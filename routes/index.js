@@ -5,17 +5,20 @@
 
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
-const User = require('../models/user');
+
+// Models
 const Threat = require('../models/threat');
 const ScanResult = require('../models/scanResult');
+
+// Middleware
+const authMiddleware = require('../middleware/auth');
 
 /**
  * Ana Sayfa
  */
 router.get('/', (req, res) => {
   res.render('index', {
-    title: 'Android AntiVirüs Koruma'
+    title: 'Android Antivirüs & Güvenlik'
   });
 });
 
@@ -83,167 +86,52 @@ router.get('/docs', (req, res) => {
 });
 
 /**
+ * İndirme Sayfası
+ */
+router.get('/download', (req, res) => {
+  res.render('download', {
+    title: 'Android Uygulamasını İndir'
+  });
+});
+
+/**
+ * Fiyatlandırma Sayfası
+ */
+router.get('/pricing', (req, res) => {
+  res.render('pricing', {
+    title: 'Fiyatlandırma'
+  });
+});
+
+/**
  * Profil Sayfası (Giriş yapılmış olmalı)
  */
-router.get('/profile', auth.isAuthenticated, (req, res) => {
-  res.render('profile', {
-    title: 'Profil',
-    user: req.session.user
-  });
-});
-
-/**
- * Kullanıcı Kontrol Paneli (Giriş yapılmış olmalı)
- */
-router.get('/dashboard', auth.isAuthenticated, async (req, res) => {
+router.get('/profile', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    // Kullanıcı tarama geçmişini al
-    const userId = req.session.user.id;
-    const scanHistory = await ScanResult.findByUserId(userId, 5);
-    
-    // Tehditleri sorgula
-    const activeThreats = await Threat.findAll({ isCleaned: false });
-    const cleanedThreats = await Threat.count({ isCleaned: true });
-    
-    // İstatistikleri hazırla
-    const stats = {
-      totalScans: await ScanResult.count({ userId }),
-      activeThreats: activeThreats.length,
-      cleanedThreats,
-      lastScanDate: scanHistory.length > 0 ? scanHistory[0].endTime : null
-    };
-    
-    res.render('dashboard', {
-      title: 'Kontrol Paneli',
-      scanHistory,
-      activeThreats,
-      stats
-    });
-  } catch (error) {
-    console.error('Dashboard hatası:', error);
-    req.session.flashMessages = {
-      error: 'Kontrol paneli bilgileri yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/');
-  }
-});
-
-/**
- * Tarama Başlat Sayfası (Giriş yapılmış olmalı)
- */
-router.get('/scan', auth.isAuthenticated, (req, res) => {
-  res.render('scan', {
-    title: 'Tarama Başlat'
-  });
-});
-
-/**
- * Tarama İşlemi Başlat (Giriş yapılmış olmalı)
- */
-router.post('/scan', auth.isAuthenticated, async (req, res) => {
-  try {
-    const { type } = req.body;
     const userId = req.session.user.id;
     
-    // Yeni tarama oluştur
-    const scan = new ScanResult(
-      null,
-      type,
-      new Date(),
-      null,
-      0,
-      [],
-      userId
-    );
+    // Kullanıcının taramalarını getir
+    const recentScans = await ScanResult.findByUserId(userId, 5);
     
-    // Veritabanına kaydet
-    await scan.save();
+    // İstatistikler
+    const totalScans = await ScanResult.count({ userId });
     
-    // Tarama sayfasına yönlendir
-    res.redirect(`/scan/${scan.id}/progress`);
-  } catch (error) {
-    console.error('Tarama başlatma hatası:', error);
-    req.session.flashMessages = {
-      error: 'Tarama başlatılırken bir hata oluştu.'
-    };
-    res.redirect('/scan');
-  }
-});
-
-/**
- * Tarama İlerleme Sayfası (Giriş yapılmış olmalı)
- */
-router.get('/scan/:id/progress', auth.isAuthenticated, async (req, res) => {
-  try {
-    const scanId = req.params.id;
-    const scan = await ScanResult.findById(scanId);
-    
-    if (!scan) {
-      req.session.flashMessages = {
-        error: 'Tarama bulunamadı.'
-      };
-      return res.redirect('/dashboard');
-    }
-    
-    // Kullanıcı kontrolü
-    if (scan.userId !== req.session.user.id) {
-      req.session.flashMessages = {
-        error: 'Bu taramaya erişim yetkiniz yok.'
-      };
-      return res.redirect('/dashboard');
-    }
-    
-    res.render('scan-progress', {
-      title: 'Tarama İlerlemesi',
-      scan
+    res.render('profile', {
+      title: 'Profilim',
+      recentScans,
+      stats: {
+        totalScans
+      }
     });
   } catch (error) {
-    console.error('Tarama ilerleme sayfası hatası:', error);
-    req.session.flashMessages = {
-      error: 'Tarama bilgileri yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/dashboard');
-  }
-});
-
-/**
- * Tarama Sonuçları Sayfası (Giriş yapılmış olmalı)
- */
-router.get('/scan/:id/results', auth.isAuthenticated, async (req, res) => {
-  try {
-    const scanId = req.params.id;
-    const scan = await ScanResult.findById(scanId);
-    
-    if (!scan) {
-      req.session.flashMessages = {
-        error: 'Tarama bulunamadı.'
-      };
-      return res.redirect('/dashboard');
-    }
-    
-    // Kullanıcı kontrolü
-    if (scan.userId !== req.session.user.id) {
-      req.session.flashMessages = {
-        error: 'Bu taramaya erişim yetkiniz yok.'
-      };
-      return res.redirect('/dashboard');
-    }
-    
-    // Tarama devam ediyor mu kontrolü
-    if (!scan.endTime) {
-      return res.redirect(`/scan/${scanId}/progress`);
-    }
-    
-    res.render('scan-results', {
-      title: 'Tarama Sonuçları',
-      scan
+    console.error('Profil sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Profil bilgileri yüklenirken bir hata oluştu.'
+      }
     });
-  } catch (error) {
-    console.error('Tarama sonuçları sayfası hatası:', error);
-    req.session.flashMessages = {
-      error: 'Tarama sonuçları yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/dashboard');
   }
 });
 
@@ -252,8 +140,86 @@ router.get('/scan/:id/results', auth.isAuthenticated, async (req, res) => {
  */
 router.get('/under-construction', (req, res) => {
   res.render('under-construction', {
-    title: 'Yapım Aşamasında'
+    title: 'Yapım Aşamasında',
+    returnUrl: req.query.returnUrl || '/'
   });
+});
+
+/**
+ * Tarama İlerleme Sayfası
+ */
+router.get('/scan-progress/:scanId', async (req, res) => {
+  try {
+    const scanId = req.params.scanId;
+    
+    // Taramayı getir
+    const scanResult = await ScanResult.findById(scanId);
+    
+    if (!scanResult) {
+      return res.status(404).render('error', {
+        title: 'Hata',
+        error: {
+          status: 404,
+          message: 'Tarama bulunamadı.'
+        }
+      });
+    }
+    
+    res.render('scan-progress', {
+      title: 'Tarama İlerlemesi',
+      scanResult
+    });
+  } catch (error) {
+    console.error('Tarama ilerleme sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Tarama ilerleme bilgisi yüklenirken bir hata oluştu.'
+      }
+    });
+  }
+});
+
+/**
+ * Tarama Sonuç Sayfası
+ */
+router.get('/scan-result/:scanId', async (req, res) => {
+  try {
+    const scanId = req.params.scanId;
+    
+    // Taramayı getir
+    const scanResult = await ScanResult.findById(scanId);
+    
+    if (!scanResult) {
+      return res.status(404).render('error', {
+        title: 'Hata',
+        error: {
+          status: 404,
+          message: 'Tarama sonucu bulunamadı.'
+        }
+      });
+    }
+    
+    // Tarama tamamlanmadıysa, tarama ilerleme sayfasına yönlendir
+    if (scanResult.getStatus() !== 'COMPLETED') {
+      return res.redirect(`/scan-progress/${scanId}`);
+    }
+    
+    res.render('scan-result', {
+      title: 'Tarama Sonucu',
+      scanResult
+    });
+  } catch (error) {
+    console.error('Tarama sonuç sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Tarama sonucu yüklenirken bir hata oluştu.'
+      }
+    });
+  }
 });
 
 module.exports = router;

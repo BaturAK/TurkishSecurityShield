@@ -5,24 +5,15 @@
 
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { v4: uuidv4 } = require('uuid');
+
+// Models
 const User = require('../models/user');
 const Threat = require('../models/threat');
 const ScanResult = require('../models/scanResult');
 
-// API anahtarı doğrulama middleware
-const apiKeyAuth = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'] || req.query.api_key;
-  
-  if (!apiKey || apiKey !== process.env.API_KEY) {
-    return res.status(401).json({
-      success: false,
-      error: 'Geçersiz API anahtarı'
-    });
-  }
-  
-  next();
-};
+// Middleware
+const authMiddleware = require('../middleware/auth');
 
 /**
  * API Durum Kontrolü
@@ -30,99 +21,328 @@ const apiKeyAuth = (req, res, next) => {
  */
 router.get('/status', (req, res) => {
   res.json({
-    success: true,
-    status: 'API çalışıyor',
-    timestamp: new Date()
+    status: 'success',
+    message: 'API çalışıyor',
+    timestamp: new Date(),
+    version: '1.0.0'
   });
+});
+
+/**
+ * Kimlik Doğrulama
+ * POST /api/auth/login
+ */
+router.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'E-posta ve şifre gereklidir'
+      });
+    }
+    
+    // Kullanıcıyı getir
+    const user = await User.findByEmail(email);
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Kullanıcı bulunamadı'
+      });
+    }
+    
+    // Demo amaçlı basit şifre kontrolü
+    // NOT: Gerçek bir uygulamada şifreler plain text olarak saklanmaz!
+    if (password === 'password') {
+      // Başarılı giriş
+      // API token oluştur
+      const token = uuidv4();
+      
+      // Token'ı veritabanına kaydet
+      // Bu bir demo, gerçek bir uygulamada token doğru şekilde saklanmalı
+      const db = require('../config/database').getDb();
+      await db.collection('api_tokens').insertOne({
+        token,
+        userId: user.id,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 1 hafta
+      });
+      
+      res.json({
+        status: 'success',
+        message: 'Giriş başarılı',
+        data: {
+          token,
+          user: {
+            id: user.id,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+          }
+        }
+      });
+    } else {
+      // Başarısız giriş
+      res.status(401).json({
+        status: 'error',
+        message: 'Geçersiz şifre'
+      });
+    }
+  } catch (error) {
+    console.error('API giriş hatası:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Giriş yapılırken bir hata oluştu'
+    });
+  }
+});
+
+/**
+ * Yeni Tarama Başlat
+ * POST /api/scans/start
+ */
+router.post('/scans/start', async (req, res) => {
+  try {
+    const { type, userId } = req.body;
+    
+    if (!type) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Tarama tipi gereklidir'
+      });
+    }
+    
+    // Kullanıcı belirtilmişse, var mı kontrol et
+    if (userId) {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'Kullanıcı bulunamadı'
+        });
+      }
+    }
+    
+    // Tarama oluştur
+    const scanResult = new ScanResult(
+      uuidv4(),
+      type.toUpperCase(),
+      new Date(),
+      null,
+      0,
+      [],
+      userId
+    );
+    
+    // Taramayı kaydet
+    await scanResult.save();
+    
+    res.json({
+      status: 'success',
+      message: 'Tarama başarıyla başlatıldı',
+      data: {
+        scanId: scanResult.id,
+        type: scanResult.type,
+        startTime: scanResult.startTime
+      }
+    });
+    
+    // Asenkron olarak tarama simülasyonu başlat
+    simulateScan(scanResult.id, scanResult.type, userId);
+  } catch (error) {
+    console.error('Tarama başlatılırken hata:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Tarama başlatılırken bir hata oluştu'
+    });
+  }
+});
+
+/**
+ * Tarama simülasyonu
+ * @param {string} scanId - Tarama ID'si
+ * @param {string} type - Tarama tipi
+ * @param {string|null} userId - Kullanıcı ID'si
+ */
+async function simulateScan(scanId, type, userId) {
+  try {
+    // Taramayı getir
+    const scanResult = await ScanResult.findById(scanId);
+    
+    if (!scanResult) {
+      console.error('Tarama bulunamadı:', scanId);
+      return;
+    }
+    
+    // Tarama süresini belirle
+    const scanDuration = type === 'QUICK' 
+      ? Math.floor(Math.random() * 5000) + 3000  // Hızlı tarama: 3-8 saniye
+      : type === 'FULL' 
+        ? Math.floor(Math.random() * 10000) + 8000  // Tam tarama: 8-18 saniye
+        : Math.floor(Math.random() * 5000) + 5000;  // Diğer taramalar: 5-10 saniye
+    
+    // Taramayı tamamla
+    setTimeout(async () => {
+      // Taranan öğe sayısını belirle
+      const totalScanned = type === 'QUICK' 
+        ? Math.floor(Math.random() * 100) + 50
+        : type === 'FULL' 
+          ? Math.floor(Math.random() * 1000) + 500
+          : Math.floor(Math.random() * 300) + 100;
+      
+      // Rastgele tehdit sayısı
+      const threatCount = type === 'QUICK' 
+        ? Math.floor(Math.random() * 3)
+        : type === 'FULL' 
+          ? Math.floor(Math.random() * 5) + 1
+          : Math.floor(Math.random() * 2);
+      
+      // Rastgele tehditler oluştur
+      const threats = Threat.getRandomThreats(threatCount);
+      
+      // Tehditleri veritabanına kaydet
+      for (const threat of threats) {
+        await threat.save();
+      }
+      
+      // Taramayı tamamla
+      scanResult.complete(totalScanned, threats);
+      await scanResult.save();
+      
+      console.log(`Tarama tamamlandı: ${scanId}, tehdit sayısı: ${threats.length}`);
+    }, scanDuration);
+    
+  } catch (error) {
+    console.error('Tarama simülasyonu sırasında hata:', error);
+  }
+}
+
+/**
+ * Tarama Durumu Getir
+ * GET /api/scans/:scanId/status
+ */
+router.get('/scans/:scanId/status', async (req, res) => {
+  try {
+    const scanId = req.params.scanId;
+    
+    // Taramayı getir
+    const scanResult = await ScanResult.findById(scanId);
+    
+    if (!scanResult) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Tarama bulunamadı'
+      });
+    }
+    
+    // Tarama durumunu hesapla
+    const status = scanResult.getStatus();
+    
+    // Tarama ilerleme yüzdesi
+    const progress = status === 'COMPLETED' 
+      ? 100 
+      : status === 'RUNNING' 
+        ? Math.min(95, Math.floor(((Date.now() - scanResult.startTime) / 10000) * 100))
+        : 0;
+    
+    // Durum metni
+    const statusText = status === 'COMPLETED' 
+      ? 'Tarama tamamlandı' 
+      : status === 'RUNNING' 
+        ? 'Taranıyor...' 
+        : 'Tarama başarısız';
+    
+    res.json({
+      status: 'success',
+      data: {
+        scanId: scanResult.id,
+        type: scanResult.type,
+        status,
+        progress,
+        statusText,
+        startTime: scanResult.startTime,
+        endTime: scanResult.endTime,
+        totalScanned: scanResult.totalScanned,
+        threatCount: scanResult.threatsFound.length
+      }
+    });
+  } catch (error) {
+    console.error('Tarama durumu alınırken hata:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Tarama durumu alınırken bir hata oluştu'
+    });
+  }
+});
+
+/**
+ * Tarama Sonucu Getir
+ * GET /api/scans/:scanId
+ */
+router.get('/scans/:scanId', async (req, res) => {
+  try {
+    const scanId = req.params.scanId;
+    
+    // Taramayı getir
+    const scanResult = await ScanResult.findById(scanId);
+    
+    if (!scanResult) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Tarama bulunamadı'
+      });
+    }
+    
+    res.json({
+      status: 'success',
+      data: scanResult
+    });
+  } catch (error) {
+    console.error('Tarama sonucu alınırken hata:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Tarama sonucu alınırken bir hata oluştu'
+    });
+  }
 });
 
 /**
  * Kullanıcı Bilgisi Getir
  * GET /api/users/:userId
  */
-router.get('/users/:userId', apiKeyAuth, async (req, res) => {
+router.get('/users/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
+    
+    // Kullanıcıyı getir
     const user = await User.findById(userId);
     
     if (!user) {
       return res.status(404).json({
-        success: false,
-        error: 'Kullanıcı bulunamadı'
+        status: 'error',
+        message: 'Kullanıcı bulunamadı'
       });
     }
     
+    // Hassas bilgileri filtreleme
     res.json({
-      success: true,
-      user: {
+      status: 'success',
+      data: {
         id: user.id,
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin
       }
     });
   } catch (error) {
-    console.error('API kullanıcı getirme hatası:', error);
+    console.error('Kullanıcı bilgisi alınırken hata:', error);
     res.status(500).json({
-      success: false,
-      error: 'Sunucu hatası'
-    });
-  }
-});
-
-/**
- * Tarama Durumu Getir
- * GET /api/scans/:scanId/status
- */
-router.get('/scans/:scanId/status', apiKeyAuth, async (req, res) => {
-  try {
-    const scanId = req.params.scanId;
-    const scan = await ScanResult.findById(scanId);
-    
-    if (!scan) {
-      return res.status(404).json({
-        success: false,
-        error: 'Tarama bulunamadı'
-      });
-    }
-    
-    // Simülasyon: Devam eden taramalar için ilerleyiş hesapla
-    let progress = 100;
-    if (!scan.endTime) {
-      const totalDuration = 30 * 1000; // 30 saniye tarama süresi
-      const elapsed = new Date() - scan.startTime;
-      progress = Math.min(Math.floor((elapsed / totalDuration) * 100), 99);
-      
-      // Simüle edilmiş tamamlanma
-      if (progress >= 99) {
-        // Rastgele tehditler oluştur
-        const threatCount = Math.floor(Math.random() * 3);
-        const threatsFound = Threat.getRandomThreats(threatCount);
-        
-        // Taramayı tamamla
-        scan.complete(Math.floor(Math.random() * 500) + 100, threatsFound);
-        await scan.save();
-        
-        progress = 100;
-      }
-    }
-    
-    res.json({
-      success: true,
-      status: scan.getStatus(),
-      progress: progress,
-      totalScanned: scan.totalScanned,
-      threatsCount: scan.threatsFound.length,
-      startTime: scan.startTime,
-      endTime: scan.endTime,
-      duration: scan.getDuration()
-    });
-  } catch (error) {
-    console.error('API tarama durumu hatası:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Sunucu hatası'
+      status: 'error',
+      message: 'Kullanıcı bilgisi alınırken bir hata oluştu'
     });
   }
 });
@@ -131,41 +351,45 @@ router.get('/scans/:scanId/status', apiKeyAuth, async (req, res) => {
  * Tehdit Temizle
  * POST /api/threats/:threatId/clean
  */
-router.post('/threats/:threatId/clean', apiKeyAuth, async (req, res) => {
+router.post('/threats/:threatId/clean', async (req, res) => {
   try {
     const threatId = req.params.threatId;
+    
+    // Tehdidi getir
     const threat = await Threat.findById(threatId);
     
     if (!threat) {
       return res.status(404).json({
-        success: false,
-        error: 'Tehdit bulunamadı'
+        status: 'error',
+        message: 'Tehdit bulunamadı'
       });
     }
     
-    // Tehdit zaten temizlendi mi?
+    // Tehdit zaten temizlendi mi kontrol et
     if (threat.isCleaned) {
       return res.json({
-        success: true,
-        message: 'Tehdit zaten temizlenmiş',
-        threat: threat.toJSON()
+        status: 'success',
+        message: 'Tehdit zaten temizlendi',
+        data: threat
       });
     }
     
     // Tehdidi temizle
     threat.clean();
+    
+    // Tehdidi kaydet
     await threat.save();
     
     res.json({
-      success: true,
+      status: 'success',
       message: 'Tehdit başarıyla temizlendi',
-      threat: threat.toJSON()
+      data: threat
     });
   } catch (error) {
-    console.error('API tehdit temizleme hatası:', error);
+    console.error('Tehdit temizlenirken hata:', error);
     res.status(500).json({
-      success: false,
-      error: 'Sunucu hatası'
+      status: 'error',
+      message: 'Tehdit temizlenirken bir hata oluştu'
     });
   }
 });
@@ -174,31 +398,33 @@ router.post('/threats/:threatId/clean', apiKeyAuth, async (req, res) => {
  * Kullanıcı Taramaları Getir
  * GET /api/users/:userId/scans
  */
-router.get('/users/:userId/scans', apiKeyAuth, async (req, res) => {
+router.get('/users/:userId/scans', async (req, res) => {
   try {
     const userId = req.params.userId;
     const limit = parseInt(req.query.limit) || 10;
     
-    const scanHistory = await ScanResult.findByUserId(userId, limit);
+    // Kullanıcı var mı kontrol et
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Kullanıcı bulunamadı'
+      });
+    }
+    
+    // Kullanıcının taramalarını getir
+    const scans = await ScanResult.findByUserId(userId, limit);
     
     res.json({
-      success: true,
-      scans: scanHistory.map(scan => ({
-        id: scan.id,
-        type: scan.type,
-        startTime: scan.startTime,
-        endTime: scan.endTime,
-        totalScanned: scan.totalScanned,
-        threatsCount: scan.threatsFound.length,
-        status: scan.getStatus(),
-        duration: scan.getDuration()
-      }))
+      status: 'success',
+      data: scans
     });
   } catch (error) {
-    console.error('API kullanıcı taramaları hatası:', error);
+    console.error('Kullanıcı taramaları alınırken hata:', error);
     res.status(500).json({
-      success: false,
-      error: 'Sunucu hatası'
+      status: 'error',
+      message: 'Kullanıcı taramaları alınırken bir hata oluştu'
     });
   }
 });
@@ -207,55 +433,57 @@ router.get('/users/:userId/scans', apiKeyAuth, async (req, res) => {
  * Kullanıcı İstatistikleri Getir
  * GET /api/users/:userId/stats
  */
-router.get('/users/:userId/stats', apiKeyAuth, async (req, res) => {
+router.get('/users/:userId/stats', async (req, res) => {
   try {
     const userId = req.params.userId;
     
-    // Kullanıcıyı kontrol et
+    // Kullanıcı var mı kontrol et
     const user = await User.findById(userId);
+    
     if (!user) {
       return res.status(404).json({
-        success: false,
-        error: 'Kullanıcı bulunamadı'
+        status: 'error',
+        message: 'Kullanıcı bulunamadı'
       });
     }
     
-    // İstatistikleri hazırla
+    // Kullanıcının istatistiklerini getir
     const totalScans = await ScanResult.count({ userId });
-    const scanHistory = await ScanResult.findByUserId(userId, 1);
+    const scans = await ScanResult.findByUserId(userId, 100);
     
-    // Kullanıcıya ait tüm taramaları al
-    const allScans = await ScanResult.findByUserId(userId, 100);
-    
-    // Tehdit istatistikleri
+    // Tehditleri topla
     let totalThreats = 0;
     let cleanedThreats = 0;
     
-    allScans.forEach(scan => {
-      scan.threatsFound.forEach(threat => {
-        totalThreats++;
-        if (threat.isCleaned) {
-          cleanedThreats++;
-        }
-      });
+    scans.forEach(scan => {
+      if (scan.threatsFound && Array.isArray(scan.threatsFound)) {
+        totalThreats += scan.threatsFound.length;
+        scan.threatsFound.forEach(threat => {
+          if (threat.isCleaned) {
+            cleanedThreats++;
+          }
+        });
+      }
     });
     
+    // Son tarama zamanı
+    const lastScan = scans.length > 0 ? scans[0].startTime : null;
+    
     res.json({
-      success: true,
-      stats: {
+      status: 'success',
+      data: {
         totalScans,
-        lastScanDate: scanHistory.length > 0 ? scanHistory[0].endTime : null,
         totalThreats,
         cleanedThreats,
         activeThreats: totalThreats - cleanedThreats,
-        memberSince: user.createdAt
+        lastScan
       }
     });
   } catch (error) {
-    console.error('API kullanıcı istatistikleri hatası:', error);
+    console.error('Kullanıcı istatistikleri alınırken hata:', error);
     res.status(500).json({
-      success: false,
-      error: 'Sunucu hatası'
+      status: 'error',
+      message: 'Kullanıcı istatistikleri alınırken bir hata oluştu'
     });
   }
 });
@@ -264,20 +492,22 @@ router.get('/users/:userId/stats', apiKeyAuth, async (req, res) => {
  * Tüm Aktif Tehditleri Getir
  * GET /api/threats
  */
-router.get('/threats', apiKeyAuth, async (req, res) => {
+router.get('/threats', async (req, res) => {
   try {
-    const filter = req.query.all === 'true' ? {} : { isCleaned: false };
-    const threats = await Threat.findAll(filter);
+    const onlyActive = req.query.active === 'true';
+    
+    // Tehditleri getir
+    const threats = await Threat.findAll(onlyActive ? { isCleaned: false } : {});
     
     res.json({
-      success: true,
-      threats: threats.map(threat => threat.toJSON())
+      status: 'success',
+      data: threats
     });
   } catch (error) {
-    console.error('API tehdit listesi hatası:', error);
+    console.error('Tehditler alınırken hata:', error);
     res.status(500).json({
-      success: false,
-      error: 'Sunucu hatası'
+      status: 'error',
+      message: 'Tehditler alınırken bir hata oluştu'
     });
   }
 });

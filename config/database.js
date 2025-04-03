@@ -4,31 +4,39 @@
  */
 
 const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
-// Bağlantı URL ve veritabanı adı
-const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const dbName = process.env.DB_NAME || 'antivirus';
+// MongoDB bağlantı URL'i
+const mongoUrl = process.env.MONGODB_URI || 'mongodb+srv://webdb:Hacked_22@mongodb.sgpezuw.mongodb.net/';
+const dbName = process.env.MONGODB_DB || 'antivirus_db';
 
-// Veritabanı bağlantısı ve koleksiyon referansları
-let db = null;
-let client = null;
+// MongoDB istemcisi
+let client;
+let db;
 
 /**
  * MongoDB veritabanına bağlanır
  * @returns {Promise<object>} Bağlantı başarılı ise veritabanı nesnesi, değilse hata
  */
 async function connectToDatabase() {
-  if (db) return db;
-  
   try {
+    if (client && client.topology && client.topology.isConnected()) {
+      console.log('Veritabanı bağlantısı zaten mevcut.');
+      return db;
+    }
+    
     console.log('MongoDB bağlantısı kuruluyor...');
-    client = new MongoClient(url);
+    client = new MongoClient(mongoUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    
     await client.connect();
+    console.log('MongoDB bağlantısı başarılı.');
     
     db = client.db(dbName);
-    console.log(`MongoDB bağlantısı başarılı: ${dbName}`);
     
-    // Koleksiyonları ve varsayılan verileri başlat
+    // Gerekli koleksiyonları oluştur
     await initializeCollections();
     
     return db;
@@ -43,45 +51,55 @@ async function connectToDatabase() {
  */
 async function initializeCollections() {
   try {
-    // Koleksiyonlar mevcut değilse oluştur
     const collections = await db.listCollections().toArray();
     const collectionNames = collections.map(c => c.name);
     
     // Users koleksiyonu
     if (!collectionNames.includes('users')) {
       await db.createCollection('users');
-      console.log('Users koleksiyonu oluşturuldu');
+      console.log('users koleksiyonu oluşturuldu.');
       
-      // Admin kullanıcısını ekle
-      const adminExists = await db.collection('users').findOne({ email: 'admin@example.com' });
-      if (!adminExists) {
-        await db.collection('users').insertOne({
-          id: 'admin-user-uid',
-          email: 'admin@example.com',
-          displayName: 'Admin User',
-          photoURL: null,
-          isAdmin: true,
-          createdAt: new Date()
-        });
-        console.log('Admin kullanıcısı oluşturuldu');
+      // Admin kullanıcısı ekle
+      const usersCollection = db.collection('users');
+      const adminUser = {
+        id: 'admin',
+        email: 'admin@example.com',
+        displayName: 'Admin',
+        photoURL: null,
+        isAdmin: true,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        status: 'active'
+      };
+      
+      const existingAdmin = await usersCollection.findOne({ id: 'admin' });
+      if (!existingAdmin) {
+        await usersCollection.insertOne(adminUser);
+        console.log('Admin kullanıcısı oluşturuldu.');
       }
     }
     
     // Threats koleksiyonu
     if (!collectionNames.includes('threats')) {
       await db.createCollection('threats');
-      console.log('Threats koleksiyonu oluşturuldu');
+      console.log('threats koleksiyonu oluşturuldu.');
     }
     
-    // ScanResults koleksiyonu
-    if (!collectionNames.includes('scanResults')) {
-      await db.createCollection('scanResults');
-      console.log('ScanResults koleksiyonu oluşturuldu');
+    // Scan Results koleksiyonu
+    if (!collectionNames.includes('scan_results')) {
+      await db.createCollection('scan_results');
+      console.log('scan_results koleksiyonu oluşturuldu.');
     }
     
-    return true;
+    // API Tokens koleksiyonu
+    if (!collectionNames.includes('api_tokens')) {
+      await db.createCollection('api_tokens');
+      console.log('api_tokens koleksiyonu oluşturuldu.');
+    }
+    
+    console.log('Veritabanı koleksiyonları hazır.');
   } catch (error) {
-    console.error('Koleksiyon başlatma hatası:', error);
+    console.error('Koleksiyonlar oluşturulurken hata:', error);
     throw error;
   }
 }
@@ -93,9 +111,7 @@ async function initializeCollections() {
 async function closeConnection() {
   if (client) {
     await client.close();
-    console.log('MongoDB bağlantısı kapatıldı');
-    db = null;
-    client = null;
+    console.log('MongoDB bağlantısı kapatıldı.');
   }
 }
 
@@ -109,6 +125,11 @@ function getDb() {
 
 // Process kapatıldığında bağlantıyı kapat
 process.on('SIGINT', async () => {
+  await closeConnection();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
   await closeConnection();
   process.exit(0);
 });

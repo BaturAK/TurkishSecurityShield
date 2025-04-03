@@ -1,98 +1,110 @@
 /**
- * AntiVirüs Uygulaması Ana Dosya
- * Express web sunucusu ve API
+ * AntiVirüs Uygulaması Web Arayüzü
+ * Express.js ile hazırlanmış web uygulaması
  */
 
-// Ortam değişkenlerini yükle
-require('dotenv').config();
-
-// Modül Bağımlılıkları
+// Temel paketler
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const expressLayouts = require('express-ejs-layouts');
-const { v4: uuidv4 } = require('uuid');
+const dotenv = require('dotenv');
 
-// Veritabanı ve Bağlantı
-const database = require('./config/database');
-
-// Middleware
-const authMiddleware = require('./middleware/auth');
-
-// Rota Yöneticileri
+// Routes
 const indexRoutes = require('./routes/index');
 const authRoutes = require('./routes/auth');
+const dashboardRoutes = require('./routes/dashboard');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
 
-// Uygulama Yapılandırması
+// Middlewares
+const authMiddleware = require('./middleware/auth');
+
+// Database ve Firebase
+const database = require('./config/database');
+const firebaseConfig = require('./config/firebase');
+
+// .env dosyasını yükle
+dotenv.config();
+
+// Express app
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// EJS Görünüm Motoru Ayarları
+// Uygulama yapılandırması
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layout');
 app.use(expressLayouts);
-
-// Temel Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Oturum Yapılandırması
+// Session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'antivirus-app-session-secret',
+  secret: process.env.SESSION_SECRET || 'antivirus-app-secret-key',
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 1 gün
+  }
 }));
 
-// Kullanıcı Bilgilerini Görünümlere Aktar
+// View middleware - kullanıcı bilgilerini tüm şablonlara ekle
 app.use(authMiddleware.injectUserToViews);
 
-// Rotalar
+// Routes
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
+app.use('/dashboard', dashboardRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
-// 404 Rotası
-app.use((req, res) => {
-  res.status(404).render('404', { title: 'Sayfa Bulunamadı' });
-});
-
-// Hata İşleyici
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', {
-    title: 'Hata Oluştu',
-    error: process.env.NODE_ENV === 'development' ? err : { message: 'Sunucu hatası, lütfen daha sonra tekrar deneyin.' }
+// 404 işleyicisi
+app.use((req, res, next) => {
+  res.status(404).render('error', {
+    title: 'Sayfa Bulunamadı',
+    error: {
+      status: 404,
+      message: 'Aradığınız sayfa bulunamadı.'
+    }
   });
 });
 
-// Sunucuyu Başlat
+// Hata işleyicisi
+app.use((err, req, res, next) => {
+  console.error('Uygulama hatası:', err);
+  
+  res.status(err.status || 500).render('error', {
+    title: 'Hata',
+    error: {
+      status: err.status || 500,
+      message: err.message || 'Beklenmeyen bir hata oluştu.'
+    }
+  });
+});
+
+// Sunucuyu başlat
 async function startServer() {
   try {
-    // Veritabanına bağlan
+    // MongoDB veritabanına bağlan
     await database.connectToDatabase();
     
-    // Sunucuyu dinle
+    // Sunucuyu başlat
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`AntiVirüs Uygulaması ${PORT} portunda çalışıyor...`);
-      console.log(`http://localhost:${PORT}`);
+      console.log(`Sunucu http://localhost:${PORT} adresinde çalışıyor`);
     });
+    
+    // Firebase bağlantısını test et
+    const firebaseConnected = firebaseConfig.testFirebaseConnection();
+    console.log(`Firebase bağlantı durumu: ${firebaseConnected ? 'Bağlı' : 'Bağlı değil (Demo mod)'}`);
   } catch (error) {
     console.error('Sunucu başlatılırken hata oluştu:', error);
     process.exit(1);
   }
 }
 
-// Eğer doğrudan çalıştırılıyorsa sunucuyu başlat
-if (require.main === module) {
-  startServer();
-}
-
-module.exports = app;
+// Sunucuyu başlat
+startServer();

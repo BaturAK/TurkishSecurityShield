@@ -22,11 +22,12 @@ class User {
   constructor(id, email, displayName = null, photoURL = null, isAdmin = false) {
     this.id = id;
     this.email = email;
-    this.displayName = displayName;
+    this.displayName = displayName || email.split('@')[0];
     this.photoURL = photoURL;
     this.isAdmin = isAdmin;
     this.createdAt = new Date();
-    this.lastLoginAt = new Date();
+    this.lastLogin = new Date();
+    this.status = 'active';
   }
 
   /**
@@ -41,7 +42,8 @@ class User {
       photoURL: this.photoURL,
       isAdmin: this.isAdmin,
       createdAt: this.createdAt,
-      lastLoginAt: this.lastLoginAt
+      lastLogin: this.lastLogin,
+      status: this.status
     };
   }
 
@@ -50,30 +52,33 @@ class User {
    * @returns {Promise<boolean>} - Kaydetme işlemi başarılı ise true döner
    */
   async save() {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const userCollection = db.collection('users');
       
-      // Mevcut kullanıcıyı kontrol et
+      // Kullanıcı zaten var mı kontrol et
       const existingUser = await userCollection.findOne({ id: this.id });
       
       if (existingUser) {
         // Kullanıcı var, güncelle
-        const result = await userCollection.updateOne(
+        await userCollection.updateOne(
           { id: this.id },
           { $set: this.toJSON() }
         );
-        return result.modifiedCount > 0;
       } else {
-        // Yeni kullanıcı ekle
-        const result = await userCollection.insertOne(this.toJSON());
-        return !!result.insertedId;
+        // Kullanıcı yok, yeni kayıt ekle
+        await userCollection.insertOne(this.toJSON());
       }
+      
+      return true;
     } catch (error) {
-      console.error('Kullanıcı kaydederken hata:', error);
-      throw error;
+      console.error('Kullanıcı kaydedilirken hata:', error);
+      return false;
     }
   }
 
@@ -83,31 +88,16 @@ class User {
    * @returns {Promise<User>} - Kaydedilen kullanıcı
    */
   static async saveUserToDb(userData) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
-    try {
-      const userCollection = db.collection('users');
-      
-      // Mevcut kullanıcıyı kontrol et
-      const existingUser = await userCollection.findOne({ id: userData.id });
-      
-      if (existingUser) {
-        // Kullanıcı var, güncelle
-        await userCollection.updateOne(
-          { id: userData.id },
-          { $set: userData }
-        );
-      } else {
-        // Yeni kullanıcı ekle
-        await userCollection.insertOne(userData);
-      }
-      
-      return userData;
-    } catch (error) {
-      console.error('Kullanıcı DB kayıt hatası:', error);
-      throw error;
-    }
+    const user = new User(
+      userData.id || uuidv4(),
+      userData.email,
+      userData.displayName,
+      userData.photoURL,
+      userData.isAdmin || false
+    );
+    
+    await user.save();
+    return user;
   }
 
   /**
@@ -116,14 +106,19 @@ class User {
    * @returns {Promise<User|null>} - Bulunan kullanıcı veya null
    */
   static async findByEmail(email) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const userCollection = db.collection('users');
       const userData = await userCollection.findOne({ email });
       
-      if (!userData) return null;
+      if (!userData) {
+        return null;
+      }
       
       return new User(
         userData.id,
@@ -133,8 +128,8 @@ class User {
         userData.isAdmin
       );
     } catch (error) {
-      console.error('E-posta ile kullanıcı arama hatası:', error);
-      throw error;
+      console.error('E-posta ile kullanıcı bulunurken hata:', error);
+      return null;
     }
   }
 
@@ -144,14 +139,19 @@ class User {
    * @returns {Promise<User|null>} - Bulunan kullanıcı veya null
    */
   static async findById(id) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const userCollection = db.collection('users');
       const userData = await userCollection.findOne({ id });
       
-      if (!userData) return null;
+      if (!userData) {
+        return null;
+      }
       
       return new User(
         userData.id,
@@ -161,8 +161,8 @@ class User {
         userData.isAdmin
       );
     } catch (error) {
-      console.error('ID ile kullanıcı arama hatası:', error);
-      throw error;
+      console.error('ID ile kullanıcı bulunurken hata:', error);
+      return null;
     }
   }
 
@@ -171,14 +171,17 @@ class User {
    * @returns {Promise<User[]>} - Kullanıcı listesi
    */
   static async findAll() {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
-      const userCollection = db.collection('users');
-      const usersData = await userCollection.find().toArray();
+      const db = getDb();
       
-      return usersData.map(userData => new User(
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
+      const userCollection = db.collection('users');
+      const users = await userCollection.find().toArray();
+      
+      return users.map(userData => new User(
         userData.id,
         userData.email,
         userData.displayName,
@@ -186,8 +189,8 @@ class User {
         userData.isAdmin
       ));
     } catch (error) {
-      console.error('Tüm kullanıcıları getirme hatası:', error);
-      throw error;
+      console.error('Tüm kullanıcılar getirilirken hata:', error);
+      return [];
     }
   }
 
@@ -196,14 +199,17 @@ class User {
    * @returns {Promise<User[]>} - Admin kullanıcı listesi
    */
   static async findAdmins() {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
-      const userCollection = db.collection('users');
-      const usersData = await userCollection.find({ isAdmin: true }).toArray();
+      const db = getDb();
       
-      return usersData.map(userData => new User(
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
+      const userCollection = db.collection('users');
+      const users = await userCollection.find({ isAdmin: true }).toArray();
+      
+      return users.map(userData => new User(
         userData.id,
         userData.email,
         userData.displayName,
@@ -211,8 +217,8 @@ class User {
         userData.isAdmin
       ));
     } catch (error) {
-      console.error('Admin kullanıcıları getirme hatası:', error);
-      throw error;
+      console.error('Admin kullanıcılar getirilirken hata:', error);
+      return [];
     }
   }
 
@@ -221,15 +227,18 @@ class User {
    * @returns {Promise<number>} - Kullanıcı sayısı
    */
   static async count() {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const userCollection = db.collection('users');
       return await userCollection.countDocuments();
     } catch (error) {
-      console.error('Kullanıcı sayma hatası:', error);
-      throw error;
+      console.error('Kullanıcı sayısı hesaplanırken hata:', error);
+      return 0;
     }
   }
 
@@ -239,18 +248,17 @@ class User {
    * @returns {Promise<User[]>} - Kullanıcı listesi
    */
   static async findRecent(limit = 10) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
-      const userCollection = db.collection('users');
-      const usersData = await userCollection
-        .find()
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .toArray();
+      const db = getDb();
       
-      return usersData.map(userData => new User(
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
+      const userCollection = db.collection('users');
+      const users = await userCollection.find().sort({ createdAt: -1 }).limit(limit).toArray();
+      
+      return users.map(userData => new User(
         userData.id,
         userData.email,
         userData.displayName,
@@ -258,8 +266,8 @@ class User {
         userData.isAdmin
       ));
     } catch (error) {
-      console.error('Son kullanıcıları getirme hatası:', error);
-      throw error;
+      console.error('Son kullanıcılar getirilirken hata:', error);
+      return [];
     }
   }
 }

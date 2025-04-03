@@ -1,53 +1,35 @@
 /**
- * Firebase Configuration
- * Firebase bağlantı ayarları
- * 
- * NOT: Bu dosya gerçek bir Firebase bağlantısı yerine bir mock implementasyon sağlar.
- * Gerçek uygulamada Firebase veya Firebase Admin SDK kullanılabilir.
+ * Firebase Yapılandırması
+ * Firebase Auth ve Firestore yapılandırma ayarları
  */
 
-// Firebase uygulamasını simüle et
-let firebaseApp = { name: 'mock-firebase-app' };
-let firebaseAuth = {
-  // Basit bir mock auth nesnesi
-  currentUser: null,
-  signInWithEmailAndPassword: async (email, password) => {
-    // Basit doğrulama (gerçek uygulamada Firebase ile yapılır)
-    if (email === 'admin@example.com' && password === 'password') {
-      return { 
-        user: { 
-          uid: 'admin-user-uid',
-          email: 'admin@example.com',
-          displayName: 'Admin User',
-          photoURL: null
-        } 
-      };
-    }
-    throw new Error('auth/user-not-found');
-  },
-  createUserWithEmailAndPassword: async (email, password) => {
-    return { 
-      user: { 
-        uid: 'user-' + Math.random().toString(36).substring(2, 15),
-        email: email,
-        displayName: null,
-        photoURL: null,
-        updateProfile: async (profile) => {
-          return true;
-        }
-      } 
-    };
-  },
-  signOut: async () => {
-    return true;
-  },
-  sendPasswordResetEmail: async (email) => {
-    console.log(`[MOCK] Password reset email sent to ${email}`);
-    return true;
-  }
+const admin = require('firebase-admin');
+require('dotenv').config();
+
+// Firebase yapılandırması
+const firebaseConfig = {
+  projectId: process.env.FIREBASE_PROJECT_ID || 'demo-project',
+  apiKey: process.env.FIREBASE_API_KEY || 'demo-api-key',
+  appId: process.env.FIREBASE_APP_ID || 'demo-app-id'
 };
 
-console.log('Mock Firebase bağlantısı başarılı');
+// Firebase admin uygulama örneği
+let firebaseApp;
+
+// Firebase başlatma
+try {
+  // Firebase admin başlatma
+  firebaseApp = admin.initializeApp({
+    projectId: firebaseConfig.projectId,
+    credential: admin.credential.applicationDefault()
+  });
+  
+  console.log('Firebase Admin başarıyla başlatıldı.');
+} catch (error) {
+  // Hata varsa, demo modu kullanılacak
+  console.warn('Firebase Admin başlatılamadı. Demo modu kullanılacak:', error.message);
+  firebaseApp = null;
+}
 
 /**
  * Firebase bağlantısını test eder
@@ -62,7 +44,8 @@ function testFirebaseConnection() {
  * @returns {object|null} Firebase auth nesnesi, bağlantı yoksa null
  */
 function getAuth() {
-  return firebaseAuth;
+  if (!firebaseApp) return null;
+  return admin.auth();
 }
 
 /**
@@ -70,7 +53,8 @@ function getAuth() {
  * @returns {object|null} Firebase firestore nesnesi, bağlantı yoksa null
  */
 function getFirestore() {
-  return null; // Firestore bu aşamada kullanılmıyor
+  if (!firebaseApp) return null;
+  return admin.firestore();
 }
 
 /**
@@ -78,10 +62,19 @@ function getFirestore() {
  * @returns {object|null} Google oturum açma sağlayıcısı, bağlantı yoksa null
  */
 function getGoogleAuthProvider() {
-  return null; // Google Auth Provider doğrudan kullanılamıyor, admin SDK'da farklı
+  if (!firebaseApp) return null;
+  
+  try {
+    // Client-side oauth sağlayıcıyı döndür
+    return new admin.auth.GoogleAuthProvider();
+  } catch (error) {
+    console.error('Google auth provider oluşturulamadı:', error);
+    return null;
+  }
 }
 
 module.exports = {
+  firebaseConfig,
   testFirebaseConnection,
   getAuth,
   getFirestore,

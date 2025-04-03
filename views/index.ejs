@@ -1,117 +1,168 @@
-<!-- Hero Section -->
-<section class="hero bg-primary text-white py-5">
+<!-- Ana Sayfa -->
+
+<!-- Hero Bölümü -->
+<section class="hero-section">
   <div class="container py-5">
     <div class="row align-items-center">
-      <div class="col-md-6">
-        <h1 class="display-4 fw-bold mb-4">Android Cihazınız İçin Tam Koruma</h1>
+      <div class="col-lg-6 mb-5 mb-lg-0">
+        <h1 class="display-4 fw-bold mb-4">Cihazınızı Zararlı Yazılımlardan Koruyun</h1>
         <p class="lead mb-4">
-          Modern tehditlerden korunmak için tasarlanmış kapsamlı bir antivirüs çözümü. 
-          Gerçek zamanlı tarama, Wi-Fi güvenliği ve zararlı yazılım koruması ile cihazınızı güvende tutun.
+          AntiVirüs ile Android cihazınızı virüslerden, casus yazılımlardan ve diğer tehditlere karşı güvenle koruyun. Gerçek zamanlı koruma, düzenli taramalar ve uygulama kilidi ile cihazınızın güvenliğini sağlayın.
         </p>
-        <div class="d-flex gap-3 mb-4">
-          <a href="/auth/register" class="btn btn-light btn-lg">
-            <i class="fas fa-user-plus me-2"></i> Hemen Kaydol
+        <div class="d-flex flex-wrap gap-3">
+          <a href="/download" class="btn btn-primary btn-lg">
+            <i class="fas fa-download me-2"></i> Şimdi İndir
           </a>
-          <a href="#features" class="btn btn-outline-light btn-lg">
-            <i class="fas fa-info-circle me-2"></i> Özellikler
+          <a href="/features" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-info-circle me-2"></i> Özellikleri Keşfet
           </a>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="text-center">
-          <img src="/img/hero-phone.png" alt="AntiVirüs Uygulama Ekranı" class="img-fluid rounded shadow-lg">
-        </div>
+      <div class="col-lg-6 text-center">
+        <img src="/img/hero-image.svg" alt="AntiVirüs Uygulama Ekranı" class="img-fluid" style="max-height: 500px;">
       </div>
     </div>
   </div>
 </section>
 
-<!-- Özellikler -->
-<section id="features" class="py-5">
-  <div class="container py-5">
-    <h2 class="text-center mb-5 display-5">Kapsamlı Koruma Özellikleri</h2>
+<!-- Öne Çıkan Özellikler -->
+<section class="py-5">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <h2 class="display-5 fw-bold mb-3">Öne Çıkan Özellikler</h2>
+      <p class="lead text-muted">
+        AntiVirüs uygulaması, zararlı yazılımlardan korunmak için ihtiyacınız olan tüm özellikleri sunar.
+      </p>
+    </div>
     
     <div class="row g-4">
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
-              <i class="fas fa-shield-alt"></i>
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-3 mb-3 mx-auto">
+              <i class="fas fa-shield-virus fa-2x"></i>
             </div>
-            <h3 class="h4">Gerçek Zamanlı Koruma</h3>
-            <p class="text-muted">
-              Arka planda sürekli çalışan koruma sistemi ile zararlı yazılımları anında tespit eder ve engeller.
+            <h3 class="h4 mb-3">Gerçek Zamanlı Koruma</h3>
+            <p class="text-muted mb-0">
+              Cihazınızı sürekli izleyerek tehditler ortaya çıkar çıkmaz tespit eder ve engeller.
             </p>
           </div>
         </div>
       </div>
       
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
-              <i class="fas fa-wifi"></i>
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-warning bg-opacity-10 text-warning rounded-3 mb-3 mx-auto">
+              <i class="fas fa-search fa-2x"></i>
             </div>
-            <h3 class="h4">Wi-Fi Güvenlik Taraması</h3>
-            <p class="text-muted">
-              Bağlandığınız ağların güvenliğini analiz eder ve potansiyel güvenlik açıklarını tespit eder.
+            <h3 class="h4 mb-3">Derin Tarama</h3>
+            <p class="text-muted mb-0">
+              Hızlı ve kapsamlı taramalar ile cihazınızdaki tüm dosyaları ve uygulamaları kontrol eder.
             </p>
           </div>
         </div>
       </div>
       
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
-              <i class="fas fa-qrcode"></i>
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-success bg-opacity-10 text-success rounded-3 mb-3 mx-auto">
+              <i class="fas fa-wifi fa-2x"></i>
             </div>
-            <h3 class="h4">QR Kod Taraması</h3>
-            <p class="text-muted">
-              QR kodları tarayarak zararlı bağlantıları belirler ve güvenli olmayan web sitelerine erişimi engeller.
+            <h3 class="h4 mb-3">Wi-Fi Güvenliği</h3>
+            <p class="text-muted mb-0">
+              Bağlandığınız ağların güvenliğini kontrol eder ve potansiyel risklere karşı sizi uyarır.
             </p>
           </div>
         </div>
       </div>
       
-      <div class="col-md-4">
+      <div class="col-md-6 col-lg-3">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
-              <i class="fas fa-lock"></i>
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-info bg-opacity-10 text-info rounded-3 mb-3 mx-auto">
+              <i class="fas fa-lock fa-2x"></i>
             </div>
-            <h3 class="h4">Uygulama Kilidi</h3>
-            <p class="text-muted">
-              Hassas uygulamaları şifre, parmak izi veya yüz tanıma ile koruyarak istenmeyen erişimleri engeller.
+            <h3 class="h4 mb-3">Uygulama Kilidi</h3>
+            <p class="text-muted mb-0">
+              Hassas uygulamalarınızı PIN, desen veya parmak izi ile koruyarak gizliliğinizi sağlar.
             </p>
           </div>
         </div>
       </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
-              <i class="fas fa-broom"></i>
-            </div>
-            <h3 class="h4">Sistem Temizleyici</h3>
-            <p class="text-muted">
-              Gereksiz dosyaları, önbelleği ve diğer artıkları temizleyerek cihazınızın performansını artırır.
-            </p>
-          </div>
-        </div>
+    </div>
+    
+    <div class="text-center mt-5">
+      <a href="/features" class="btn btn-outline-primary">
+        <i class="fas fa-list-ul me-2"></i> Tüm Özellikleri Gör
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Çalışma Prensibi -->
+<section class="py-5 bg-light">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <h2 class="display-5 fw-bold mb-3">Nasıl Çalışır?</h2>
+      <p class="lead text-muted">
+        AntiVirüs, cihazınızı zararlı yazılımlardan korumak için çok katmanlı bir güvenlik yaklaşımı benimser.
+      </p>
+    </div>
+    
+    <div class="row g-4 align-items-center">
+      <div class="col-md-6 order-md-2">
+        <img src="/img/how-it-works.svg" alt="AntiVirüs Nasıl Çalışır" class="img-fluid">
       </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body text-center">
-            <div class="feature-icon bg-primary text-white rounded-circle mb-3">
-              <i class="fas fa-tachometer-alt"></i>
+      <div class="col-md-6 order-md-1">
+        <div class="steps">
+          <div class="d-flex mb-4">
+            <div class="me-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">1</div>
             </div>
-            <h3 class="h4">Batarya Optimizasyonu</h3>
-            <p class="text-muted">
-              Batarya tüketen uygulamaları tespit eder ve pil ömrünü uzatmak için optimizasyon önerileri sunar.
-            </p>
+            <div>
+              <h3 class="h5 fw-bold">Tarama ve Tespit</h3>
+              <p class="text-muted">
+                Gelişmiş algoritmalar ve imza veritabanı ile uygulamaları ve dosyaları tarayarak zararlı yazılımları tespit eder.
+              </p>
+            </div>
+          </div>
+          
+          <div class="d-flex mb-4">
+            <div class="me-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">2</div>
+            </div>
+            <div>
+              <h3 class="h5 fw-bold">Sürekli İzleme</h3>
+              <p class="text-muted">
+                Gerçek zamanlı koruma ile cihazınızdaki tüm aktiviteleri izler ve şüpheli davranışları tespit eder.
+              </p>
+            </div>
+          </div>
+          
+          <div class="d-flex mb-4">
+            <div class="me-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">3</div>
+            </div>
+            <div>
+              <h3 class="h5 fw-bold">Engelleme ve Temizleme</h3>
+              <p class="text-muted">
+                Tespit edilen tehditleri anında engeller ve gerekirse zararlı yazılımları cihazınızdan temizler.
+              </p>
+            </div>
+          </div>
+          
+          <div class="d-flex">
+            <div class="me-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">4</div>
+            </div>
+            <div>
+              <h3 class="h5 fw-bold">Güncel Koruma</h3>
+              <p class="text-muted">
+                Sürekli güncellenen tehdit veritabanı ile en yeni zararlı yazılımlara karşı bile koruma sağlar.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -120,168 +171,120 @@
 </section>
 
 <!-- İstatistikler -->
-<section class="bg-light py-5">
+<section class="py-5 bg-dark text-white">
   <div class="container py-4">
-    <div class="row text-center">
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="stat-item">
-          <div class="h1 text-primary mb-2">
-            <span class="counter">5</span>M+
-          </div>
-          <h5>İndirme</h5>
-        </div>
+    <div class="row g-4 text-center">
+      <div class="col-6 col-md-3">
+        <h2 class="display-5 fw-bold text-primary mb-2">10M+</h2>
+        <p class="mb-0">Aktif Kullanıcı</p>
       </div>
-      
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="stat-item">
-          <div class="h1 text-primary mb-2">
-            <span class="counter">99.7</span>%
-          </div>
-          <h5>Tespit Oranı</h5>
-        </div>
+      <div class="col-6 col-md-3">
+        <h2 class="display-5 fw-bold text-primary mb-2">99.7%</h2>
+        <p class="mb-0">Tespit Oranı</p>
       </div>
-      
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="stat-item">
-          <div class="h1 text-primary mb-2">
-            <span class="counter">150</span>M+
-          </div>
-          <h5>Tehdit Engellemesi</h5>
-        </div>
+      <div class="col-6 col-md-3">
+        <h2 class="display-5 fw-bold text-primary mb-2">50M+</h2>
+        <p class="mb-0">Engellenen Tehdit</p>
       </div>
-      
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="h1 text-primary mb-2">
-            <span class="counter">4.8</span>/5
-          </div>
-          <h5>Kullanıcı Puanı</h5>
-        </div>
+      <div class="col-6 col-md-3">
+        <h2 class="display-5 fw-bold text-primary mb-2">4.8</h2>
+        <p class="mb-0">Uygulama Puanı</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Nasıl Çalışır -->
+<!-- Kullanıcı Yorumları -->
 <section class="py-5">
-  <div class="container py-5">
-    <h2 class="text-center mb-5 display-5">Nasıl Çalışır?</h2>
-    
-    <div class="row align-items-center mb-5">
-      <div class="col-md-6 order-md-2">
-        <h3>1. Kapsamlı Tarama</h3>
-        <p class="lead">Gelişmiş tarama motorumuz cihazınızdaki tüm uygulamaları, dosyaları ve sistem ayarlarını analiz eder.</p>
-        <p>Zararlı yazılım imzalarını, şüpheli davranış kalıplarını ve potansiyel güvenlik açıklarını tespit eder. 
-        Hızlı tarama veya tam sistem taraması seçenekleriyle ihtiyacınıza uygun koruma sağlar.</p>
-      </div>
-      <div class="col-md-6 order-md-1 text-center mb-4 mb-md-0">
-        <img src="/img/scanning.png" alt="Tarama" class="img-fluid rounded shadow">
-      </div>
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <h2 class="display-5 fw-bold mb-3">Kullanıcılarımız Ne Diyor?</h2>
+      <p class="lead text-muted">
+        Binlerce kullanıcı AntiVirüs'e güveniyor. İşte bazı yorumlar.
+      </p>
     </div>
     
-    <div class="row align-items-center mb-5">
-      <div class="col-md-6">
-        <h3>2. Tehdit Tespiti ve Analizi</h3>
-        <p class="lead">Yapay zeka destekli analiz motoru, bulduğu her tehdidi detaylı olarak inceler.</p>
-        <p>Her tehdit risk seviyesine göre sınıflandırılır ve kullanıcıya şeffaf bir rapor sunulur.
-        Tehditler hakkında kapsamlı bilgiler ve koruma önerileri sağlanır.</p>
-      </div>
-      <div class="col-md-6 text-center mb-4 mb-md-0">
-        <img src="/img/analysis.png" alt="Tehdit Analizi" class="img-fluid rounded shadow">
-      </div>
-    </div>
-    
-    <div class="row align-items-center">
-      <div class="col-md-6 order-md-2">
-        <h3>3. Temizleme ve Koruma</h3>
-        <p class="lead">Tespit edilen tehditler için otomatik veya manuel temizleme seçenekleri sunar.</p>
-        <p>Zararlı yazılımlar güvenli bir şekilde kaldırılır, karantinaya alınır veya izole edilir.
-        Proaktif koruma sistemi, gelecekteki benzer tehditlere karşı savunma mekanizmalarını güçlendirir.</p>
-      </div>
-      <div class="col-md-6 order-md-1 text-center">
-        <img src="/img/protection.png" alt="Koruma" class="img-fluid rounded shadow">
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Müşteri Yorumları -->
-<section class="bg-light py-5">
-  <div class="container py-5">
-    <h2 class="text-center mb-5 display-5">Kullanıcılarımız Ne Diyor?</h2>
-    
-    <div class="row">
-      <div class="col-md-4 mb-4">
+    <div class="row g-4">
+      <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-3">
-              <div class="avatar me-3">
-                <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Kullanıcı" class="rounded-circle" width="60">
-              </div>
-              <div>
-                <h5 class="mb-0">Ayşe K.</h5>
-                <div class="text-warning mb-1">
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                </div>
+          <div class="card-body p-4">
+            <div class="d-flex mb-3">
+              <div class="text-warning">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
               </div>
             </div>
-            <p class="mb-0">
-              "Bu uygulama telefonumu bir süredir yavaşlatan sorunu tespit etti. Şimdi telefonum eskisinden daha hızlı çalışıyor ve pil ömrü uzadı."
+            <p class="mb-3">
+              "Telefonumu sürekli yavaşlatan zararlı yazılımlar vardı. AntiVirüs, bu zararlı yazılımları tespit edip temizledi ve telefonum eski performansına kavuştu. Kesinlikle tavsiye ediyorum!"
             </p>
+            <div class="d-flex align-items-center">
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <span class="text-primary fw-bold">AY</span>
+              </div>
+              <div class="ms-3">
+                <h5 class="mb-0">Ahmet Yılmaz</h5>
+                <small class="text-muted">İstanbul</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
-      <div class="col-md-4 mb-4">
+      <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-3">
-              <div class="avatar me-3">
-                <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="Kullanıcı" class="rounded-circle" width="60">
-              </div>
-              <div>
-                <h5 class="mb-0">Mehmet Y.</h5>
-                <div class="text-warning mb-1">
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star-half-alt"></i>
-                </div>
+          <div class="card-body p-4">
+            <div class="d-flex mb-3">
+              <div class="text-warning">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
               </div>
             </div>
-            <p class="mb-0">
-              "WiFi güvenlik özelliği sayesinde halka açık bir ağda bilgilerimin tehlikede olduğunu öğrendim. VPN koruması ile güvenli şekilde internete bağlanabiliyorum."
+            <p class="mb-3">
+              "Uygulama kilidi özelliği sayesinde çocuklarımın erişmesini istemediğim uygulamaları kolayca koruma altına alabiliyorum. Ayrıca Wi-Fi güvenlik taraması da halka açık ağlarda çok işime yarıyor."
             </p>
+            <div class="d-flex align-items-center">
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <span class="text-primary fw-bold">SÖ</span>
+              </div>
+              <div class="ms-3">
+                <h5 class="mb-0">Sevgi Öztürk</h5>
+                <small class="text-muted">Ankara</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
-      <div class="col-md-4 mb-4">
+      <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-3">
-              <div class="avatar me-3">
-                <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Kullanıcı" class="rounded-circle" width="60">
-              </div>
-              <div>
-                <h5 class="mb-0">Zeynep A.</h5>
-                <div class="text-warning mb-1">
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                </div>
+          <div class="card-body p-4">
+            <div class="d-flex mb-3">
+              <div class="text-warning">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star-half-alt"></i>
               </div>
             </div>
-            <p class="mb-0">
-              "Çocuğumun telefonuna kurdum, uygulama kilidi sayesinde hangi uygulamaları kullanabileceğini kontrol edebiliyorum. Ayrıca web filtreleme özellikleri de çok yararlı."
+            <p class="mb-3">
+              "Şirket telefonlarımız için toplu lisans aldık ve sonuçlardan çok memnunuz. Hafif bir uygulama olması, cihaz performansını etkilememesi ve kapsamlı koruması ile kesinlikle tavsiye ediyorum."
             </p>
+            <div class="d-flex align-items-center">
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <span class="text-primary fw-bold">MT</span>
+              </div>
+              <div class="ms-3">
+                <h5 class="mb-0">Mehmet Tekin</h5>
+                <small class="text-muted">İzmir</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -290,65 +293,14 @@
 </section>
 
 <!-- CTA -->
-<section class="bg-primary text-white text-center py-5">
-  <div class="container py-4">
-    <h2 class="display-5 mb-4">Cihazınızı Hemen Korumaya Alın</h2>
-    <p class="lead mb-4">Ücretsiz başlayın ve Android cihazınız için kapsamlı güvenlik çözümümüzün avantajlarından yararlanın.</p>
-    <div class="d-flex justify-content-center gap-3">
-      <a href="/auth/register" class="btn btn-light btn-lg px-4">
-        <i class="fas fa-user-plus me-2"></i> Hemen Kaydol
-      </a>
-      <a href="/auth/login" class="btn btn-outline-light btn-lg px-4">
-        <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
-      </a>
-    </div>
+<section class="py-5 bg-primary text-white">
+  <div class="container py-4 text-center">
+    <h2 class="display-5 fw-bold mb-4">Cihazınızı Hemen Korumaya Alın</h2>
+    <p class="lead mb-4">
+      Ücretsiz sürümü indirin ve AntiVirüs'ün sunduğu kapsamlı korumayı deneyimleyin.
+    </p>
+    <a href="/download" class="btn btn-light btn-lg px-4 me-md-2">
+      <i class="fas fa-download me-2"></i> Ücretsiz İndirin
+    </a>
   </div>
 </section>
-
-<style>
-  .feature-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-  }
-  
-  .stat-item {
-    padding: 20px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-  }
-  
-  .hero {
-    background: linear-gradient(135deg, #3a8eba 0%, #2c3e50 100%);
-  }
-</style>
-
-<!-- Counter Animation Script -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const counters = document.querySelectorAll('.counter');
-    
-    counters.forEach(counter => {
-      const target = parseFloat(counter.textContent);
-      let count = 0;
-      const speed = 2000; // Animation duration in milliseconds
-      const increment = target / (speed / 30); // 30 is approx fps
-      
-      const updateCount = () => {
-        if (count < target) {
-          count += increment;
-          counter.textContent = count > target ? target : count.toFixed(1).replace(/\.0$/, '');
-          setTimeout(updateCount, 30);
-        } else {
-          counter.textContent = target;
-        }
-      };
-      
-      updateCount();
-    });
-  });
-</script>

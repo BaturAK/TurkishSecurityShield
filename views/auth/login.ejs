@@ -1,88 +1,93 @@
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-      <div class="card auth-form border-0 shadow">
-        <div class="card-body p-4 p-md-5">
-          <div class="text-center mb-4">
-            <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
-            <h2 class="fw-bold">Hesabınıza Giriş Yapın</h2>
-            <p class="text-muted">Cihazınızı korumak için giriş yapın</p>
-          </div>
-          
-          <form action="/auth/login" method="POST">
-            <div class="mb-3">
-              <label for="email" class="form-label">E-posta Adresi</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                <input type="email" class="form-control" id="email" name="email" 
-                  placeholder="ornek@mail.com" required autofocus 
-                  value="<%= locals.formData ? formData.email : '' %>">
-              </div>
+<!-- Giriş Sayfası -->
+
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+              <img src="/img/logo.svg" alt="AntiVirüs" height="60" class="mb-3">
+              <h2 class="h3">AntiVirüs Hesabına Giriş Yap</h2>
+              <p class="text-muted">Güvenlik durumunuzu kontrol etmek için giriş yapın</p>
             </div>
             
-            <div class="mb-4">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label for="password" class="form-label">Şifre</label>
-                <a href="/auth/forgot-password" class="small text-primary">Şifremi Unuttum</a>
+            <% if (error) { %>
+              <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <%= error %>
               </div>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" class="form-control" id="password" name="password" 
-                  placeholder="Şifreniz" required minlength="6">
-                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                  <i class="fas fa-eye"></i>
+            <% } %>
+            
+            <form action="/auth/login" method="POST">
+              <div class="mb-3">
+                <label for="email" class="form-label">E-posta Adresi</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                  <input type="email" class="form-control" id="email" name="email" placeholder="E-posta adresinizi girin" required>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label for="password" class="form-label mb-0">Şifre</label>
+                  <a href="/auth/forgot-password" class="small text-decoration-none">Şifremi Unuttum</a>
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                  <input type="password" class="form-control" id="password" name="password" placeholder="Şifrenizi girin" required>
+                </div>
+              </div>
+              
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                <label class="form-check-label" for="rememberMe">Beni Hatırla</label>
+              </div>
+              
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
+                </button>
+                
+                <hr class="my-4">
+                
+                <div class="text-center mb-3">
+                  <span class="text-muted">veya şununla devam et</span>
+                </div>
+                
+                <button type="button" class="btn btn-outline-dark">
+                  <i class="fab fa-google me-2"></i> Google ile Giriş Yap
                 </button>
               </div>
-            </div>
+            </form>
             
-            <div class="form-check mb-4">
-              <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe" 
-                <%= locals.formData && formData.rememberMe ? 'checked' : '' %>>
-              <label class="form-check-label" for="rememberMe">
-                Beni hatırla
-              </label>
+            <div class="text-center mt-4">
+              <p class="mb-0">Hesabınız yok mu? <a href="/auth/register" class="fw-semibold text-decoration-none">Kaydolun</a></p>
             </div>
-            
-            <div class="d-grid mb-4">
-              <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
-              </button>
-            </div>
-            
-            <div class="text-center">
-              <p class="mb-0">Hesabınız yok mu? <a href="/auth/register" class="text-primary fw-bold">Kaydolun</a></p>
-            </div>
-          </form>
+          </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+          <p class="small text-muted">
+            Giriş yaparak <a href="/terms" class="text-decoration-none">Kullanım Şartlarımızı</a> ve 
+            <a href="/privacy" class="text-decoration-none">Gizlilik Politikamızı</a> kabul etmiş olursunuz.
+          </p>
         </div>
       </div>
-      
-      <div class="text-center mt-4">
-        <p class="text-muted">
-          <small>
-            Giriş yaparak, <a href="/terms" class="text-primary">Kullanım Şartları</a> ve 
-            <a href="/privacy" class="text-primary">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
-          </small>
-        </p>
+    </div>
+  </div>
+</section>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">
+        <h5><i class="fas fa-info-circle me-2"></i> Demo Bilgisi</h5>
+        <p class="mb-1">Bu bir demo uygulamasıdır. Aşağıdaki bilgilerle giriş yapabilirsiniz:</p>
+        <ul class="mb-0">
+          <li><strong>Admin Kullanıcısı:</strong> E-posta: admin@example.com, Şifre: password</li>
+          <li><strong>Normal Kullanıcı:</strong> Herhangi bir e-posta adresi ve şifre olarak "password" kullanın</li>
+        </ul>
       </div>
     </div>
   </div>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    
-    if (togglePassword && passwordInput) {
-      togglePassword.addEventListener('click', function () {
-        // Şifre görünürlüğünü değiştir
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        
-        // İkon değiştir
-        this.querySelector('i').classList.toggle('fa-eye');
-        this.querySelector('i').classList.toggle('fa-eye-slash');
-      });
-    }
-  });
-</script>

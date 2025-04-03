@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="500" viewBox="0 0 600 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Telefon Çerçevesi -->
+  <rect x="150" y="50" width="300" height="400" rx="20" fill="#1F2937" />
+  <rect x="160" y="60" width="280" height="380" rx="12" fill="#F3F4F6" />
+  
+  <!-- Uygulama Arayüzü -->
+  <rect x="160" y="60" width="280" height="70" rx="12" fill="#4F46E5" />
+  
+  <!-- App Logo ve Başlık -->
+  <circle cx="190" cy="95" r="20" fill="white" fill-opacity="0.2" />
+  <path d="M185 95L190 100L200 90" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="220" y="100" font-family="Arial, sans-serif" font-weight="bold" font-size="18" fill="white">AntiVirüs</text>
+  
+  <!-- Ana Tarama Butonu -->
+  <circle cx="300" cy="200" r="60" fill="#4F46E5" fill-opacity="0.1" stroke="#4F46E5" stroke-width="4" />
+  <circle cx="300" cy="200" r="50" fill="#4F46E5" />
+  <path d="M285 200L295 210L315 190" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Tarama Durumu -->
+  <text x="300" y="275" font-family="Arial, sans-serif" font-weight="bold" font-size="16" fill="#1F2937" text-anchor="middle">Korumalı</text>
+  
+  <!-- Alt Menü Butonları -->
+  <rect x="180" y="350" width="60" height="60" rx="15" fill="#F3F4F6" stroke="#4F46E5" stroke-width="2" />
+  <rect x="270" y="350" width="60" height="60" rx="15" fill="#F3F4F6" stroke="#4F46E5" stroke-width="2" />
+  <rect x="360" y="350" width="60" height="60" rx="15" fill="#F3F4F6" stroke="#4F46E5" stroke-width="2" />
+  
+  <!-- Buton İkonları -->
+  <path d="M205 380L215 370L215 390" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="300" cy="380" r="10" stroke="#4F46E5" stroke-width="2" />
+  <path d="M380 375L385 380L390 375M385 380L385 385" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Güvenlik Kalkanı Efektleri -->
+  <circle cx="300" cy="200" r="80" stroke="#4F46E5" stroke-width="2" stroke-dasharray="10 5" />
+  <circle cx="300" cy="200" r="100" stroke="#4F46E5" stroke-width="1" stroke-dasharray="5 10" />
+  
+  <!-- Küçük Tehdit İkonları (engellenmiş) -->
+  <circle cx="230" cy="150" r="8" fill="#EF4444" opacity="0.5" />
+  <line x1="225" y1="145" x2="235" y2="155" stroke="white" stroke-width="2" />
+  <line x1="235" y1="145" x2="225" y2="155" stroke="white" stroke-width="2" />
+  
+  <circle cx="370" cy="170" r="8" fill="#F59E0B" opacity="0.5" />
+  <line x1="365" y1="165" x2="375" y2="175" stroke="white" stroke-width="2" />
+  <line x1="375" y1="165" x2="365" y2="175" stroke="white" stroke-width="2" />
+  
+  <circle cx="350" cy="250" r="8" fill="#EF4444" opacity="0.5" />
+  <line x1="345" y1="245" x2="355" y2="255" stroke="white" stroke-width="2" />
+  <line x1="355" y1="245" x2="345" y2="255" stroke="white" stroke-width="2" />
+  
+  <!-- Dekoratif Elementler -->
+  <circle cx="100" cy="100" r="30" fill="#4F46E5" fill-opacity="0.1" />
+  <circle cx="500" cy="150" r="40" fill="#10B981" fill-opacity="0.1" />
+  <circle cx="150" cy="400" r="25" fill="#F59E0B" fill-opacity="0.1" />
+  <circle cx="450" cy="350" r="35" fill="#3B82F6" fill-opacity="0.1" />
+</svg>

@@ -6,10 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Aktif menü öğesini işaretle
   markActiveMenuItem();
   
-  // Tarama ilerleme durumunu kontrol et (varsa)
+  // Tarama ilerleme kontrolü
   initScanProgress();
   
-  // Tehdit temizleme butonlarını initialize et
+  // Tehdit temizleme butonları
   initThreatCleanButtons();
 });
 
@@ -17,86 +17,104 @@ document.addEventListener('DOMContentLoaded', function() {
  * Mevcut sayfanın URL'ine göre ilgili menü öğesini aktif olarak işaretler
  */
 function markActiveMenuItem() {
-  const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+  const currentLocation = window.location.pathname;
   
-  navLinks.forEach(link => {
+  // Ana menü öğeleri
+  document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
     const href = link.getAttribute('href');
-    if (href === currentPath || 
-        (href !== '/' && currentPath.startsWith(href))) {
+    
+    // Ana sayfa için özel kontrol
+    if (href === '/' && currentLocation === '/') {
+      link.classList.add('active');
+    } 
+    // Diğer sayfalar için kontrol
+    else if (href !== '/' && currentLocation.startsWith(href)) {
       link.classList.add('active');
     }
   });
+  
+  // Admin sidebar menü öğeleri
+  if (document.querySelector('.admin-sidebar')) {
+    document.querySelectorAll('.admin-sidebar .nav-link').forEach(link => {
+      const href = link.getAttribute('href');
+      
+      if (currentLocation === href || 
+          (href !== '/admin' && currentLocation.startsWith(href))) {
+        link.classList.add('active');
+      }
+    });
+  }
 }
 
 /**
  * Tarama ilerleme durumunu kontrol eden ve güncelleyen fonksiyon
  */
 function initScanProgress() {
-  const scanProgressContainer = document.getElementById('scan-progress-container');
-  if (!scanProgressContainer) return;
+  const scanProgressElement = document.getElementById('scanProgress');
   
-  const scanId = scanProgressContainer.dataset.scanId;
-  if (!scanId) return;
+  if (!scanProgressElement) {
+    return;
+  }
   
-  const progressElement = document.getElementById('scan-progress');
-  const progressTextElement = document.getElementById('scan-progress-text');
-  const statusTextElement = document.getElementById('scan-status-text');
+  const scanId = scanProgressElement.dataset.scanId;
   
-  // İlk durumu kontrol et
+  if (!scanId) {
+    console.error('Tarama ID\'si bulunamadı');
+    return;
+  }
+  
+  // 2 saniyede bir tarama durumunu kontrol et
+  const intervalId = setInterval(checkScanStatus, 2000);
+  
+  // İlk kontrolü hemen yap
   checkScanStatus();
-  
-  // Her 2 saniyede bir durumu güncelle
-  const intervalId = setInterval(() => {
-    checkScanStatus();
-  }, 2000);
   
   function checkScanStatus() {
     fetch(`/api/scans/${scanId}/status`)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Tarama durumu alınamadı');
+        }
+        return response.json();
+      })
       .then(data => {
-        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
-          clearInterval(intervalId);
+        if (data.status === 'success') {
+          const scanData = data.data;
+          const progress = scanData.progress;
+          const statusText = scanData.statusText;
           
-          if (data.status === 'COMPLETED') {
-            updateScanProgress(100, 'Tarama tamamlandı');
-            
-            // Sayfayı 3 saniye sonra sonuçlara yönlendir
+          // İlerleme çubuğunu ve durum metnini güncelle
+          updateScanProgress(progress, statusText);
+          
+          // Tarama tamamlandıysa, sayfayı sonuç sayfasına yönlendir
+          if (scanData.status === 'COMPLETED') {
+            clearInterval(intervalId);
             setTimeout(() => {
-              window.location.href = `/scans/${scanId}/results`;
-            }, 3000);
-          } else {
-            updateScanProgress(data.progress, 'Tarama başarısız oldu');
+              window.location.href = `/scan-result/${scanId}`;
+            }, 1000);
           }
         } else {
-          updateScanProgress(data.progress, 'Taranıyor...');
+          console.error('Tarama durumu alınamadı:', data.message);
         }
       })
       .catch(error => {
-        console.error('Tarama durumu alınamadı:', error);
-        clearInterval(intervalId);
-        updateScanProgress(0, 'Bağlantı hatası');
+        console.error('Tarama durumu kontrol edilirken hata:', error);
       });
   }
   
   function updateScanProgress(progress, statusText) {
-    if (progressElement) {
-      progressElement.style.width = `${progress}%`;
-      progressElement.setAttribute('aria-valuenow', progress);
+    // İlerleme çubuğunu güncelle
+    const progressBar = scanProgressElement.querySelector('.progress-bar');
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute('aria-valuenow', progress);
+      progressBar.textContent = `${progress}%`;
     }
     
-    if (progressTextElement) {
-      progressTextElement.textContent = `${Math.round(progress)}%`;
-    }
-    
-    if (statusTextElement) {
-      statusTextElement.textContent = statusText;
-    }
-    
-    // Dairesel ilerleme için
-    const circleProgress = document.querySelector('.progress-circle');
-    if (circleProgress) {
-      circleProgress.style.background = `conic-gradient(var(--primary-color) ${progress}%, var(--light-color) 0%)`;
+    // Durum metnini güncelle
+    const statusElement = scanProgressElement.querySelector('.scan-status');
+    if (statusElement && statusText) {
+      statusElement.textContent = statusText;
     }
   }
 }
@@ -105,57 +123,73 @@ function initScanProgress() {
  * Tehdit temizleme butonlarını initialize eden fonksiyon
  */
 function initThreatCleanButtons() {
-  const cleanButtons = document.querySelectorAll('.clean-threat-btn');
-  
-  cleanButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const threatId = this.dataset.threatId;
-      const threatCard = document.getElementById(`threat-${threatId}`);
+  document.querySelectorAll('.clean-threat-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
       
-      if (!threatId || !threatCard) return;
+      const threatId = this.dataset.threatId;
+      const card = this.closest('.threat-card');
+      
+      if (!threatId) {
+        console.error('Tehdit ID\'si bulunamadı');
+        return;
+      }
       
       // Buton durumunu güncelle
       this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Temizleniyor...';
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Temizleniyor...';
       
-      // API'ye temizleme isteği gönder
+      // Tehdit temizleme isteği gönder
       fetch(`/api/threats/${threatId}/clean`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Tehdit temizleme işlemi başarısız');
+        }
+        return response.json();
+      })
       .then(data => {
-        if (data.success) {
-          // Başarılı temizleme
-          threatCard.classList.add('bg-light');
-          threatCard.querySelector('.threat-status').innerHTML = 
-            '<span class="badge bg-success"><i class="fas fa-check me-1"></i> Temizlendi</span>';
-          
-          this.innerHTML = '<i class="fas fa-check me-1"></i> Temizlendi';
-          this.classList.remove('btn-danger');
-          this.classList.add('btn-success');
-          this.disabled = true;
-          
-          // Bildirim göster
-          showAlert('success', `"${data.threat.name}" tehdidi başarıyla temizlendi.`);
+        if (data.status === 'success') {
+          // Başarılı ise, kart görünümünü güncelle
+          if (card) {
+            card.classList.remove('border-danger', 'border-warning');
+            card.classList.add('border-success');
+            
+            // Temizlendi etiketini göster
+            const badge = card.querySelector('.threat-status');
+            if (badge) {
+              badge.textContent = 'Temizlendi';
+              badge.classList.remove('bg-danger', 'bg-warning');
+              badge.classList.add('bg-success');
+            }
+            
+            // Butonu güncelle
+            this.innerHTML = '<i class="fas fa-check me-2"></i> Temizlendi';
+            this.classList.remove('btn-danger', 'btn-warning');
+            this.classList.add('btn-success');
+            this.disabled = true;
+            
+            // Bildirim göster
+            showAlert('success', 'Tehdit başarıyla temizlendi!');
+          }
         } else {
-          // Temizleme hatası
-          this.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Temizleme Başarısız';
+          // Hata durumunda
           this.disabled = false;
-          
-          // Hata bildirim
-          showAlert('danger', `Tehdit temizlenirken bir hata oluştu: ${data.error}`);
+          this.innerHTML = '<i class="fas fa-broom me-2"></i> Tekrar Dene';
+          showAlert('danger', data.message || 'Tehdit temizlenirken bir hata oluştu.');
         }
       })
       .catch(error => {
-        console.error('Tehdit temizleme hatası:', error);
-        this.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Bağlantı Hatası';
-        this.disabled = false;
+        console.error('Tehdit temizlenirken hata:', error);
         
-        // Bağlantı hatası bildirimi
-        showAlert('danger', 'Sunucu ile bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
+        // Buton durumunu eski haline getir
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-broom me-2"></i> Tekrar Dene';
+        showAlert('danger', 'Tehdit temizlenirken bir hata oluştu.');
       });
     });
   });
@@ -167,36 +201,43 @@ function initThreatCleanButtons() {
  * @param {string} message - Gösterilecek mesaj
  */
 function showAlert(type, message) {
-  const alertContainer = document.createElement('div');
-  alertContainer.className = `alert alert-${type} alert-dismissible fade show`;
-  alertContainer.setAttribute('role', 'alert');
+  // Daha önce oluşturulmuş bir alert container var mı kontrol et
+  let alertContainer = document.getElementById('alertContainer');
   
-  // İkona karar ver
-  let icon = 'info-circle';
-  if (type === 'success') icon = 'check-circle';
-  if (type === 'danger') icon = 'exclamation-circle';
-  if (type === 'warning') icon = 'exclamation-triangle';
-  
-  alertContainer.innerHTML = `
-    <i class="fas fa-${icon} me-2"></i> ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  
-  // Bildirim alanı varsa oraya ekle, yoksa body'nin en üstüne ekle
-  const alertArea = document.querySelector('.alert-area') || document.body;
-  if (alertArea === document.body) {
-    alertContainer.style.position = 'fixed';
-    alertContainer.style.top = '20px';
-    alertContainer.style.right = '20px';
-    alertContainer.style.zIndex = '9999';
-    alertContainer.style.maxWidth = '400px';
+  // Yoksa oluştur
+  if (!alertContainer) {
+    alertContainer = document.createElement('div');
+    alertContainer.id = 'alertContainer';
+    alertContainer.className = 'position-fixed top-0 end-0 p-3';
+    alertContainer.style.zIndex = '1050';
+    document.body.appendChild(alertContainer);
   }
   
-  alertArea.appendChild(alertContainer);
+  // Bildirim ID'si
+  const alertId = 'alert-' + Date.now();
   
-  // 5 saniye sonra otomatik kapat
-  setTimeout(() => {
-    alertContainer.classList.remove('show');
-    setTimeout(() => alertContainer.remove(), 300);
-  }, 5000);
+  // Alert HTML'i
+  const alertHtml = `
+    <div id="${alertId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button>
+      </div>
+    </div>
+  `;
+  
+  // Alert'i ekle
+  alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+  
+  // Toast'u başlat
+  const toastElement = document.getElementById(alertId);
+  const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+  toast.show();
+  
+  // Otomatik kaldırma
+  toastElement.addEventListener('hidden.bs.toast', function() {
+    this.remove();
+  });
 }

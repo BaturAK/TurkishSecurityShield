@@ -5,19 +5,34 @@
 
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { v4: uuidv4 } = require('uuid');
+
+// Models
 const User = require('../models/user');
 const Threat = require('../models/threat');
 const ScanResult = require('../models/scanResult');
 
-// Admin paneli ana sayfa
-router.get('/', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
+// Middleware
+const authMiddleware = require('../middleware/auth');
+
+/**
+ * Middleware zincirleri
+ * Tüm admin sayfaları için oturum açmış ve admin yetkisine sahip olma kontrolü
+ */
+router.use(authMiddleware.isAuthenticated);
+router.use(authMiddleware.isAdmin);
+
+/**
+ * Admin Dashboard
+ * GET /admin
+ */
+router.get('/', async (req, res) => {
   try {
-    // İstatistikleri al
+    // İstatistikleri getir
     const userCount = await User.count();
     const threatCount = await Threat.count();
     const scanCount = await ScanResult.count();
-    const cleanedThreats = await Threat.count({ isCleaned: true });
+    const activeThreats = await Threat.count({ isCleaned: false });
     
     // Son kullanıcıları getir
     const recentUsers = await User.findRecent(5);
@@ -26,273 +41,372 @@ router.get('/', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
     const recentScans = await ScanResult.findRecent(5);
     
     res.render('admin/dashboard', {
-      title: 'Admin Paneli',
+      title: 'Admin Panel',
       stats: {
         userCount,
         threatCount,
         scanCount,
-        cleanedThreats,
-        activeThreats: threatCount - cleanedThreats
+        activeThreats
       },
       recentUsers,
       recentScans
     });
   } catch (error) {
-    console.error('Admin panel hatası:', error);
-    req.session.flashMessages = {
-      error: 'Admin paneli yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/');
+    console.error('Admin dashboard yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Admin dashboard yüklenirken bir hata oluştu.'
+      }
+    });
   }
 });
 
-// Kullanıcı Yönetimi
-router.get('/users', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
+/**
+ * Admin Kullanıcı Yönetimi Sayfası
+ * GET /admin/users
+ */
+router.get('/users', async (req, res) => {
   try {
+    // Tüm kullanıcıları getir
     const users = await User.findAll();
     
     res.render('admin/users', {
-      title: 'Kullanıcı Yönetimi',
-      users
+      title: 'Admin - Kullanıcı Yönetimi',
+      users,
+      success: req.query.success,
+      error: req.query.error
     });
   } catch (error) {
-    console.error('Kullanıcı yönetimi hatası:', error);
-    req.session.flashMessages = {
-      error: 'Kullanıcı listesi yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/admin');
+    console.error('Kullanıcı yönetimi sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Kullanıcı listesi yüklenirken bir hata oluştu.'
+      }
+    });
   }
 });
 
-// Tek Kullanıcı Detayı
-router.get('/users/:userId', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
+/**
+ * Admin Kullanıcı Detay Sayfası
+ * GET /admin/users/:userId
+ */
+router.get('/users/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
+    
+    // Kullanıcıyı getir
     const user = await User.findById(userId);
     
     if (!user) {
-      req.session.flashMessages = {
-        error: 'Kullanıcı bulunamadı.'
-      };
-      return res.redirect('/admin/users');
-    }
-    
-    // Kullanıcı taramalarını al
-    const scanHistory = await ScanResult.findByUserId(userId, 10);
-    
-    res.render('admin/user-detail', {
-      title: 'Kullanıcı Detayı',
-      user,
-      scanHistory
-    });
-  } catch (error) {
-    console.error('Kullanıcı detay hatası:', error);
-    req.session.flashMessages = {
-      error: 'Kullanıcı bilgileri yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/admin/users');
-  }
-});
-
-// Kullanıcı Admin Yetkisi Ver
-router.post('/users/:userId/make-admin', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const user = await User.findById(userId);
-    
-    if (!user) {
-      req.session.flashMessages = {
-        error: 'Kullanıcı bulunamadı.'
-      };
-      return res.redirect('/admin/users');
-    }
-    
-    // Admin yetkisini güncelle
-    user.isAdmin = true;
-    await user.save();
-    
-    req.session.flashMessages = {
-      success: `${user.displayName || user.email} kullanıcısına admin yetkisi verildi.`
-    };
-    
-    res.redirect(`/admin/users/${userId}`);
-  } catch (error) {
-    console.error('Admin yetkisi verme hatası:', error);
-    req.session.flashMessages = {
-      error: 'Admin yetkisi verilirken bir hata oluştu.'
-    };
-    res.redirect('/admin/users');
-  }
-});
-
-// Tehdit Yönetimi
-router.get('/threats', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
-  try {
-    const threats = await Threat.findAll();
-    
-    res.render('admin/threats', {
-      title: 'Tehdit Yönetimi',
-      threats
-    });
-  } catch (error) {
-    console.error('Tehdit yönetimi hatası:', error);
-    req.session.flashMessages = {
-      error: 'Tehdit listesi yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/admin');
-  }
-});
-
-// Tehdit Temizle
-router.post('/threats/:threatId/clean', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
-  try {
-    const threatId = req.params.threatId;
-    const threat = await Threat.findById(threatId);
-    
-    if (!threat) {
-      req.session.flashMessages = {
-        error: 'Tehdit bulunamadı.'
-      };
-      return res.redirect('/admin/threats');
-    }
-    
-    // Tehdidi temizle
-    threat.clean();
-    await threat.save();
-    
-    req.session.flashMessages = {
-      success: `"${threat.name}" tehdidi başarıyla temizlendi.`
-    };
-    
-    res.redirect('/admin/threats');
-  } catch (error) {
-    console.error('Tehdit temizleme hatası:', error);
-    req.session.flashMessages = {
-      error: 'Tehdit temizlenirken bir hata oluştu.'
-    };
-    res.redirect('/admin/threats');
-  }
-});
-
-// Tarama Yönetimi
-router.get('/scans', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
-  try {
-    const scans = await ScanResult.findRecent(50);
-    
-    res.render('admin/scans', {
-      title: 'Tarama Yönetimi',
-      scans
-    });
-  } catch (error) {
-    console.error('Tarama yönetimi hatası:', error);
-    req.session.flashMessages = {
-      error: 'Tarama listesi yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/admin');
-  }
-});
-
-// Sistem İstatistikleri
-router.get('/stats', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
-  try {
-    // İstatistikleri hesapla
-    const userCount = await User.count();
-    const usersByDay = []; // Bu veri gerçek uygulamada veritabanından çekilir
-    
-    // Test için rastgele veriler oluştur
-    for (let i = 30; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      usersByDay.push({
-        date: date.toISOString().split('T')[0],
-        count: Math.floor(Math.random() * 50) + 1
+      return res.status(404).render('error', {
+        title: 'Hata',
+        error: {
+          status: 404,
+          message: 'Kullanıcı bulunamadı.'
+        }
       });
     }
     
-    // Tarama istatistikleri
-    const scanStats = {
-      total: await ScanResult.count(),
-      byType: {
-        QUICK: await ScanResult.count({ type: 'QUICK' }),
-        FULL: await ScanResult.count({ type: 'FULL' }),
-        WIFI: await ScanResult.count({ type: 'WIFI' }),
-        QR: await ScanResult.count({ type: 'QR' })
-      }
-    };
+    // Kullanıcının taramalarını getir
+    const scans = await ScanResult.findByUserId(userId, 10);
     
-    // Tehdit istatistikleri
-    const threatStats = {
-      total: await Threat.count(),
-      cleaned: await Threat.count({ isCleaned: true }),
-      active: await Threat.count({ isCleaned: false }),
-      byType: {
-        Trojan: await Threat.count({ type: 'Trojan' }),
-        Virus: await Threat.count({ type: 'Virus' }),
-        Spyware: await Threat.count({ type: 'Spyware' }),
-        Adware: await Threat.count({ type: 'Adware' }),
-        Ransomware: await Threat.count({ type: 'Ransomware' }),
-        Worm: await Threat.count({ type: 'Worm' }),
-        Rootkit: await Threat.count({ type: 'Rootkit' })
-      }
-    };
-    
-    res.render('admin/stats', {
-      title: 'Sistem İstatistikleri',
-      userCount,
-      usersByDay,
-      scanStats,
-      threatStats
+    res.render('admin/user-detail', {
+      title: 'Admin - Kullanıcı Detayı',
+      user,
+      scans,
+      success: req.query.success,
+      error: req.query.error
     });
   } catch (error) {
-    console.error('İstatistik hatası:', error);
-    req.session.flashMessages = {
-      error: 'İstatistikler yüklenirken bir hata oluştu.'
-    };
-    res.redirect('/admin');
+    console.error('Kullanıcı detay sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Kullanıcı detayları yüklenirken bir hata oluştu.'
+      }
+    });
   }
 });
 
-// Test Tehdit Oluştur
-router.post('/create-test-threat', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
+/**
+ * Admin Tarama Yönetimi Sayfası
+ * GET /admin/scans
+ */
+router.get('/scans', async (req, res) => {
   try {
-    // Rastgele tehdit oluştur
-    const threat = Threat.getRandomThreats(1)[0];
-    await threat.save();
+    // Tüm taramaları getir (son 100)
+    const scans = await ScanResult.findRecent(100);
     
-    req.session.flashMessages = {
-      success: `Test tehdidi oluşturuldu: ${threat.name}`
-    };
-    
-    res.redirect('/admin/threats');
+    res.render('admin/scans', {
+      title: 'Admin - Tarama Yönetimi',
+      scans,
+      success: req.query.success,
+      error: req.query.error
+    });
   } catch (error) {
-    console.error('Test tehdit oluşturma hatası:', error);
-    req.session.flashMessages = {
-      error: 'Test tehdit oluşturulurken bir hata oluştu.'
-    };
-    res.redirect('/admin');
+    console.error('Tarama yönetimi sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Tarama listesi yüklenirken bir hata oluştu.'
+      }
+    });
   }
 });
 
-// Test Tarama Oluştur
-router.post('/create-test-scan', auth.isAuthenticated, auth.isAdmin, async (req, res) => {
+/**
+ * Admin Tarama Detay Sayfası
+ * GET /admin/scans/:scanId
+ */
+router.get('/scans/:scanId', async (req, res) => {
   try {
-    const { userId, type } = req.body;
+    const scanId = req.params.scanId;
     
-    // Simüle edilmiş tarama oluştur
-    const scan = ScanResult.createSimulatedScan(type || 'QUICK', userId);
-    await scan.save();
+    // Taramayı getir
+    const scan = await ScanResult.findById(scanId);
     
-    req.session.flashMessages = {
-      success: `Test taraması oluşturuldu: ${scan.id}`
-    };
+    if (!scan) {
+      return res.status(404).render('error', {
+        title: 'Hata',
+        error: {
+          status: 404,
+          message: 'Tarama bulunamadı.'
+        }
+      });
+    }
     
-    res.redirect('/admin/scans');
+    // Kullanıcıyı getir (eğer tarama bir kullanıcıya aitse)
+    let user = null;
+    if (scan.userId) {
+      user = await User.findById(scan.userId);
+    }
+    
+    res.render('admin/scan-detail', {
+      title: 'Admin - Tarama Detayı',
+      scan,
+      user,
+      success: req.query.success,
+      error: req.query.error
+    });
   } catch (error) {
-    console.error('Test tarama oluşturma hatası:', error);
-    req.session.flashMessages = {
-      error: 'Test tarama oluşturulurken bir hata oluştu.'
-    };
-    res.redirect('/admin');
+    console.error('Tarama detay sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Tarama detayları yüklenirken bir hata oluştu.'
+      }
+    });
+  }
+});
+
+/**
+ * Admin İstatistikler Sayfası
+ * GET /admin/stats
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    // İstatistikleri getir
+    const userCount = await User.count();
+    const threatCount = await Threat.count();
+    const scanCount = await ScanResult.count();
+    const activeThreats = await Threat.count({ isCleaned: false });
+    const cleanedThreats = await Threat.count({ isCleaned: true });
+    
+    // Threat type dağılımı
+    const threats = await Threat.findAll();
+    
+    // Tarama tipi dağılımı
+    const scans = await ScanResult.findRecent(500);
+    
+    // Tiplerin dağılımını hesapla
+    const threatTypeDistribution = {};
+    threats.forEach(threat => {
+      if (!threatTypeDistribution[threat.type]) {
+        threatTypeDistribution[threat.type] = 0;
+      }
+      threatTypeDistribution[threat.type]++;
+    });
+    
+    const scanTypeDistribution = {};
+    scans.forEach(scan => {
+      if (!scanTypeDistribution[scan.type]) {
+        scanTypeDistribution[scan.type] = 0;
+      }
+      scanTypeDistribution[scan.type]++;
+    });
+    
+    res.render('admin/stats', {
+      title: 'Admin - İstatistikler',
+      stats: {
+        userCount,
+        threatCount,
+        scanCount,
+        activeThreats,
+        cleanedThreats,
+        threatTypeDistribution,
+        scanTypeDistribution
+      }
+    });
+  } catch (error) {
+    console.error('İstatistikler sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'İstatistikler yüklenirken bir hata oluştu.'
+      }
+    });
+  }
+});
+
+/**
+ * Kullanıcı Ekleme (POST işlemi)
+ * POST /admin/users/add
+ */
+router.post('/users/add', async (req, res) => {
+  try {
+    const { email, displayName, isAdmin } = req.body;
+    
+    if (!email) {
+      return res.redirect('/admin/users?error=E-posta adresi gereklidir');
+    }
+    
+    // Kullanıcı var mı kontrol et
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      return res.redirect('/admin/users?error=Bu e-posta adresi zaten kullanılıyor');
+    }
+    
+    // Yeni kullanıcı oluştur
+    const user = new User(
+      uuidv4(),
+      email,
+      displayName || email.split('@')[0],
+      null,
+      isAdmin === 'true'
+    );
+    
+    await user.save();
+    
+    res.redirect('/admin/users?success=Kullanıcı başarıyla eklendi');
+  } catch (error) {
+    console.error('Kullanıcı eklenirken hata:', error);
+    res.redirect('/admin/users?error=Kullanıcı eklenirken bir hata oluştu');
+  }
+});
+
+/**
+ * Kullanıcı Güncelleme (POST işlemi)
+ * POST /admin/users/update
+ */
+router.post('/users/update', async (req, res) => {
+  try {
+    const { userId, email, displayName, isAdmin } = req.body;
+    
+    if (!userId) {
+      return res.redirect('/admin/users?error=Kullanıcı ID gereklidir');
+    }
+    
+    // Kullanıcıyı getir
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.redirect('/admin/users?error=Kullanıcı bulunamadı');
+    }
+    
+    // E-posta değiştiyse, daha önce kullanılıyor mu kontrol et
+    if (email && email !== user.email) {
+      const existingUser = await User.findByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.redirect(`/admin/users/${userId}?error=Bu e-posta adresi zaten kullanılıyor`);
+      }
+      user.email = email;
+    }
+    
+    // Kullanıcı bilgilerini güncelle
+    if (displayName) user.displayName = displayName;
+    if (isAdmin !== undefined) user.isAdmin = isAdmin === 'true';
+    
+    await user.save();
+    
+    res.redirect(`/admin/users/${userId}?success=Kullanıcı başarıyla güncellendi`);
+  } catch (error) {
+    console.error('Kullanıcı güncellenirken hata:', error);
+    res.redirect('/admin/users?error=Kullanıcı güncellenirken bir hata oluştu');
+  }
+});
+
+/**
+ * Kullanıcı Silme (POST işlemi)
+ * POST /admin/users/delete
+ */
+router.post('/users/delete', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.redirect('/admin/users?error=Kullanıcı ID gereklidir');
+    }
+    
+    // Admin kullanıcısı silinemez kontrolü
+    if (userId === 'admin') {
+      return res.redirect('/admin/users?error=Admin kullanıcısı silinemez');
+    }
+    
+    // Kullanıcıyı getir
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.redirect('/admin/users?error=Kullanıcı bulunamadı');
+    }
+    
+    // Kullanıcıyı sil
+    // Bu bir demo, gerçek bir uygulama için veritabanında silme işlemi yapılmalı
+    const db = require('../config/database').getDb();
+    await db.collection('users').deleteOne({ id: userId });
+    
+    res.redirect('/admin/users?success=Kullanıcı başarıyla silindi');
+  } catch (error) {
+    console.error('Kullanıcı silinirken hata:', error);
+    res.redirect('/admin/users?error=Kullanıcı silinirken bir hata oluştu');
+  }
+});
+
+/**
+ * Tarama Silme (POST işlemi)
+ * POST /admin/scans/delete
+ */
+router.post('/scans/delete', async (req, res) => {
+  try {
+    const { scanId } = req.body;
+    
+    if (!scanId) {
+      return res.redirect('/admin/scans?error=Tarama ID gereklidir');
+    }
+    
+    // Taramayı getir
+    const scan = await ScanResult.findById(scanId);
+    
+    if (!scan) {
+      return res.redirect('/admin/scans?error=Tarama bulunamadı');
+    }
+    
+    // Taramayı sil
+    // Bu bir demo, gerçek bir uygulama için veritabanında silme işlemi yapılmalı
+    const db = require('../config/database').getDb();
+    await db.collection('scan_results').deleteOne({ id: scanId });
+    
+    res.redirect('/admin/scans?success=Tarama başarıyla silindi');
+  } catch (error) {
+    console.error('Tarama silinirken hata:', error);
+    res.redirect('/admin/scans?error=Tarama silinirken bir hata oluştu');
   }
 });
 

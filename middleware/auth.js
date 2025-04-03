@@ -1,6 +1,6 @@
 /**
  * Auth Middleware
- * Kimlik doğrulama ve yetkilendirme işlemlerini gerçekleştirir
+ * Kimlik doğrulama ve yetkilendirme için middleware fonksiyonları
  */
 
 /**
@@ -11,17 +11,14 @@
  */
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
+    // Kullanıcı oturum açmış, devam et
     return next();
   }
   
-  // Kullanıcının gitmek istediği sayfayı kaydederek, giriş sonrası yönlendirme yapılabilir
+  // İstenilen URL'i kaydet, giriş yaptıktan sonra yönlendirmek için
   req.session.returnTo = req.originalUrl;
   
-  // Mesaj ekle ve giriş sayfasına yönlendir
-  req.session.flashMessages = {
-    error: 'Bu sayfayı görüntülemek için giriş yapmalısınız.'
-  };
-  
+  // Kullanıcı oturum açmamış, giriş sayfasına yönlendir
   res.redirect('/auth/login');
 }
 
@@ -33,13 +30,17 @@ function isAuthenticated(req, res, next) {
  */
 function isAdmin(req, res, next) {
   if (req.session && req.session.user && req.session.user.isAdmin) {
+    // Kullanıcı admin yetkisine sahip, devam et
     return next();
   }
   
-  // Erişim reddedildi sayfasına yönlendir
-  res.status(403).render('access-denied', {
+  // Kullanıcı admin yetkisine sahip değil, hata sayfasına yönlendir
+  res.status(403).render('error', {
     title: 'Erişim Reddedildi',
-    message: 'Bu sayfayı görüntülemek için admin yetkisine sahip olmalısınız.'
+    error: {
+      status: 403,
+      message: 'Bu sayfaya erişim yetkiniz bulunmamaktadır.'
+    }
   });
 }
 
@@ -50,12 +51,13 @@ function isAdmin(req, res, next) {
  * @param {Function} next - Sonraki middleware
  */
 function isNotAuthenticated(req, res, next) {
-  if (!req.session || !req.session.user) {
-    return next();
+  if (req.session && req.session.user) {
+    // Kullanıcı zaten oturum açmış, dashboard'a yönlendir
+    return res.redirect('/dashboard');
   }
   
-  // Kullanıcı zaten giriş yapmış, kontrol paneline yönlendir
-  res.redirect('/dashboard');
+  // Kullanıcı oturum açmamış, devam et
+  next();
 }
 
 /**
@@ -65,17 +67,8 @@ function isNotAuthenticated(req, res, next) {
  * @param {Function} next - Sonraki middleware
  */
 function injectUserToViews(req, res, next) {
-  // Kullanıcı bilgisi varsa res.locals'a ekle
-  if (req.session && req.session.user) {
-    res.locals.user = req.session.user;
-  }
-  
-  // Flash mesajları varsa ekle
-  if (req.session && req.session.flashMessages) {
-    res.locals.flashMessages = req.session.flashMessages;
-    delete req.session.flashMessages;
-  }
-  
+  // Kullanıcı bilgisini locals'a ekleyerek tüm şablonlarda kullanılabilir hale getir
+  res.locals.user = req.session.user || null;
   next();
 }
 

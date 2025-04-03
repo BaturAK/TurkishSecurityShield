@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="400" fill="#2C3E50"/>
+  
+  <!-- Background Elements -->
+  <circle cx="100" cy="300" r="150" fill="#3498DB" fill-opacity="0.1"/>
+  <circle cx="450" cy="100" r="120" fill="#3498DB" fill-opacity="0.1"/>
+  
+  <!-- Abstract Security Pattern -->
+  <path d="M50 50 L100 50 L100 100 L150 100 L150 150 L200 150 L200 200 L250 200 L250 250 L300 250" 
+        stroke="#3498DB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 5"/>
+  
+  <path d="M550 350 L500 350 L500 300 L450 300 L450 250 L400 250 L400 200 L350 200 L350 150 L300 150" 
+        stroke="#3498DB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 5"/>
+  
+  <!-- Android Phone -->
+  <rect x="200" y="100" width="200" height="340" rx="20" fill="#ECF0F1"/>
+  <rect x="220" y="120" width="160" height="280" rx="5" fill="#3498DB"/>
+  <circle cx="300" cy="420" r="12" fill="#ECF0F1"/>
+  
+  <!-- Security Elements on Screen -->
+  <circle cx="300" cy="200" r="60" fill="#2ECC71"/>
+  <path d="M270 200 L290 220 L330 180" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Shield Icon -->
+  <path d="M300 300 C 300 300 250 275 250 250 V 230 L300 210 L350 230 V 250 C 350 275 300 300 300 300 Z" fill="#E74C3C"/>
+  <path d="M300 290 C 300 290 260 270 260 250 V 235 L300 220 L340 235 V 250 C 340 270 300 290 300 290 Z" fill="#C0392B"/>
+  <path d="M300 270 C 300 270 280 260 280 250 V 240 L300 230 L320 240 V 250 C 320 260 300 270 300 270 Z" fill="white"/>
+  
+  <!-- App Download Button Elements -->
+  <rect x="50" y="250" width="120" height="40" rx="20" fill="#2ECC71"/>
+  <text x="110" y="275" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">İNDİR</text>
+  <path d="M70 265 H85 M77.5 257.5 V272.5" stroke="white" stroke-width="2"/>
+  
+  <rect x="430" y="250" width="120" height="40" rx="20" fill="#E74C3C"/>
+  <text x="490" y="275" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">PREMIUM</text>
+  <path d="M450 265 H465" stroke="white" stroke-width="2"/>
+  
+  <!-- Stars for Rating -->
+  <g transform="translate(430, 320)">
+    <path d="M10,0 L13,6 L20,7 L15,12 L16,19 L10,16 L4,19 L5,12 L0,7 L7,6 Z" fill="#F1C40F"/>
+    <path d="M30,0 L33,6 L40,7 L35,12 L36,19 L30,16 L24,19 L25,12 L20,7 L27,6 Z" fill="#F1C40F"/>
+    <path d="M50,0 L53,6 L60,7 L55,12 L56,19 L50,16 L44,19 L45,12 L40,7 L47,6 Z" fill="#F1C40F"/>
+    <path d="M70,0 L73,6 L80,7 L75,12 L76,19 L70,16 L64,19 L65,12 L60,7 L67,6 Z" fill="#F1C40F"/>
+    <path d="M90,0 L93,6 L100,7 L95,12 L96,19 L90,16 L84,19 L85,12 L80,7 L87,6 Z" fill="#F1C40F"/>
+  </g>
+  
+  <!-- Text Elements -->
+  <text x="300" y="50" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="white">ANTİVİRÜS UYGULAMASI</text>
+  <text x="300" y="80" text-anchor="middle" font-family="Arial" font-size="16" fill="#ECF0F1">Cihazınız İçin Güvenlik Çözümü</text>
+  
+  <text x="110" y="350" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="white">ÜCRETSİZ</text>
+  <text x="110" y="370" text-anchor="middle" font-family="Arial" font-size="14" fill="#ECF0F1">Temel Koruma</text>
+  
+  <text x="490" y="350" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="white">PREMIUM</text>
+  <text x="490" y="370" text-anchor="middle" font-family="Arial" font-size="14" fill="#ECF0F1">Tam Koruma</text>
+</svg>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="250" height="60" viewBox="0 0 250 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Background -->
+  <path d="M30 5C30 5 15 10 5 10V30C5 40 15 50 30 55C45 50 55 40 55 30V10C45 10 30 5 30 5Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="2"/>
+  
+  <!-- Shield Checkmark -->
+  <path d="M20 30L25 35L40 20" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- AntiVirüs Text -->
+  <text x="70" y="35" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="white">AntiVirüs</text>
+  
+  <!-- Tagline -->
+  <text x="70" y="50" font-family="Arial, sans-serif" font-size="12" fill="rgba(255, 255, 255, 0.8)">Güvenle Koruma</text>
+</svg>

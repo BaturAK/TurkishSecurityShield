@@ -23,7 +23,7 @@ class Threat {
    * @param {Date} detectionDate - Tespit edilme tarihi
    */
   constructor(id, name, type, description, severity = 'MEDIUM', filePath = null, isCleaned = false, detectionDate = new Date()) {
-    this.id = id || uuidv4();
+    this.id = id;
     this.name = name;
     this.type = type;
     this.description = description;
@@ -64,30 +64,33 @@ class Threat {
    * @returns {Promise<boolean>} - Kaydetme işlemi başarılı ise true döner
    */
   async save() {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const threatCollection = db.collection('threats');
       
-      // Mevcut tehdidi kontrol et
+      // Tehdit zaten var mı kontrol et
       const existingThreat = await threatCollection.findOne({ id: this.id });
       
       if (existingThreat) {
         // Tehdit var, güncelle
-        const result = await threatCollection.updateOne(
+        await threatCollection.updateOne(
           { id: this.id },
           { $set: this.toJSON() }
         );
-        return result.modifiedCount > 0;
       } else {
-        // Yeni tehdit ekle
-        const result = await threatCollection.insertOne(this.toJSON());
-        return !!result.insertedId;
+        // Tehdit yok, yeni kayıt ekle
+        await threatCollection.insertOne(this.toJSON());
       }
+      
+      return true;
     } catch (error) {
-      console.error('Tehdit kaydederken hata:', error);
-      throw error;
+      console.error('Tehdit kaydedilirken hata:', error);
+      return false;
     }
   }
 
@@ -97,14 +100,19 @@ class Threat {
    * @returns {Promise<Threat|null>} - Bulunan tehdit nesnesi, yoksa null
    */
   static async findById(id) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const threatCollection = db.collection('threats');
       const threatData = await threatCollection.findOne({ id });
       
-      if (!threatData) return null;
+      if (!threatData) {
+        return null;
+      }
       
       return new Threat(
         threatData.id,
@@ -117,8 +125,8 @@ class Threat {
         threatData.detectionDate
       );
     } catch (error) {
-      console.error('ID ile tehdit arama hatası:', error);
-      throw error;
+      console.error('ID ile tehdit bulunurken hata:', error);
+      return null;
     }
   }
 
@@ -128,14 +136,17 @@ class Threat {
    * @returns {Promise<Threat[]>} - Tehdit nesneleri dizisi
    */
   static async findAll(filter = {}) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
-      const threatCollection = db.collection('threats');
-      const threatsData = await threatCollection.find(filter).toArray();
+      const db = getDb();
       
-      return threatsData.map(threatData => new Threat(
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
+      const threatCollection = db.collection('threats');
+      const threats = await threatCollection.find(filter).sort({ detectionDate: -1 }).toArray();
+      
+      return threats.map(threatData => new Threat(
         threatData.id,
         threatData.name,
         threatData.type,
@@ -146,8 +157,8 @@ class Threat {
         threatData.detectionDate
       ));
     } catch (error) {
-      console.error('Tehditleri getirme hatası:', error);
-      throw error;
+      console.error('Tehditler getirilirken hata:', error);
+      return [];
     }
   }
 
@@ -157,15 +168,18 @@ class Threat {
    * @returns {Promise<number>} - Tehdit sayısı
    */
   static async count(filter = {}) {
-    const db = getDb();
-    if (!db) throw new Error('Veritabanı bağlantısı yok');
-
     try {
+      const db = getDb();
+      
+      if (!db) {
+        throw new Error('Veritabanı bağlantısı kurulamadı');
+      }
+      
       const threatCollection = db.collection('threats');
       return await threatCollection.countDocuments(filter);
     } catch (error) {
-      console.error('Tehdit sayma hatası:', error);
-      throw error;
+      console.error('Tehdit sayısı hesaplanırken hata:', error);
+      return 0;
     }
   }
 
@@ -176,33 +190,62 @@ class Threat {
    */
   static getRandomThreats(count = 3) {
     const threatTypes = ['Trojan', 'Virus', 'Spyware', 'Adware', 'Ransomware', 'Worm', 'Rootkit'];
-    const severityLevels = ['LOW', 'MEDIUM', 'HIGH'];
+    const severities = ['LOW', 'MEDIUM', 'HIGH'];
+    
     const filePaths = [
-      '/data/app/com.example.malicious',
-      '/sdcard/download/suspicious.apk',
-      '/system/bin/infected',
-      null
+      '/data/app/com.example.suspicious.app/base.apk',
+      '/sdcard/Download/suspicious_file.apk',
+      '/sdcard/DCIM/malicious_attachment.jpg',
+      '/data/data/com.example.game/cache/ad_library.dex',
+      '/system/app/bloatware.apk',
+      '/data/app/com.example.modified.app/classes.dex'
+    ];
+    
+    const threatNames = [
+      'Android.Trojan.BankBot',
+      'Android.Virus.Locker',
+      'Android.Spyware.Pegasus',
+      'Android.Adware.Ewind',
+      'Android.Ransomware.WannaLocker',
+      'Android.Worm.Selfmite',
+      'Android.Rootkit.GhostPush',
+      'Android.Trojan.FakeBank',
+      'Android.Virus.Judy',
+      'Android.Spyware.Flexispy'
+    ];
+    
+    const descriptions = [
+      'Bu tehdit bankacılık bilgilerinizi çalmayı amaçlar ve SMS izinlerini kullanır.',
+      'Cihazınızı kilitleyerek erişimi engeller ve kişisel verilerinizi şifreler.',
+      'Arka planda çalışarak kişisel bilgilerinizi ve iletişimlerinizi izler.',
+      'İstenmeyen reklamlar gösterir ve tarama geçmişinizi takip eder.',
+      'Verilerinizi şifreleyerek fidye talep eder.',
+      'SMS yoluyla kendini diğer cihazlara yayar.',
+      'Sistem seviyesinde erişim sağlayarak kendini gizler.',
+      'Gerçek bankacılık uygulamalarını taklit ederek kimlik bilgilerinizi çalar.',
+      'Zararlı reklam kodları içerir ve otomatik tıklama işlemleri gerçekleştirir.',
+      'Çağrıları ve mesajları dinleyerek kişisel bilgilerinizi toplar.'
     ];
     
     const threats = [];
     
     for (let i = 0; i < count; i++) {
       const type = threatTypes[Math.floor(Math.random() * threatTypes.length)];
-      const severity = severityLevels[Math.floor(Math.random() * severityLevels.length)];
+      const severity = severities[Math.floor(Math.random() * severities.length)];
+      const nameIndex = Math.floor(Math.random() * threatNames.length);
+      const descIndex = Math.floor(Math.random() * descriptions.length);
       const filePath = filePaths[Math.floor(Math.random() * filePaths.length)];
       
-      const threat = new Threat(
+      threats.push(new Threat(
         uuidv4(),
-        `${type}.AndroidTest.${Math.floor(Math.random() * 1000)}`,
+        threatNames[nameIndex],
         type,
-        `Bu bir ${type.toLowerCase()} test tehdididir. ${severity} seviyeli bir tehlikedir.`,
+        descriptions[descIndex],
         severity,
         filePath,
         false,
         new Date()
-      );
-      
-      threats.push(threat);
+      ));
     }
     
     return threats;
