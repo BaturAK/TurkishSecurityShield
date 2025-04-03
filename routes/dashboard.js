@@ -108,10 +108,17 @@ router.get('/scans', async (req, res) => {
     // Toplam tarama sayısını al
     const totalScans = await ScanResult.count({ userId });
     
+    // Tehditleri say
+    let totalThreats = 0;
+    scans.forEach(scan => {
+      totalThreats += scan.threatsFound.length;
+    });
+    
     res.render('dashboard/scans', {
       title: 'Taramalar',
       scans,
-      totalScans
+      totalScans,
+      totalThreats
     });
   } catch (error) {
     console.error('Taramalar sayfası yüklenirken hata:', error);
