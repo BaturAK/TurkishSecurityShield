@@ -1,0 +1,88 @@
+Proje Tanımı:
+Bir Flutter tabanlı Android antivirüs uygulaması geliştir. Uygulama, cihazdaki zararlı yazılımları tespit eden, arka planda çalışan bir güvenlik tarayıcısı olacak ve tehditleri MongoDB Atlas veya Firebase Firestore üzerinde gerçek zamanlı olarak saklayacak.
+📌 Özellikler:
+1️⃣ Gerçek Zamanlı Tarama
+
+    Kullanıcının cihazındaki yüklenmiş uygulamaları, dosyaları ve ağ bağlantılarını tarayarak tehditleri tespit et.
+
+    Cihazda yüklü apk dosyalarının hash’lerini tarayarak bilinen kötü amaçlı yazılımları analiz et.
+
+    Arka planda çalışan bir servis oluşturarak belirli aralıklarla tarama yap.
+
+2️⃣ MongoDB Entegrasyonu
+
+    Kullanıcıdan gelen tehdit verilerini MongoDB Atlas veya Firebase Firestore’a kaydet.
+
+    Gerçek zamanlı tehdit güncellemeleri ile kötü amaçlı yazılım veritabanını sürekli güncel tut.
+
+    MongoDB’den tehdit seviyesi yüksek olan dosya ve uygulamaların listesini alarak cihazdaki verilerle karşılaştır.
+
+3️⃣ Tehdit Algılama Motoru
+
+    Yerleşik bir zararlı yazılım veritabanı (JSON formatında) oluştur.
+
+    SHA256 hash karşılaştırması yaparak cihazdaki uygulamaları kötü amaçlı yazılımlarla eşleştir.
+
+    Uygulamaların izinlerini ve arka planda çalışan işlemlerini analiz et.
+
+    Şüpheli ağ trafiğini izleyerek belirli IP adreslerine bağlanan uygulamaları tespit et.
+
+4️⃣ Gerçek Zamanlı Bildirimler
+
+    Kötü amaçlı yazılım tespit edildiğinde cihaz sahibine anlık bildirim gönder.
+
+    Kullanıcıya uygulamayı kaldırma, ağ bağlantısını kesme veya işlem günlüğü oluşturma seçenekleri sun.
+
+    Firebase Cloud Messaging (FCM) veya yerel bildirimleri kullanarak anında uyarı ver.
+
+5️⃣ Arka Planda Çalışma (Background Service)
+
+    Foregound Service kullanarak antivirüs motorunun arka planda sürekli çalışmasını sağla.
+
+    Arka planda çalışırken CPU ve batarya dostu olacak şekilde optimizasyon yap.
+
+    Kullanıcı cihazı yeniden başlattığında servisin tekrar çalışmasını sağla.
+
+6️⃣ Kullanıcı Arayüzü (UI/UX)
+
+    Modern bir Flutter UI ile sezgisel ve minimalist bir tasarım oluştur.
+
+    Material 3 veya Cupertino Design kullanarak hem Android hem de iOS’a uygun bir arayüz yap.
+
+    Ana ekran: Hızlı tarama, tam tarama ve gerçek zamanlı koruma seçenekleri.
+
+    Tehdit raporları: Tespit edilen tehditler ve alınan aksiyonları detaylı göster.
+
+7️⃣ Ekstra Özellikler
+
+    QR kod tarayarak şüpheli bağlantıları kontrol et.
+
+    VPN servisi ile güvenli bağlantı sun.
+
+    Uygulama kilidi ekleyerek yetkisiz erişimi engelle.
+
+    Pil tüketimini minimumda tutacak şekilde optimize et.
+
+🛠 Kullanılacak Teknolojiler:
+
+✅ Flutter & Dart
+✅ Firebase Firestore veya MongoDB Atlas (Gerçek zamanlı veri yönetimi)
+✅ Foreground Service (Arka planda çalışan tarayıcı)
+✅ Dio veya HTTP (API istekleri)
+✅ Firebase Cloud Messaging (FCM) (Anlık bildirimler)
+✅ Provider veya Riverpod (Durum yönetimi)
+✅ SHA256 Hash Algoritması (Tehdit tespiti)
+✅ Hive veya SQLite (Yerel veri saklama)
+🎯 Çıktı Beklentisi:
+
+    Tam işlevsel bir Flutter uygulaması
+
+    Gerçek zamanlı çalışan bir antivirüs motoru
+
+    MongoDB Atlas veya Firebase Firestore ile entegre edilen tehdit analizi
+
+    Şüpheli uygulama ve dosya tarama özelliği
+
+    Modern ve kullanıcı dostu bir UI tasarımı
+
+    Gerçek zamanlı bildirimler ve tehdit güncellemeleri
