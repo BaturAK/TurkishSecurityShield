@@ -1,407 +1,218 @@
-<!-- Admin Header -->
-<div class="row mb-4">
-  <div class="col-lg-12">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <div class="d-flex align-items-center">
-          <div class="flex-shrink-0">
-            <div class="bg-primary text-white rounded-circle p-3" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-users-cog fa-2x"></i>
+<!-- Admin - Kullanıcı Yönetimi -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Kullanıcı Yönetimi</h5>
+            <a href="/admin/users/new" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus me-1"></i> Yeni Kullanıcı
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <!-- Arama ve Filtreleme -->
+          <div class="p-3 border-bottom">
+            <div class="row g-2">
+              <div class="col-md-4">
+                <div class="input-group">
+                  <input type="text" class="form-control" placeholder="Kullanıcı ara..." id="userSearchInput">
+                  <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <select class="form-select" id="userRoleFilter">
+                  <option value="all">Tüm Roller</option>
+                  <option value="admin">Yönetici</option>
+                  <option value="user">Kullanıcı</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <select class="form-select" id="userStatusFilter">
+                  <option value="all">Tüm Durumlar</option>
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Pasif</option>
+                </select>
+              </div>
+              <div class="col-md-2 text-end">
+                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                  <i class="fas fa-sync-alt me-1"></i> Sıfırla
+                </button>
+              </div>
             </div>
           </div>
-          <div class="flex-grow-1 ms-3">
-            <h2 class="mb-1">Kullanıcı Yönetimi</h2>
-            <p class="text-muted mb-0">Kullanıcıları görüntüle, düzenle ve yönet</p>
-          </div>
-          <div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-              <i class="fas fa-user-plus me-2"></i>Yeni Kullanıcı
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Users Table -->
-<div class="row mb-4">
-  <div class="col-lg-12">
-    <div class="card shadow-sm">
-      <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Tüm Kullanıcılar</h5>
-        <div class="input-group" style="width: 300px;">
-          <input type="text" class="form-control" placeholder="Kullanıcı ara..." id="searchUser">
-          <button class="btn btn-outline-secondary" type="button">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Kullanıcı</th>
-                <th>E-posta</th>
-                <th>Kayıt Tarihi</th>
-                <th>Son Giriş</th>
-                <th>Durum</th>
-                <th>İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% users.forEach(user => { %>
+          
+          <!-- Kullanıcı Listesi -->
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
                 <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="flex-shrink-0">
-                        <img src="https://placehold.co/40x40?text=<%= user.name.charAt(0) %>" alt="User Avatar" class="rounded-circle">
-                      </div>
-                      <div class="flex-grow-1 ms-2">
-                        <h6 class="mb-0"><%= user.name %></h6>
-                        <small class="text-muted">ID: <%= user.id %></small>
-                      </div>
-                    </div>
-                  </td>
-                  <td><%= user.email %></td>
-                  <td><%= new Date(user.created).toLocaleDateString('tr-TR') %></td>
-                  <td><%= new Date(user.lastLogin).toLocaleDateString('tr-TR') %></td>
-                  <td>
-                    <span class="badge bg-success">Aktif</span>
-                  </td>
-                  <td>
-                    <div class="dropdown">
-                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        İşlemler
-                      </button>
-                      <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewUserModal" data-user-id="<%= user.id %>"><i class="fas fa-eye me-2"></i>Görüntüle</a></li>
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editUserModal" data-user-id="<%= user.id %>"><i class="fas fa-edit me-2"></i>Düzenle</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-user-id="<%= user.id %>"><i class="fas fa-trash me-2"></i>Sil</a></li>
-                      </ul>
-                    </div>
-                  </td>
+                  <th scope="col" class="ps-3">Kullanıcı</th>
+                  <th scope="col">E-posta</th>
+                  <th scope="col">Rol</th>
+                  <th scope="col">Son Giriş</th>
+                  <th scope="col">Durum</th>
+                  <th scope="col">İşlemler</th>
                 </tr>
-              <% }); %>
-            </tbody>
-          </table>
+              </thead>
+              <tbody id="userTableBody">
+                <% if (users && users.length > 0) { %>
+                  <% users.forEach(function(user) { %>
+                    <tr>
+                      <td class="ps-3">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <img src="https://placehold.co/40x40?text=<%= user.displayName ? user.displayName.charAt(0) : 'U' %>" alt="User Avatar" class="rounded-circle">
+                          </div>
+                          <div class="flex-grow-1 ms-2">
+                            <h6 class="mb-0"><%= user.displayName || 'Kullanıcı' %></h6>
+                            <small class="text-muted"><%= user.id.substring(0, 8) %>...</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td><%= user.email %></td>
+                      <td>
+                        <% if (user.isAdmin) { %>
+                          <span class="badge bg-primary">Admin</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary">Kullanıcı</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (user.lastLoginDate) { %>
+                          <%= user.lastLoginDate.toLocaleDateString('tr-TR') %> <%= user.lastLoginDate.toLocaleTimeString('tr-TR') %>
+                        <% } else { %>
+                          <span class="text-muted">Giriş yapmadı</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (user.isActive) { %>
+                          <span class="badge bg-success">Aktif</span>
+                        <% } else { %>
+                          <span class="badge bg-danger">Pasif</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <div class="btn-group">
+                          <a href="/admin/users/<%= user.id %>" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                          <a href="/admin/users/<%= user.id %>/edit" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <button type="button" class="btn btn-sm btn-outline-danger" 
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#deleteUserModal" 
+                                  data-user-id="<%= user.id %>" 
+                                  data-user-name="<%= user.displayName || user.email %>">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center py-4">
+                      <div class="py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>Henüz kullanıcı bulunmuyor</h5>
+                        <p class="text-muted">İlk kullanıcıyı eklemek için "Yeni Kullanıcı" butonuna tıklayın</p>
+                      </div>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Sayfalama -->
+          <div class="d-flex justify-content-between align-items-center p-3">
+            <div>
+              <span class="text-muted small">Toplam <strong><%= users ? users.length : 0 %></strong> kullanıcı</span>
+            </div>
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Önceki</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                  <a class="page-link" href="#">Sonraki</a>
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
-      </div>
-      <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-        <div>
-          <span class="text-muted">Toplam <%= users.length %> kullanıcı</span>
-        </div>
-        <nav aria-label="Page navigation">
-          <ul class="pagination mb-0">
-            <li class="page-item disabled">
-              <a class="page-link" href="#" aria-label="Previous">
-                <span aria-hidden="true">&laquo;</span>
-              </a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-              <a class="page-link" href="#" aria-label="Next">
-                <span aria-hidden="true">&raquo;</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
       </div>
     </div>
   </div>
 </div>
 
-<!-- User Stats -->
-<div class="row">
-  <div class="col-lg-4 mb-4">
-    <div class="card shadow-sm">
-      <div class="card-header bg-light">
-        <h5 class="mb-0">Kullanıcı İstatistikleri</h5>
-      </div>
-      <div class="card-body">
-        <div class="mb-4">
-          <h6>Kullanıcı Aktivitesi</h6>
-          <div class="progress mb-2" style="height: 10px;">
-            <div class="progress-bar bg-success" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="text-muted">Son 7 günde aktif kullanıcılar: %65</small>
-        </div>
-        
-        <div class="mb-4">
-          <h6>Premium Kullanıcılar</h6>
-          <div class="progress mb-2" style="height: 10px;">
-            <div class="progress-bar bg-primary" role="progressbar" style="width: 35%;" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="text-muted">Premium planı kullanan kullanıcılar: %35</small>
-        </div>
-        
-        <div>
-          <h6>Yeni Kaydolanlar</h6>
-          <div class="progress mb-2" style="height: 10px;">
-            <div class="progress-bar bg-info" role="progressbar" style="width: 12%;" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="text-muted">Son 30 günde yeni kullanıcılar: %12</small>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-lg-8 mb-4">
-    <div class="card shadow-sm">
-      <div class="card-header bg-light">
-        <h5 class="mb-0">Kullanıcı Aktivite Grafiği</h5>
-      </div>
-      <div class="card-body">
-        <canvas id="userActivityChart" height="250"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modals -->
-<!-- View User Modal -->
-<div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Kullanıcı Silme Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Kullanıcı Detayları</h5>
+        <h5 class="modal-title" id="deleteUserModalLabel">Kullanıcı Sil</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="text-center mb-4">
-          <img src="https://placehold.co/100x100?text=U" alt="User Avatar" class="rounded-circle">
-          <h5 class="mt-3 mb-1">Örnek Kullanıcı</h5>
-          <p class="text-muted">ornek@example.com</p>
-          <div class="mt-3">
-            <span class="badge bg-success">Aktif Kullanıcı</span>
-            <span class="badge bg-info ms-2">Premium</span>
-          </div>
-        </div>
-        
-        <div class="row">
-          <div class="col-6 mb-3">
-            <h6 class="text-muted small">KULLANICI ID</h6>
-            <p>12345</p>
-          </div>
-          <div class="col-6 mb-3">
-            <h6 class="text-muted small">KAYIT TARİHİ</h6>
-            <p>01.01.2023</p>
-          </div>
-          <div class="col-6 mb-3">
-            <h6 class="text-muted small">SON GİRİŞ</h6>
-            <p>15.04.2023</p>
-          </div>
-          <div class="col-6 mb-3">
-            <h6 class="text-muted small">TARAMALAR</h6>
-            <p>24</p>
-          </div>
-          <div class="col-12 mb-3">
-            <h6 class="text-muted small">CİHAZLAR</h6>
-            <p>Samsung Galaxy S21, Xiaomi Mi 11</p>
-          </div>
-        </div>
-        
-        <h6 class="mt-4 mb-3">Son Aktiviteler</h6>
-        <ul class="list-group list-group-flush small">
-          <li class="list-group-item px-0">
-            <div class="d-flex justify-content-between">
-              <span>Hızlı Tarama Tamamlandı</span>
-              <span class="text-muted">15.04.2023 14:32</span>
-            </div>
-          </li>
-          <li class="list-group-item px-0">
-            <div class="d-flex justify-content-between">
-              <span>WiFi Taraması Tamamlandı</span>
-              <span class="text-muted">14.04.2023 09:15</span>
-            </div>
-          </li>
-          <li class="list-group-item px-0">
-            <div class="d-flex justify-content-between">
-              <span>Oturum Açıldı</span>
-              <span class="text-muted">14.04.2023 09:10</span>
-            </div>
-          </li>
-        </ul>
+        <p>Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+        <p class="fw-bold user-name-display"></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#editUserModal">Düzenle</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Yeni Kullanıcı Ekle</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addUserForm">
-          <div class="mb-3">
-            <label for="name" class="form-label">İsim</label>
-            <input type="text" class="form-control" id="name" required>
-          </div>
-          <div class="mb-3">
-            <label for="email" class="form-label">E-posta</label>
-            <input type="email" class="form-control" id="email" required>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Şifre</label>
-            <input type="password" class="form-control" id="password" required>
-          </div>
-          <div class="mb-3">
-            <label for="confirmPassword" class="form-label">Şifre Tekrarı</label>
-            <input type="password" class="form-control" id="confirmPassword" required>
-          </div>
-          <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="isAdmin">
-            <label class="form-check-label" for="isAdmin">Admin Yetkisi</label>
-          </div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <form id="deleteUserForm" action="/admin/users/delete" method="POST">
+          <input type="hidden" name="userId" id="deleteUserId">
+          <button type="submit" class="btn btn-danger">Sil</button>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-        <button type="button" class="btn btn-primary">Kullanıcı Ekle</button>
-      </div>
     </div>
   </div>
 </div>
 
-<!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Kullanıcı Düzenle</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editUserForm">
-          <div class="mb-3">
-            <label for="editName" class="form-label">İsim</label>
-            <input type="text" class="form-control" id="editName" value="Örnek Kullanıcı" required>
-          </div>
-          <div class="mb-3">
-            <label for="editEmail" class="form-label">E-posta</label>
-            <input type="email" class="form-control" id="editEmail" value="ornek@example.com" required>
-          </div>
-          <div class="mb-3">
-            <label for="editStatus" class="form-label">Durum</label>
-            <select class="form-select" id="editStatus">
-              <option value="active" selected>Aktif</option>
-              <option value="inactive">Pasif</option>
-              <option value="suspended">Askıya Alınmış</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="editRole" class="form-label">Rol</label>
-            <select class="form-select" id="editRole">
-              <option value="user" selected>Kullanıcı</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="editPlan" class="form-label">Plan</label>
-            <select class="form-select" id="editPlan">
-              <option value="free">Ücretsiz</option>
-              <option value="standard" selected>Standart</option>
-              <option value="premium">Premium</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-        <button type="button" class="btn btn-primary">Değişiklikleri Kaydet</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Delete User Modal -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Kullanıcı Sil</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="text-center mb-4">
-          <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
-          <h5>Bu kullanıcıyı silmek istediğinizden emin misiniz?</h5>
-          <p class="text-muted">Bu işlem geri alınamaz ve kullanıcıya ait tüm veriler silinecektir.</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-        <button type="button" class="btn btn-danger">Kalıcı Olarak Sil</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Chart.js için -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Kullanıcı aktivite grafiği
   document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('userActivityChart').getContext('2d');
+    // Kullanıcı silme modalı
+    const deleteUserModal = document.getElementById('deleteUserModal');
+    if (deleteUserModal) {
+      deleteUserModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const userId = button.getAttribute('data-user-id');
+        const userName = button.getAttribute('data-user-name');
+        
+        const modalUserName = this.querySelector('.user-name-display');
+        const deleteUserIdInput = document.getElementById('deleteUserId');
+        
+        modalUserName.textContent = userName;
+        deleteUserIdInput.value = userId;
+      });
+    }
     
-    const data = {
-      labels: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
-      datasets: [
-        {
-          label: 'Aktif Kullanıcılar',
-          data: [15, 21, 18, 24, 23, 19, 14],
-          borderColor: 'rgba(54, 162, 235, 1)',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Yeni Kayıtlar',
-          data: [5, 7, 4, 6, 8, 3, 2],
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
-    };
-    
-    const config = {
-      type: 'line',
-      data: data,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false
+    // Kullanıcı arama fonksiyonu
+    const searchInput = document.getElementById('userSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const userRows = document.querySelectorAll('#userTableBody tr');
+        
+        userRows.forEach(function(row) {
+          const userName = row.querySelector('h6').textContent.toLowerCase();
+          const userEmail = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+          
+          if (userName.includes(searchValue) || userEmail.includes(searchValue)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
           }
-        },
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    };
-    
-    new Chart(ctx, config);
+        });
+      });
+    }
   });
 </script>

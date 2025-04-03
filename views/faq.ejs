@@ -1,0 +1,375 @@
+<!-- SSS Sayfası -->
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <h1 class="display-4 fw-bold text-center mb-5">Sıkça Sorulan Sorular</h1>
+      
+      <!-- Arama Bölümü -->
+      <div class="card border-0 shadow mb-5">
+        <div class="card-body p-4">
+          <div class="row justify-content-center">
+            <div class="col-md-8">
+              <div class="input-group">
+                <input type="text" class="form-control" id="faqSearch" placeholder="Soru ara...">
+                <button class="btn btn-primary" type="button">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+              <div class="text-center mt-3">
+                <p class="text-muted mb-0">
+                  Aradığınız cevabı bulamadınız mı? <a href="/contact" class="text-decoration-none">Bize Ulaşın</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Kategori Menüsü -->
+      <ul class="nav nav-pills mb-4 justify-content-center">
+        <li class="nav-item">
+          <button class="nav-link active" data-category="all">Tümü</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-category="general">Genel</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-category="account">Hesap</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-category="subscription">Abonelik</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-category="technical">Teknik</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-category="mobile">Mobil</button>
+        </li>
+      </ul>
+      
+      <!-- SSS Accordion -->
+      <div class="accordion shadow-sm" id="faqAccordion">
+        <!-- Genel Sorular -->
+        <div class="faq-category" data-category="general">
+          <h3 class="fw-bold mb-3">Genel Sorular</h3>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                AntiVirüs uygulaması nedir ve ne işe yarar?
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                AntiVirüs, Android cihazlarda virüs, zararlı yazılım ve diğer güvenlik tehditlerini tespit eden ve temizleyen bir güvenlik uygulamasıdır. Uygulamamız, gerçek zamanlı koruma, tarama özellikleri, VPN hizmeti, Wi-Fi güvenlik tarayıcısı, uygulama kilidi gibi birçok özellik ile cihazınızın güvenliğini korur ve performansını optimize eder.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                AntiVirüs uygulaması cihazımı yavaşlatır mı?
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Hayır, AntiVirüs uygulaması düşük sistem kaynağı kullanımı için özel olarak tasarlanmıştır. Arka planda çalışırken minimum CPU ve RAM kullanır, böylece cihazınızın performansını etkilemez. Ayrıca, Pil Optimizasyonu özelliğimiz, pil ömrünü uzatmak için arka planda çalışan uygulamaları yönetmenize yardımcı olur.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                AntiVirüs uygulaması güncelleme gerektirir mi?
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Evet, AntiVirüs uygulaması ve tehditleri tanımlama veritabanımız düzenli olarak güncellenir. Otomatik güncelleme özelliğimiz sayesinde, her zaman en son tehdit tanımlarına ve güvenlik yamalarına sahip olursunuz. Güncellemeler, uygulamanız açıkken otomatik olarak indirilir ve yüklenir, böylece her zaman en yüksek düzeyde koruma alırsınız.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Hesap Soruları -->
+        <div class="faq-category" data-category="account">
+          <h3 class="fw-bold mb-3 mt-5">Hesap Soruları</h3>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingFour">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                Nasıl hesap oluştururum?
+              </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                AntiVirüs uygulamasını kullanmak için hesap oluşturmak oldukça kolaydır. Uygulamayı indirdikten sonra "Hesap Oluştur" butonuna tıklayın ve e-posta adresinizi, parolanızı ve diğer gerekli bilgileri girin. Ayrıca Google, Facebook veya Apple hesabınızla da hızlı bir şekilde kayıt olabilirsiniz. Hesabınızı oluşturduktan sonra, cihazınızı korumaya hemen başlayabilirsiniz.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingFive">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                Şifremi unuttum, ne yapmalıyım?
+              </button>
+            </h2>
+            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Şifrenizi unuttuysanız, giriş ekranındaki "Şifremi Unuttum" bağlantısına tıklayın. Size hesabınızla ilişkili e-posta adresine bir şifre sıfırlama bağlantısı gönderilecektir. Bağlantıya tıklayın ve yeni bir şifre belirleyin. Hala sorun yaşıyorsanız, Destek ekibimizle support@antivirus.com adresinden iletişime geçebilirsiniz.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingSix">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                Hesap bilgilerimi nasıl güncelleyebilirim?
+              </button>
+            </h2>
+            <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Hesap bilgilerinizi güncellemek için, uygulamaya giriş yapın ve sağ üst köşedeki profil simgesine dokunun. "Hesap Ayarları" veya "Profil" seçeneğini seçin ve istediğiniz bilgileri güncelleyin. İsim, e-posta adresi, parola ve diğer hesap bilgilerinizi buradan değiştirebilirsiniz. Değişikliklerinizi kaydetmeyi unutmayın.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Abonelik Soruları -->
+        <div class="faq-category" data-category="subscription">
+          <h3 class="fw-bold mb-3 mt-5">Abonelik Soruları</h3>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingSeven">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                Hangi abonelik planları mevcut?
+              </button>
+            </h2>
+            <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                AntiVirüs üç farklı plan sunmaktadır: Ücretsiz, Premium ve Premium Plus. Ücretsiz plan temel koruma özellikleri sunarken, Premium plan gerçek zamanlı koruma, VPN hizmeti (günlük sınırlı) ve uygulama kilidi gibi gelişmiş özellikler içerir. Premium Plus planı ise tüm özelliklere sınırsız erişim, sınırsız VPN kullanımı, kimlik koruma ve öncelikli destek sunar. Detaylı karşılaştırma için "Özellikler" sayfamızı ziyaret edebilirsiniz.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingEight">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                Aboneliğimi nasıl iptal edebilirim?
+              </button>
+            </h2>
+            <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Aboneliğinizi iptal etmek için uygulamada hesabınıza giriş yapın, "Hesap Ayarları" > "Aboneliklerim" bölümüne gidin ve "Aboneliği İptal Et" seçeneğine tıklayın. Alternatif olarak, Google Play Store veya App Store'dan da aboneliğinizi yönetebilirsiniz. İptal işlemi, mevcut abonelik döneminin sonunda geçerli olacaktır ve bu süre içinde premium özellikleri kullanmaya devam edebilirsiniz.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingNine">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine">
+                Aboneliğimi yükseltebilir miyim?
+              </button>
+            </h2>
+            <div id="collapseNine" class="accordion-collapse collapse" aria-labelledby="headingNine" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Evet, aboneliğinizi dilediğiniz zaman yükseltebilirsiniz. Uygulamada "Hesap Ayarları" > "Aboneliklerim" bölümüne gidin ve "Yükselt" seçeneğine tıklayın. Mevcut Premium aboneliğinizi Premium Plus'a yükseltebilir veya ücretsiz sürümden premium planlara geçebilirsiniz. Yükseltme işlemi anında gerçekleşir ve yeni özellikler hemen kullanımınıza sunulur. Yükseltme durumunda, kalan süre için orantılı bir ücret ödersiniz.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Teknik Sorular -->
+        <div class="faq-category" data-category="technical">
+          <h3 class="fw-bold mb-3 mt-5">Teknik Sorular</h3>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingTen">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTen" aria-expanded="false" aria-controls="collapseTen">
+                AntiVirüs hangi tür tehditleri tespit edebilir?
+              </button>
+            </h2>
+            <div id="collapseTen" class="accordion-collapse collapse" aria-labelledby="headingTen" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                AntiVirüs uygulaması virüsler, trojanlar, solucanlar, casus yazılımlar, reklam yazılımları, fidye yazılımları, kötü amaçlı uygulamalar ve diğer zararlı yazılım türlerini tespit edebilir. Ayrıca kimlik avı saldırılarına karşı koruma, güvenli olmayan Wi-Fi ağlarını tespit etme ve şüpheli QR kodlarını belirleme özellikleri de içerir. Yapay zeka destekli tarama motorumuz sayesinde, en yeni ve karmaşık tehditleri bile tespit edebiliyoruz.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingEleven">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEleven" aria-expanded="false" aria-controls="collapseEleven">
+                Tarama türleri arasındaki fark nedir?
+              </button>
+            </h2>
+            <div id="collapseEleven" class="accordion-collapse collapse" aria-labelledby="headingEleven" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                AntiVirüs uygulaması üç ana tarama türü sunar:
+                <ul>
+                  <li><strong>Hızlı Tarama:</strong> Virüslerin genellikle bulunduğu kritik sistem alanlarını kontrol eder. 1-2 dakika sürer ve günlük kullanım için idealdir.</li>
+                  <li><strong>Tam Tarama:</strong> Cihazınızdaki tüm dosyaları ve uygulamaları derinlemesine analiz eder. 10-30 dakika sürebilir ve haftalık yapılması önerilir.</li>
+                  <li><strong>Özel Tarama:</strong> Belirli dosyaları, klasörleri veya uygulamaları seçerek taramanızı sağlar. Şüpheli bir öğeyi hızlıca kontrol etmek istediğinizde kullanışlıdır.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingTwelve">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwelve" aria-expanded="false" aria-controls="collapseTwelve">
+                VPN hizmeti nasıl çalışır?
+              </button>
+            </h2>
+            <div id="collapseTwelve" class="accordion-collapse collapse" aria-labelledby="headingTwelve" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                VPN (Sanal Özel Ağ) hizmetimiz, internet bağlantınızı şifreleyerek verilerinizi korur ve IP adresinizi gizler. VPN'i etkinleştirdiğinizde, internet trafiğiniz güvenli bir tünel üzerinden yönlendirilir ve gerçek konumunuz gizlenir. Bu, özellikle halka açık Wi-Fi ağlarını kullanırken, çevrimiçi bankacılık yaparken veya hassas bilgilere erişirken ekstra güvenlik sağlar. Premium aboneliğimiz günlük sınırlı VPN kullanımı sunarken, Premium Plus sınırsız kullanım ve 30'dan fazla ülkede sunucu erişimi sağlar.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Mobil Sorular -->
+        <div class="faq-category" data-category="mobile">
+          <h3 class="fw-bold mb-3 mt-5">Mobil Uygulama Soruları</h3>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingThirteen">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThirteen" aria-expanded="false" aria-controls="collapseThirteen">
+                AntiVirüs uygulaması hangi Android sürümleriyle uyumludur?
+              </button>
+            </h2>
+            <div id="collapseThirteen" class="accordion-collapse collapse" aria-labelledby="headingThirteen" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                AntiVirüs uygulaması Android 6.0 (Marshmallow) ve üzeri sürümleri desteklemektedir. En iyi performans ve tüm özelliklerin tam olarak çalışması için Android 8.0 veya daha yeni bir sürüm kullanmanızı öneririz. Uygulamamız düzenli olarak güncellenir ve en son Android sürümlerine uyumlu hale getirilir.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingFourteen">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFourteen" aria-expanded="false" aria-controls="collapseFourteen">
+                Uygulama Kilidi özelliği nasıl kullanılır?
+              </button>
+            </h2>
+            <div id="collapseFourteen" class="accordion-collapse collapse" aria-labelledby="headingFourteen" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Uygulama Kilidi özelliğini kullanmak için:
+                <ol>
+                  <li>AntiVirüs uygulamasını açın ve "Uygulama Kilidi" bölümüne gidin.</li>
+                  <li>"Etkinleştir" butonuna dokunun ve bir PIN, desen veya parmak izi ayarlayın.</li>
+                  <li>Kilitlemek istediğiniz uygulamaları listeden seçin.</li>
+                  <li>Seçtiğiniz uygulamalar artık PIN, desen veya parmak izi koruması ile güvence altına alınmıştır.</li>
+                </ol>
+                Ücretsiz plan kullanıcıları 3 uygulamaya kadar kilitleyebilir, premium planlar ise sınırsız uygulama kilitleme imkanı sunar.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="headingFifteen">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFifteen" aria-expanded="false" aria-controls="collapseFifteen">
+                QR Tarayıcı nasıl kullanılır ve neden güvenli?
+              </button>
+            </h2>
+            <div id="collapseFifteen" class="accordion-collapse collapse" aria-labelledby="headingFifteen" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Güvenli QR Tarayıcımızı kullanmak için, uygulamada "QR Tarayıcı" seçeneğine dokunun ve kameranızı QR koduna doğrultun. Tarayıcımız, QR kodunun içerdiği URL'yi analiz eder ve zararlı bir web sitesine yönlendirme veya kötü amaçlı kod içerip içermediğini kontrol eder. Eğer bir tehdit tespit edilirse, sizi uyarır ve devam etmemenizi önerir. Bu özellik, sahte ödeme bağlantıları, kimlik avı siteleri veya zararlı yazılım indirme sayfalarına karşı koruma sağlar.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- İletişim Çağrısı -->
+      <div class="card border-0 shadow text-center mt-5">
+        <div class="card-body p-5">
+          <h2 class="fw-bold mb-3">Hala sorunuz mu var?</h2>
+          <p class="lead mb-4">Teknik destek ekibimiz size yardımcı olmak için hazır.</p>
+          <a href="/contact" class="btn btn-primary">Bize Ulaşın</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Kategori filtresi işlevi
+    const categoryButtons = document.querySelectorAll('[data-category]');
+    const faqCategories = document.querySelectorAll('.faq-category');
+    
+    categoryButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const category = this.getAttribute('data-category');
+        
+        // Kategori butonlarının aktif durumunu güncelle
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Kategorileri göster/gizle
+        if (category === 'all') {
+          faqCategories.forEach(cat => cat.style.display = 'block');
+        } else {
+          faqCategories.forEach(cat => {
+            if (cat.getAttribute('data-category') === category) {
+              cat.style.display = 'block';
+            } else {
+              cat.style.display = 'none';
+            }
+          });
+        }
+      });
+    });
+    
+    // Arama işlevi
+    const searchInput = document.getElementById('faqSearch');
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    
+    searchInput.addEventListener('keyup', function() {
+      const searchTerm = this.value.toLowerCase();
+      let resultsFound = false;
+      
+      accordionItems.forEach(item => {
+        const question = item.querySelector('button').textContent.toLowerCase();
+        const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+        
+        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+          item.style.display = 'block';
+          resultsFound = true;
+          
+          // Ebeveyn kategoriyi göster
+          const parentCategory = item.closest('.faq-category');
+          if (parentCategory) {
+            parentCategory.style.display = 'block';
+          }
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      // Eğer arama sonucu yoksa, "Sonuç bulunamadı" mesajı göster
+      const noResultsMessage = document.getElementById('noResultsMessage');
+      if (!resultsFound && searchTerm !== '') {
+        if (!noResultsMessage) {
+          const message = document.createElement('div');
+          message.id = 'noResultsMessage';
+          message.className = 'alert alert-info mt-3';
+          message.textContent = 'Aramanızla eşleşen sonuç bulunamadı.';
+          searchInput.parentNode.parentNode.appendChild(message);
+        }
+      } else {
+        if (noResultsMessage) {
+          noResultsMessage.remove();
+        }
+      }
+      
+      // Kategori filtrelerini sıfırla
+      if (searchTerm !== '') {
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        document.querySelector('[data-category="all"]').classList.add('active');
+      }
+    });
+  });
+</script>
