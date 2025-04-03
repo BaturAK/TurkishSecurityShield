@@ -1,0 +1,622 @@
+<!-- Admin - İstatistikler ve Raporlar -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Sistem İstatistikleri</h5>
+            <div>
+              <button class="btn btn-sm btn-outline-primary me-2" id="exportStatsBtn">
+                <i class="fas fa-file-export me-1"></i> Dışa Aktar
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" id="refreshStatsBtn">
+                <i class="fas fa-sync-alt me-1"></i> Yenile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Genel İstatistikler -->
+  <div class="row">
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded me-3">
+              <i class="fas fa-users fa-lg text-primary"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Toplam Kullanıcı</h6>
+              <h3 class="fw-bold mb-0"><%= totalUsers || 0 %></h3>
+              <small class="text-muted">
+                <% if (userGrowthRate > 0) { %>
+                  <i class="fas fa-arrow-up text-success me-1"></i>
+                <% } else if (userGrowthRate < 0) { %>
+                  <i class="fas fa-arrow-down text-danger me-1"></i>
+                <% } else { %>
+                  <i class="fas fa-minus text-muted me-1"></i>
+                <% } %>
+                <%= Math.abs(userGrowthRate || 0) %>% son 30 günde
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded me-3">
+              <i class="fas fa-shield-virus fa-lg text-success"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Toplam Tarama</h6>
+              <h3 class="fw-bold mb-0"><%= totalScans || 0 %></h3>
+              <small class="text-muted">
+                <% if (scanGrowthRate > 0) { %>
+                  <i class="fas fa-arrow-up text-success me-1"></i>
+                <% } else if (scanGrowthRate < 0) { %>
+                  <i class="fas fa-arrow-down text-danger me-1"></i>
+                <% } else { %>
+                  <i class="fas fa-minus text-muted me-1"></i>
+                <% } %>
+                <%= Math.abs(scanGrowthRate || 0) %>% son 30 günde
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded me-3">
+              <i class="fas fa-bug fa-lg text-danger"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Tespit Edilen Tehdit</h6>
+              <h3 class="fw-bold mb-0"><%= totalThreats || 0 %></h3>
+              <small class="text-muted">
+                <% if (threatGrowthRate > 0) { %>
+                  <i class="fas fa-arrow-up text-danger me-1"></i>
+                <% } else if (threatGrowthRate < 0) { %>
+                  <i class="fas fa-arrow-down text-success me-1"></i>
+                <% } else { %>
+                  <i class="fas fa-minus text-muted me-1"></i>
+                <% } %>
+                <%= Math.abs(threatGrowthRate || 0) %>% son 30 günde
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded me-3">
+              <i class="fas fa-crown fa-lg text-info"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Premium Üyeler</h6>
+              <h3 class="fw-bold mb-0"><%= premiumUsers || 0 %></h3>
+              <small class="text-muted">
+                <% if (premiumGrowthRate > 0) { %>
+                  <i class="fas fa-arrow-up text-success me-1"></i>
+                <% } else if (premiumGrowthRate < 0) { %>
+                  <i class="fas fa-arrow-down text-danger me-1"></i>
+                <% } else { %>
+                  <i class="fas fa-minus text-muted me-1"></i>
+                <% } %>
+                <%= Math.abs(premiumGrowthRate || 0) %>% son 30 günde
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Grafik Bölümü -->
+  <div class="row">
+    <div class="col-md-8 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">Kullanıcı Aktivitesi</h6>
+            <div>
+              <select class="form-select form-select-sm" id="activityChartPeriod">
+                <option value="7">Son 7 Gün</option>
+                <option value="30" selected>Son 30 Gün</option>
+                <option value="90">Son 90 Gün</option>
+                <option value="365">Son 1 Yıl</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height: 300px;">
+            <!-- Grafiğin yer tutucusu -->
+            <div class="placeholder-chart d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Grafikler yükleniyor...</p>
+                <small class="text-muted d-block">Gerçek uygulamada burada tarama, tehdit tespiti ve kullanıcı aktivite grafiği olacaktır.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">Tehdit Dağılımı</h6>
+            <div>
+              <select class="form-select form-select-sm" id="threatChartPeriod">
+                <option value="30" selected>Son 30 Gün</option>
+                <option value="90">Son 90 Gün</option>
+                <option value="365">Tüm Zamanlar</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height: 300px;">
+            <!-- Grafiğin yer tutucusu -->
+            <div class="placeholder-chart d-flex align-items-center justify-content-center h-100">
+              <div class="text-center">
+                <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Grafikler yükleniyor...</p>
+                <small class="text-muted d-block">Gerçek uygulamada burada tehdit türlerine göre pasta grafik olacaktır.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Coğrafi ve Platform Dağılımı -->
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-bold">Coğrafi Dağılım</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th scope="col">Ülke</th>
+                  <th scope="col">Kullanıcılar</th>
+                  <th scope="col">Yüzde</th>
+                  <th scope="col">Değişim</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="flag-icon me-2">🇹🇷</span>
+                      <span>Türkiye</span>
+                    </div>
+                  </td>
+                  <td><%= turkeyUsers || 852 %></td>
+                  <td><%= turkeyPercentage || '85.2' %>%</td>
+                  <td>
+                    <span class="text-success">
+                      <i class="fas fa-arrow-up me-1"></i> <%= turkeyGrowth || '5.2' %>%
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="flag-icon me-2">🇦🇿</span>
+                      <span>Azerbaycan</span>
+                    </div>
+                  </td>
+                  <td><%= azerbaijanUsers || 64 %></td>
+                  <td><%= azerbaijanPercentage || '6.4' %>%</td>
+                  <td>
+                    <span class="text-success">
+                      <i class="fas fa-arrow-up me-1"></i> <%= azerbaijanGrowth || '2.1' %>%
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="flag-icon me-2">🇩🇪</span>
+                      <span>Almanya</span>
+                    </div>
+                  </td>
+                  <td><%= germanyUsers || 42 %></td>
+                  <td><%= germanyPercentage || '4.2' %>%</td>
+                  <td>
+                    <span class="text-success">
+                      <i class="fas fa-arrow-up me-1"></i> <%= germanyGrowth || '1.5' %>%
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="flag-icon me-2">🇺🇸</span>
+                      <span>ABD</span>
+                    </div>
+                  </td>
+                  <td><%= usaUsers || 22 %></td>
+                  <td><%= usaPercentage || '2.2' %>%</td>
+                  <td>
+                    <span class="text-danger">
+                      <i class="fas fa-arrow-down me-1"></i> <%= usaGrowth || '0.5' %>%
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="flag-icon me-2">🌍</span>
+                      <span>Diğer</span>
+                    </div>
+                  </td>
+                  <td><%= otherUsers || 20 %></td>
+                  <td><%= otherPercentage || '2.0' %>%</td>
+                  <td>
+                    <span class="text-success">
+                      <i class="fas fa-arrow-up me-1"></i> <%= otherGrowth || '0.7' %>%
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-bold">Platform Kullanımı</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0 me-3">
+                  <i class="fab fa-android fa-2x text-success"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="fw-bold mb-0">Android</h6>
+                  <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: <%= androidPercentage || '78' %>%"></div>
+                  </div>
+                </div>
+                <div class="ms-3">
+                  <span class="badge bg-success"><%= androidPercentage || '78' %>%</span>
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0 me-3">
+                  <i class="fab fa-apple fa-2x text-dark"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="fw-bold mb-0">iOS</h6>
+                  <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-dark" style="width: <%= iosPercentage || '22' %>%"></div>
+                  </div>
+                </div>
+                <div class="ms-3">
+                  <span class="badge bg-dark"><%= iosPercentage || '22' %>%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0 me-3">
+                  <i class="fas fa-mobile-alt fa-2x text-primary"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="fw-bold mb-0">Mobil</h6>
+                  <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-primary" style="width: <%= mobilePercentage || '92' %>%"></div>
+                  </div>
+                </div>
+                <div class="ms-3">
+                  <span class="badge bg-primary"><%= mobilePercentage || '92' %>%</span>
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-shrink-0 me-3">
+                  <i class="fas fa-desktop fa-2x text-secondary"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="fw-bold mb-0">Masaüstü</h6>
+                  <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-secondary" style="width: <%= desktopPercentage || '8' %>%"></div>
+                  </div>
+                </div>
+                <div class="ms-3">
+                  <span class="badge bg-secondary"><%= desktopPercentage || '8' %>%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <h6 class="fw-bold mt-3 mb-3">Android Sürümü Dağılımı</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th scope="col">Sürüm</th>
+                  <th scope="col">Kullanıcılar</th>
+                  <th scope="col">Yüzde</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Android 13+</td>
+                  <td><%= android13Users || 247 %></td>
+                  <td><%= android13Percentage || '32' %>%</td>
+                </tr>
+                <tr>
+                  <td>Android 12</td>
+                  <td><%= android12Users || 185 %></td>
+                  <td><%= android12Percentage || '24' %>%</td>
+                </tr>
+                <tr>
+                  <td>Android 11</td>
+                  <td><%= android11Users || 162 %></td>
+                  <td><%= android11Percentage || '21' %>%</td>
+                </tr>
+                <tr>
+                  <td>Android 10</td>
+                  <td><%= android10Users || 93 %></td>
+                  <td><%= android10Percentage || '12' %>%</td>
+                </tr>
+                <tr>
+                  <td>Android 9 ve altı</td>
+                  <td><%= androidOlderUsers || 85 %></td>
+                  <td><%= androidOlderPercentage || '11' %>%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tehdit İstatistikleri -->
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-bold">Son Tehdit İstatistikleri</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <h6 class="fw-bold mb-3">Tehdit Türleri</h6>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Virüs & Trojan</span>
+                  <span class="text-danger"><%= virusCount || 128 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-danger" role="progressbar" style="width: <%= virusPercentage || '32' %>%" aria-valuenow="<%= virusPercentage || '32' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Casus Yazılım</span>
+                  <span class="text-warning"><%= spywareCount || 97 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-warning" role="progressbar" style="width: <%= spywarePercentage || '24' %>%" aria-valuenow="<%= spywarePercentage || '24' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Reklam Yazılımı</span>
+                  <span class="text-info"><%= adwareCount || 113 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-info" role="progressbar" style="width: <%= adwarePercentage || '28' %>%" aria-valuenow="<%= adwarePercentage || '28' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Fidye Yazılımı</span>
+                  <span class="text-primary"><%= ransomwareCount || 24 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-primary" role="progressbar" style="width: <%= ransomwarePercentage || '6' %>%" aria-valuenow="<%= ransomwarePercentage || '6' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Diğer</span>
+                  <span class="text-secondary"><%= otherThreatCount || 40 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-secondary" role="progressbar" style="width: <%= otherThreatPercentage || '10' %>%" aria-valuenow="<%= otherThreatPercentage || '10' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+              <h6 class="fw-bold mb-3">Tehdit Tehlike Seviyesi</h6>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Yüksek</span>
+                  <span class="text-danger"><%= highSeverityCount || 103 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-danger" role="progressbar" style="width: <%= highSeverityPercentage || '26' %>%" aria-valuenow="<%= highSeverityPercentage || '26' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Orta</span>
+                  <span class="text-warning"><%= mediumSeverityCount || 183 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-warning" role="progressbar" style="width: <%= mediumSeverityPercentage || '46' %>%" aria-valuenow="<%= mediumSeverityPercentage || '46' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Düşük</span>
+                  <span class="text-success"><%= lowSeverityCount || 116 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: <%= lowSeverityPercentage || '28' %>%" aria-valuenow="<%= lowSeverityPercentage || '28' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <h6 class="fw-bold mt-4 mb-3">Temizlenme Oranı</h6>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Temizlendi</span>
+                  <span class="text-success"><%= cleanedCount || 324 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: <%= cleanedPercentage || '81' %>%" aria-valuenow="<%= cleanedPercentage || '81' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Temizlenemedi</span>
+                  <span class="text-danger"><%= uncleanedCount || 78 %></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-danger" role="progressbar" style="width: <%= uncleanedPercentage || '19' %>%" aria-valuenow="<%= uncleanedPercentage || '19' %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+              <h6 class="fw-bold mb-3">En Çok Tespit Edilen Tehditler</h6>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fas fa-virus text-danger me-2"></i>
+                    <span class="fw-bold">Android.Trojan.Agent.ABC</span>
+                    <small class="text-muted d-block">Trojan</small>
+                  </div>
+                  <span class="badge bg-danger rounded-pill"><%= topThreat1Count || 42 %></span>
+                </li>
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fas fa-ad text-warning me-2"></i>
+                    <span class="fw-bold">Adware.AndroidOS.Agent.XYZ</span>
+                    <small class="text-muted d-block">Adware</small>
+                  </div>
+                  <span class="badge bg-warning rounded-pill"><%= topThreat2Count || 38 %></span>
+                </li>
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fas fa-user-secret text-info me-2"></i>
+                    <span class="fw-bold">Android.Spyware.Monitor.123</span>
+                    <small class="text-muted d-block">Spyware</small>
+                  </div>
+                  <span class="badge bg-info rounded-pill"><%= topThreat3Count || 32 %></span>
+                </li>
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fas fa-lock text-primary me-2"></i>
+                    <span class="fw-bold">Ransom.Android.Locker.DEF</span>
+                    <small class="text-muted d-block">Ransomware</small>
+                  </div>
+                  <span class="badge bg-primary rounded-pill"><%= topThreat4Count || 21 %></span>
+                </li>
+                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fas fa-bug text-secondary me-2"></i>
+                    <span class="fw-bold">Android.Backdoor.Access.456</span>
+                    <small class="text-muted d-block">Backdoor</small>
+                  </div>
+                  <span class="badge bg-secondary rounded-pill"><%= topThreat5Count || 18 %></span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Veri yenileme
+    const refreshButton = document.getElementById('refreshStatsBtn');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', function() {
+        // Yenileme ikonunu döndür
+        this.querySelector('i').classList.add('fa-spin');
+        
+        // Normalde burada bir AJAX isteği yapılır
+        // Şimdilik sadece simülasyon yapalım
+        setTimeout(() => {
+          this.querySelector('i').classList.remove('fa-spin');
+          alert('İstatistikler yenilendi.');
+        }, 1000);
+      });
+    }
+    
+    // Dışa aktarma
+    const exportButton = document.getElementById('exportStatsBtn');
+    if (exportButton) {
+      exportButton.addEventListener('click', function() {
+        alert('İstatistikler PDF/CSV olarak dışa aktarılıyor...');
+        // Normalde burada dışa aktarma işlemi yapılır
+      });
+    }
+    
+    // Grafik periyodu değiştiğinde
+    const activityChartPeriod = document.getElementById('activityChartPeriod');
+    if (activityChartPeriod) {
+      activityChartPeriod.addEventListener('change', function() {
+        alert('Seçilen periyot: ' + this.value + ' gün');
+        // Normalde burada grafik yeniden çizilir
+      });
+    }
+    
+    // Tehdit grafiği periyodu değiştiğinde
+    const threatChartPeriod = document.getElementById('threatChartPeriod');
+    if (threatChartPeriod) {
+      threatChartPeriod.addEventListener('change', function() {
+        alert('Seçilen periyot: ' + this.value + ' gün');
+        // Normalde burada grafik yeniden çizilir
+      });
+    }
+  });
+</script>

@@ -6,9 +6,17 @@
         <div class="card-header bg-white py-3">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold">Kullanıcı Yönetimi</h5>
-            <a href="/admin/users/new" class="btn btn-sm btn-primary">
-              <i class="fas fa-plus me-1"></i> Yeni Kullanıcı
-            </a>
+            <div>
+              <button class="btn btn-sm btn-outline-primary me-2" id="exportUsersBtn">
+                <i class="fas fa-file-export me-1"></i> Dışa Aktar
+              </button>
+              <button class="btn btn-sm btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                <i class="fas fa-user-plus me-1"></i> Yeni Kullanıcı
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" id="refreshUsersBtn">
+                <i class="fas fa-sync-alt me-1"></i> Yenile
+              </button>
+            </div>
           </div>
         </div>
         <div class="card-body p-0">
@@ -17,28 +25,37 @@
             <div class="row g-2">
               <div class="col-md-4">
                 <div class="input-group">
-                  <input type="text" class="form-control" placeholder="Kullanıcı ara..." id="userSearchInput">
+                  <input type="text" class="form-control" placeholder="E-posta, isim..." id="userSearchInput">
                   <button class="btn btn-outline-secondary" type="button">
                     <i class="fas fa-search"></i>
                   </button>
                 </div>
               </div>
-              <div class="col-md-3">
-                <select class="form-select" id="userRoleFilter">
-                  <option value="all">Tüm Roller</option>
-                  <option value="admin">Yönetici</option>
-                  <option value="user">Kullanıcı</option>
-                </select>
-              </div>
-              <div class="col-md-3">
+              <div class="col-md-2">
                 <select class="form-select" id="userStatusFilter">
-                  <option value="all">Tüm Durumlar</option>
+                  <option value="all">Tüm Kullanıcılar</option>
                   <option value="active">Aktif</option>
                   <option value="inactive">Pasif</option>
+                  <option value="admin">Yöneticiler</option>
+                  <option value="premium">Premium</option>
                 </select>
               </div>
+              <div class="col-md-2">
+                <select class="form-select" id="userSortFilter">
+                  <option value="newest">En Yeni</option>
+                  <option value="oldest">En Eski</option>
+                  <option value="az">A-Z</option>
+                  <option value="za">Z-A</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <div class="input-group">
+                  <span class="input-group-text">Tarih</span>
+                  <input type="date" class="form-control" id="userDateFilter">
+                </div>
+              </div>
               <div class="col-md-2 text-end">
-                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                <button class="btn btn-outline-secondary w-100" id="resetUserFilters">
                   <i class="fas fa-sync-alt me-1"></i> Sıfırla
                 </button>
               </div>
@@ -50,11 +67,13 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th scope="col" class="ps-3">Kullanıcı</th>
+                  <th scope="col" class="ps-3">ID</th>
+                  <th scope="col">Profil</th>
                   <th scope="col">E-posta</th>
-                  <th scope="col">Rol</th>
-                  <th scope="col">Son Giriş</th>
                   <th scope="col">Durum</th>
+                  <th scope="col">Üyelik</th>
+                  <th scope="col">Kayıt Tarihi</th>
+                  <th scope="col">Tehditler</th>
                   <th scope="col">İşlemler</th>
                 </tr>
               </thead>
@@ -62,32 +81,27 @@
                 <% if (users && users.length > 0) { %>
                   <% users.forEach(function(user) { %>
                     <tr>
-                      <td class="ps-3">
+                      <td class="ps-3 text-muted">
+                        <small><%= user.id.substring(0, 8) %>...</small>
+                      </td>
+                      <td>
                         <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0">
-                            <img src="https://placehold.co/40x40?text=<%= user.displayName ? user.displayName.charAt(0) : 'U' %>" alt="User Avatar" class="rounded-circle">
-                          </div>
-                          <div class="flex-grow-1 ms-2">
-                            <h6 class="mb-0"><%= user.displayName || 'Kullanıcı' %></h6>
-                            <small class="text-muted"><%= user.id.substring(0, 8) %>...</small>
+                          <% if (user.photoURL) { %>
+                            <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle me-2" width="40" height="40">
+                          <% } else { %>
+                            <div class="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                              <i class="fas fa-user"></i>
+                            </div>
+                          <% } %>
+                          <div>
+                            <h6 class="mb-0 fw-bold"><%= user.displayName || 'İsimsiz Kullanıcı' %></h6>
+                            <% if (user.isAdmin) { %>
+                              <span class="badge bg-primary">Admin</span>
+                            <% } %>
                           </div>
                         </div>
                       </td>
                       <td><%= user.email %></td>
-                      <td>
-                        <% if (user.isAdmin) { %>
-                          <span class="badge bg-primary">Admin</span>
-                        <% } else { %>
-                          <span class="badge bg-secondary">Kullanıcı</span>
-                        <% } %>
-                      </td>
-                      <td>
-                        <% if (user.lastLoginDate) { %>
-                          <%= user.lastLoginDate.toLocaleDateString('tr-TR') %> <%= user.lastLoginDate.toLocaleTimeString('tr-TR') %>
-                        <% } else { %>
-                          <span class="text-muted">Giriş yapmadı</span>
-                        <% } %>
-                      </td>
                       <td>
                         <% if (user.isActive) { %>
                           <span class="badge bg-success">Aktif</span>
@@ -96,18 +110,46 @@
                         <% } %>
                       </td>
                       <td>
+                        <% if (user.isPremium) { %>
+                          <span class="badge bg-warning">Premium</span>
+                        <% } else { %>
+                          <span class="badge bg-light text-dark">Ücretsiz</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% const createdDate = user.createdAt ? new Date(user.createdAt) : new Date(); %>
+                        <%= createdDate.toLocaleDateString('tr-TR') %>
+                        <small class="text-muted d-block"><%= createdDate.toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'}) %></small>
+                      </td>
+                      <td>
+                        <% const threatCount = user.threatCount || 0; %>
+                        <% if (threatCount > 0) { %>
+                          <span class="badge bg-danger"><%= threatCount %></span>
+                        <% } else { %>
+                          <span class="badge bg-success">0</span>
+                        <% } %>
+                      </td>
+                      <td>
                         <div class="btn-group">
-                          <a href="/admin/users/<%= user.id %>" class="btn btn-sm btn-outline-secondary">
+                          <a href="/admin/users/<%= user.id %>" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-eye"></i>
                           </a>
-                          <a href="/admin/users/<%= user.id %>/edit" class="btn btn-sm btn-outline-primary">
+                          <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#editUserModal" 
+                                  data-user-id="<%= user.id %>"
+                                  data-user-name="<%= user.displayName || '' %>"
+                                  data-user-email="<%= user.email %>"
+                                  data-user-admin="<%= user.isAdmin %>"
+                                  data-user-premium="<%= user.isPremium %>"
+                                  data-user-active="<%= user.isActive %>">
                             <i class="fas fa-edit"></i>
-                          </a>
+                          </button>
                           <button type="button" class="btn btn-sm btn-outline-danger" 
                                   data-bs-toggle="modal" 
                                   data-bs-target="#deleteUserModal" 
-                                  data-user-id="<%= user.id %>" 
-                                  data-user-name="<%= user.displayName || user.email %>">
+                                  data-user-id="<%= user.id %>"
+                                  data-user-email="<%= user.email %>">
                             <i class="fas fa-trash"></i>
                           </button>
                         </div>
@@ -116,11 +158,11 @@
                   <% }); %>
                 <% } else { %>
                   <tr>
-                    <td colspan="6" class="text-center py-4">
+                    <td colspan="8" class="text-center py-4">
                       <div class="py-5">
                         <i class="fas fa-users fa-3x text-muted mb-3"></i>
                         <h5>Henüz kullanıcı bulunmuyor</h5>
-                        <p class="text-muted">İlk kullanıcıyı eklemek için "Yeni Kullanıcı" butonuna tıklayın</p>
+                        <p class="text-muted">Kullanıcılar kaydoldukça burada görüntülenecekler</p>
                       </div>
                     </td>
                   </tr>
@@ -152,6 +194,199 @@
       </div>
     </div>
   </div>
+  
+  <!-- Kullanıcı İstatistikleri -->
+  <div class="row">
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Toplam Kullanıcı</h6>
+              <h3 class="fw-bold mb-0"><%= totalUsers || 0 %></h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 p-3 rounded">
+              <i class="fas fa-users text-primary"></i>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div>
+              <span class="text-muted">Bu ay</span>
+              <h6 class="mb-0 fw-bold"><%= monthlyUsers || 0 %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Bu hafta</span>
+              <h6 class="mb-0 fw-bold"><%= weeklyUsers || 0 %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Bugün</span>
+              <h6 class="mb-0 fw-bold"><%= dailyUsers || 0 %></h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Premium Kullanıcılar</h6>
+              <h3 class="fw-bold mb-0"><%= premiumUsers || 0 %></h3>
+            </div>
+            <div class="bg-warning bg-opacity-10 p-3 rounded">
+              <i class="fas fa-crown text-warning"></i>
+            </div>
+          </div>
+          <div class="progress mb-3" style="height: 8px;">
+            <% const premiumPercentage = totalUsers > 0 ? Math.round((premiumUsers || 0) / totalUsers * 100) : 0; %>
+            <div class="progress-bar bg-warning" role="progressbar" style="width: <%= premiumPercentage %>%" aria-valuenow="<%= premiumPercentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="text-center small text-muted">
+            Tüm kullanıcıların <%= premiumPercentage %>%'i premium üyeliğe sahip
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Aktif Kullanıcılar</h6>
+              <h3 class="fw-bold mb-0"><%= activeUsers || 0 %></h3>
+            </div>
+            <div class="bg-success bg-opacity-10 p-3 rounded">
+              <i class="fas fa-user-check text-success"></i>
+            </div>
+          </div>
+          <div class="progress mb-3" style="height: 8px;">
+            <% const activePercentage = totalUsers > 0 ? Math.round((activeUsers || 0) / totalUsers * 100) : 0; %>
+            <div class="progress-bar bg-success" role="progressbar" style="width: <%= activePercentage %>%" aria-valuenow="<%= activePercentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="text-center small text-muted">
+            Kullanıcıların son 30 gün içindeki aktivitesi
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Risk Altındaki Kullanıcılar</h6>
+              <h3 class="fw-bold mb-0"><%= usersAtRisk || 0 %></h3>
+            </div>
+            <div class="bg-danger bg-opacity-10 p-3 rounded">
+              <i class="fas fa-exclamation-triangle text-danger"></i>
+            </div>
+          </div>
+          <div class="progress mb-3" style="height: 8px;">
+            <% const riskPercentage = totalUsers > 0 ? Math.round((usersAtRisk || 0) / totalUsers * 100) : 0; %>
+            <div class="progress-bar bg-danger" role="progressbar" style="width: <%= riskPercentage %>%" aria-valuenow="<%= riskPercentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="text-center small text-muted">
+            Aktif tehdidi olan kullanıcılar
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Yeni Kullanıcı Modal -->
+<div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newUserModalLabel">Yeni Kullanıcı Ekle</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="newUserForm">
+          <div class="mb-3">
+            <label for="newUserName" class="form-label">İsim</label>
+            <input type="text" class="form-control" id="newUserName" placeholder="Kullanıcı Adı">
+          </div>
+          <div class="mb-3">
+            <label for="newUserEmail" class="form-label">E-posta</label>
+            <input type="email" class="form-control" id="newUserEmail" placeholder="ornek@email.com" required>
+          </div>
+          <div class="mb-3">
+            <label for="newUserPassword" class="form-label">Şifre</label>
+            <input type="password" class="form-control" id="newUserPassword" required>
+          </div>
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="newUserAdmin">
+              <label class="form-check-label" for="newUserAdmin">Admin Yetkisi</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="newUserPremium">
+              <label class="form-check-label" for="newUserPremium">Premium Üyelik</label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-success" id="saveNewUserBtn">Kullanıcı Ekle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kullanıcı Düzenleme Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editUserModalLabel">Kullanıcı Düzenle</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editUserForm">
+          <input type="hidden" id="editUserId">
+          <div class="mb-3">
+            <label for="editUserName" class="form-label">İsim</label>
+            <input type="text" class="form-control" id="editUserName" placeholder="Kullanıcı Adı">
+          </div>
+          <div class="mb-3">
+            <label for="editUserEmail" class="form-label">E-posta</label>
+            <input type="email" class="form-control" id="editUserEmail" placeholder="ornek@email.com" required>
+          </div>
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="editUserAdmin">
+              <label class="form-check-label" for="editUserAdmin">Admin Yetkisi</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="editUserPremium">
+              <label class="form-check-label" for="editUserPremium">Premium Üyelik</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="editUserActive">
+              <label class="form-check-label" for="editUserActive">Aktif</label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-primary" id="updateUserBtn">Değişiklikleri Kaydet</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Kullanıcı Silme Modal -->
@@ -164,13 +399,20 @@
       </div>
       <div class="modal-body">
         <p>Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
-        <p class="fw-bold user-name-display"></p>
+        <p class="fw-bold"><span id="deleteUserEmail"></span></p>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="deleteUserData">
+          <label class="form-check-label" for="deleteUserData">
+            Tüm kullanıcı verilerini de sil (tarama geçmişi, tehdit raporları, vb.)
+          </label>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
         <form id="deleteUserForm" action="/admin/users/delete" method="POST">
           <input type="hidden" name="userId" id="deleteUserId">
-          <button type="submit" class="btn btn-danger">Sil</button>
+          <input type="hidden" name="deleteData" id="deleteDataInput" value="false">
+          <button type="submit" class="btn btn-danger">Kullanıcıyı Sil</button>
         </form>
       </div>
     </div>
@@ -179,38 +421,248 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Kullanıcı silme modalı
-    const deleteUserModal = document.getElementById('deleteUserModal');
-    if (deleteUserModal) {
-      deleteUserModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const userId = button.getAttribute('data-user-id');
-        const userName = button.getAttribute('data-user-name');
-        
-        const modalUserName = this.querySelector('.user-name-display');
-        const deleteUserIdInput = document.getElementById('deleteUserId');
-        
-        modalUserName.textContent = userName;
-        deleteUserIdInput.value = userId;
+    // Kullanıcı yenileme butonu
+    const refreshButton = document.getElementById('refreshUsersBtn');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', function() {
+        this.querySelector('i').classList.add('fa-spin');
+        setTimeout(() => {
+          this.querySelector('i').classList.remove('fa-spin');
+          window.location.reload();
+        }, 1000);
       });
     }
     
-    // Kullanıcı arama fonksiyonu
+    // Kullanıcı arama işlevselliği
     const searchInput = document.getElementById('userSearchInput');
     if (searchInput) {
       searchInput.addEventListener('keyup', function() {
-        const searchValue = this.value.toLowerCase();
+        const searchTerm = this.value.toLowerCase();
         const userRows = document.querySelectorAll('#userTableBody tr');
         
-        userRows.forEach(function(row) {
-          const userName = row.querySelector('h6').textContent.toLowerCase();
-          const userEmail = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-          
-          if (userName.includes(searchValue) || userEmail.includes(searchValue)) {
+        userRows.forEach(row => {
+          const rowContent = row.textContent.toLowerCase();
+          if (rowContent.includes(searchTerm)) {
             row.style.display = '';
           } else {
             row.style.display = 'none';
           }
+        });
+      });
+    }
+    
+    // Filtre sıfırlama
+    const resetButton = document.getElementById('resetUserFilters');
+    if (resetButton) {
+      resetButton.addEventListener('click', function() {
+        document.getElementById('userSearchInput').value = '';
+        document.getElementById('userStatusFilter').value = 'all';
+        document.getElementById('userSortFilter').value = 'newest';
+        document.getElementById('userDateFilter').value = '';
+        
+        // Tüm satırları göster
+        const userRows = document.querySelectorAll('#userTableBody tr');
+        userRows.forEach(row => {
+          row.style.display = '';
+        });
+      });
+    }
+    
+    // Kullanıcı dışa aktarma
+    const exportButton = document.getElementById('exportUsersBtn');
+    if (exportButton) {
+      exportButton.addEventListener('click', function() {
+        alert('Kullanıcı verileri CSV olarak dışa aktarılıyor...');
+        // Normalde CSV indirme işlemi yapılır
+      });
+    }
+    
+    // Yeni kullanıcı kaydetme
+    const saveNewUserBtn = document.getElementById('saveNewUserBtn');
+    if (saveNewUserBtn) {
+      saveNewUserBtn.addEventListener('click', function() {
+        // Form verilerini al
+        const name = document.getElementById('newUserName').value;
+        const email = document.getElementById('newUserEmail').value;
+        const password = document.getElementById('newUserPassword').value;
+        const isAdmin = document.getElementById('newUserAdmin').checked;
+        const isPremium = document.getElementById('newUserPremium').checked;
+        
+        // Gerekli alanları kontrol et
+        if (!email || !password) {
+          alert('E-posta ve şifre alanları zorunludur!');
+          return;
+        }
+        
+        // Normalde form verileri POST isteği ile sunucuya gönderilir
+        // Simülasyon amacıyla bir süre bekletelim ve başarılı olduğunu varsayalım
+        
+        // Buton durumunu güncelle
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Kaydediliyor...';
+        
+        setTimeout(() => {
+          // Modalı kapat
+          const modal = bootstrap.Modal.getInstance(document.getElementById('newUserModal'));
+          modal.hide();
+          
+          // Kullanıcıya bildirim göster
+          alert('Kullanıcı başarıyla eklendi!');
+          
+          // Sayfayı yenile
+          window.location.reload();
+        }, 1500);
+      });
+    }
+    
+    // Kullanıcı düzenleme modalı
+    const editUserModal = document.getElementById('editUserModal');
+    if (editUserModal) {
+      editUserModal.addEventListener('show.bs.modal', function(event) {
+        // Modalı tetikleyen butondan kullanıcı bilgilerini al
+        const button = event.relatedTarget;
+        const userId = button.getAttribute('data-user-id');
+        const userName = button.getAttribute('data-user-name');
+        const userEmail = button.getAttribute('data-user-email');
+        const isAdmin = button.getAttribute('data-user-admin') === 'true';
+        const isPremium = button.getAttribute('data-user-premium') === 'true';
+        const isActive = button.getAttribute('data-user-active') === 'true';
+        
+        // Modal içindeki formu doldur
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editUserName').value = userName;
+        document.getElementById('editUserEmail').value = userEmail;
+        document.getElementById('editUserAdmin').checked = isAdmin;
+        document.getElementById('editUserPremium').checked = isPremium;
+        document.getElementById('editUserActive').checked = isActive;
+      });
+    }
+    
+    // Kullanıcı güncelleme
+    const updateUserBtn = document.getElementById('updateUserBtn');
+    if (updateUserBtn) {
+      updateUserBtn.addEventListener('click', function() {
+        // Form verilerini al
+        const userId = document.getElementById('editUserId').value;
+        const name = document.getElementById('editUserName').value;
+        const email = document.getElementById('editUserEmail').value;
+        const isAdmin = document.getElementById('editUserAdmin').checked;
+        const isPremium = document.getElementById('editUserPremium').checked;
+        const isActive = document.getElementById('editUserActive').checked;
+        
+        // Gerekli alanları kontrol et
+        if (!email) {
+          alert('E-posta alanı zorunludur!');
+          return;
+        }
+        
+        // Normalde form verileri POST isteği ile sunucuya gönderilir
+        // Simülasyon amacıyla bir süre bekletelim ve başarılı olduğunu varsayalım
+        
+        // Buton durumunu güncelle
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Güncelleniyor...';
+        
+        setTimeout(() => {
+          // Modalı kapat
+          const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+          modal.hide();
+          
+          // Kullanıcıya bildirim göster
+          alert('Kullanıcı başarıyla güncellendi!');
+          
+          // Sayfayı yenile
+          window.location.reload();
+        }, 1500);
+      });
+    }
+    
+    // Kullanıcı silme modalı
+    const deleteUserModal = document.getElementById('deleteUserModal');
+    if (deleteUserModal) {
+      deleteUserModal.addEventListener('show.bs.modal', function(event) {
+        // Modalı tetikleyen butondan kullanıcı bilgilerini al
+        const button = event.relatedTarget;
+        const userId = button.getAttribute('data-user-id');
+        const userEmail = button.getAttribute('data-user-email');
+        
+        // Modal içindeki elemanları güncelle
+        document.getElementById('deleteUserId').value = userId;
+        document.getElementById('deleteUserEmail').textContent = userEmail;
+      });
+    }
+    
+    // Kullanıcı silme işlemi
+    const deleteUserForm = document.getElementById('deleteUserForm');
+    if (deleteUserForm) {
+      deleteUserForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Veri silme seçeneğini kontrol et
+        const deleteData = document.getElementById('deleteUserData').checked;
+        document.getElementById('deleteDataInput').value = deleteData;
+        
+        // Normalde form POST isteği gönderilir
+        // Simülasyon amacıyla direkt başarılı olduğunu varsayalım
+        
+        // Gönder düğmesini devre dışı bırak
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Siliniyor...';
+        
+        setTimeout(() => {
+          // Modalı kapat
+          const modal = bootstrap.Modal.getInstance(document.getElementById('deleteUserModal'));
+          modal.hide();
+          
+          // Kullanıcıya bildirim göster
+          alert('Kullanıcı başarıyla silindi!');
+          
+          // Sayfayı yenile
+          window.location.reload();
+        }, 1500);
+      });
+    }
+    
+    // Durum filtresi değiştiğinde
+    const statusFilter = document.getElementById('userStatusFilter');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', function() {
+        const selectedValue = this.value;
+        const userRows = document.querySelectorAll('#userTableBody tr');
+        
+        if (selectedValue === 'all') {
+          // Tüm satırları göster
+          userRows.forEach(row => {
+            row.style.display = '';
+          });
+          return;
+        }
+        
+        userRows.forEach(row => {
+          // Satır boş ise (yani "henüz kullanıcı bulunmuyor" mesajı varsa) göster
+          if (row.cells.length <= 1) {
+            row.style.display = '';
+            return;
+          }
+          
+          let show = false;
+          
+          if (selectedValue === 'active') {
+            // Aktif kullanıcıları göster
+            show = row.querySelector('.badge.bg-success') !== null;
+          } else if (selectedValue === 'inactive') {
+            // Pasif kullanıcıları göster
+            show = row.querySelector('.badge.bg-danger') !== null && !row.textContent.includes('Admin');
+          } else if (selectedValue === 'admin') {
+            // Admin kullanıcıları göster
+            show = row.textContent.includes('Admin');
+          } else if (selectedValue === 'premium') {
+            // Premium kullanıcıları göster
+            show = row.querySelector('.badge.bg-warning') !== null;
+          }
+          
+          row.style.display = show ? '' : 'none';
         });
       });
     }

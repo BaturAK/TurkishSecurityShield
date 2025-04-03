@@ -1,0 +1,997 @@
+<!-- Kullanıcı Dashboard - Yardım -->
+<div class="container py-5">
+  <div class="row">
+    <!-- Sol Kenar Çubuğu - Kullanıcı Profili ve Menü -->
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow mb-4">
+        <div class="card-body text-center py-4">
+          <div class="avatar mb-3">
+            <% if (user && user.photoURL) { %>
+              <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle" width="100" height="100">
+            <% } else { %>
+              <div class="avatar-placeholder">
+                <i class="fas fa-user fa-3x"></i>
+              </div>
+            <% } %>
+          </div>
+          <h5 class="fw-bold"><%= user.displayName || 'Kullanıcı' %></h5>
+          <p class="text-muted small mb-3"><%= user.email %></p>
+          <div class="d-grid">
+            <a href="/profile" class="btn btn-sm btn-outline-primary">Profili Düzenle</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dashboard Menü -->
+      <div class="list-group border-0 shadow">
+        <a href="/dashboard" class="list-group-item list-group-item-action">
+          <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+        </a>
+        <a href="/dashboard/scans" class="list-group-item list-group-item-action">
+          <i class="fas fa-shield-virus me-2"></i> Taramalarım
+        </a>
+        <a href="/dashboard/threats" class="list-group-item list-group-item-action">
+          <i class="fas fa-bug me-2"></i> Tehdit Koruması
+        </a>
+        <a href="/dashboard/settings" class="list-group-item list-group-item-action">
+          <i class="fas fa-cog me-2"></i> Ayarlar
+        </a>
+        <a href="/dashboard/help" class="list-group-item list-group-item-action active">
+          <i class="fas fa-question-circle me-2"></i> Yardım
+        </a>
+      </div>
+    </div>
+    
+    <!-- Ana İçerik Alanı -->
+    <div class="col-md-9">
+      <!-- Yardım Kartı -->
+      <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Yardım Merkezi</h5>
+            <div class="input-group" style="max-width: 300px;">
+              <input type="text" class="form-control" placeholder="Arama yapın..." id="helpSearchInput">
+              <button class="btn btn-outline-primary" type="button" id="helpSearchButton">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <div class="list-group help-topics" id="helpTopicsTab" role="tablist">
+                <a class="list-group-item list-group-item-action active" id="general-tab" data-bs-toggle="list" href="#general" role="tab" aria-controls="general">
+                  <i class="fas fa-shield-alt me-2"></i> Genel Bilgiler
+                </a>
+                <a class="list-group-item list-group-item-action" id="scans-tab" data-bs-toggle="list" href="#scans" role="tab" aria-controls="scans">
+                  <i class="fas fa-search me-2"></i> Taramalar
+                </a>
+                <a class="list-group-item list-group-item-action" id="threats-tab" data-bs-toggle="list" href="#threats" role="tab" aria-controls="threats">
+                  <i class="fas fa-bug me-2"></i> Tehdit Yönetimi
+                </a>
+                <a class="list-group-item list-group-item-action" id="real-time-tab" data-bs-toggle="list" href="#real-time" role="tab" aria-controls="real-time">
+                  <i class="fas fa-bolt me-2"></i> Gerçek Zamanlı Koruma
+                </a>
+                <a class="list-group-item list-group-item-action" id="wifi-security-tab" data-bs-toggle="list" href="#wifi-security" role="tab" aria-controls="wifi-security">
+                  <i class="fas fa-wifi me-2"></i> Wi-Fi Güvenliği
+                </a>
+                <a class="list-group-item list-group-item-action" id="vpn-tab" data-bs-toggle="list" href="#vpn" role="tab" aria-controls="vpn">
+                  <i class="fas fa-lock me-2"></i> VPN Hizmeti
+                </a>
+                <a class="list-group-item list-group-item-action" id="app-lock-tab" data-bs-toggle="list" href="#app-lock" role="tab" aria-controls="app-lock">
+                  <i class="fas fa-key me-2"></i> Uygulama Kilidi
+                </a>
+                <a class="list-group-item list-group-item-action" id="qr-scan-tab" data-bs-toggle="list" href="#qr-scan" role="tab" aria-controls="qr-scan">
+                  <i class="fas fa-qrcode me-2"></i> QR Kod Güvenliği
+                </a>
+                <a class="list-group-item list-group-item-action" id="settings-tab" data-bs-toggle="list" href="#settings" role="tab" aria-controls="settings">
+                  <i class="fas fa-cog me-2"></i> Ayarlar
+                </a>
+                <a class="list-group-item list-group-item-action" id="faq-tab" data-bs-toggle="list" href="#faq" role="tab" aria-controls="faq">
+                  <i class="fas fa-question-circle me-2"></i> SSS
+                </a>
+              </div>
+            </div>
+            
+            <div class="col-md-8">
+              <div class="tab-content" id="helpTopicsContent">
+                <!-- Genel Bilgiler -->
+                <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                  <h4 class="fw-bold mb-3">Genel Bilgiler</h4>
+                  <p>AntiVirüs uygulaması, cihazınızdaki zararlı yazılımları tespit eden ve temizleyen kapsamlı bir güvenlik çözümüdür. Aşağıdaki koruma katmanlarını sağlar:</p>
+                  
+                  <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item px-0">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="feature-icon bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="fas fa-shield-alt text-primary"></i>
+                          </div>
+                        </div>
+                        <div>
+                          <h6 class="fw-bold">Gerçek Zamanlı Koruma</h6>
+                          <p class="small text-muted mb-0">Yüklenen uygulamaları ve indirilen dosyaları anında tarar.</p>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="list-group-item px-0">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="feature-icon bg-success bg-opacity-10 p-2 rounded">
+                            <i class="fas fa-search text-success"></i>
+                          </div>
+                        </div>
+                        <div>
+                          <h6 class="fw-bold">Kapsamlı Taramalar</h6>
+                          <p class="small text-muted mb-0">Cihazınızın tamamını derinlemesine analiz eder.</p>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="list-group-item px-0">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="feature-icon bg-info bg-opacity-10 p-2 rounded">
+                            <i class="fas fa-wifi text-info"></i>
+                          </div>
+                        </div>
+                        <div>
+                          <h6 class="fw-bold">Wi-Fi Güvenliği</h6>
+                          <p class="small text-muted mb-0">Güvensiz ağ bağlantılarını tespit eder.</p>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="list-group-item px-0">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="feature-icon bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="fas fa-qrcode text-warning"></i>
+                          </div>
+                        </div>
+                        <div>
+                          <h6 class="fw-bold">QR Kod Güvenliği</h6>
+                          <p class="small text-muted mb-0">QR kodları tarayarak kötü amaçlı bağlantıları tespit eder.</p>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                  
+                  <p>Uygulamayı daha etkin kullanmak için düzenli olarak tarama yapmanızı ve güvenlik uyarılarını dikkate almanızı öneririz.</p>
+                </div>
+                
+                <!-- Taramalar -->
+                <div class="tab-pane fade" id="scans" role="tabpanel" aria-labelledby="scans-tab">
+                  <h4 class="fw-bold mb-3">Taramalar</h4>
+                  <p>AntiVirüs uygulaması farklı tarama seçenekleri sunar:</p>
+                  
+                  <div class="accordion mb-4" id="scanAccordion">
+                    <div class="accordion-item border">
+                      <h2 class="accordion-header" id="headingQuickScan">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuickScan" aria-expanded="true" aria-controls="collapseQuickScan">
+                          <i class="fas fa-bolt text-primary me-2"></i> Hızlı Tarama
+                        </button>
+                      </h2>
+                      <div id="collapseQuickScan" class="accordion-collapse collapse show" aria-labelledby="headingQuickScan" data-bs-parent="#scanAccordion">
+                        <div class="accordion-body">
+                          <p>Hızlı tarama, cihazınızın en kritik alanlarını kontrol eder. Genellikle 2-3 dakika sürer.</p>
+                          <p><strong>Taranan alanlar:</strong></p>
+                          <ul>
+                            <li>Sistem uygulamaları</li>
+                            <li>İndirilen uygulamalar</li>
+                            <li>Çalışan işlemler</li>
+                            <li>Geçici dosya dizinleri</li>
+                          </ul>
+                          <p>Günlük kullanım için önerilir.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item border">
+                      <h2 class="accordion-header" id="headingFullScan">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFullScan" aria-expanded="false" aria-controls="collapseFullScan">
+                          <i class="fas fa-shield-alt text-success me-2"></i> Tam Tarama
+                        </button>
+                      </h2>
+                      <div id="collapseFullScan" class="accordion-collapse collapse" aria-labelledby="headingFullScan" data-bs-parent="#scanAccordion">
+                        <div class="accordion-body">
+                          <p>Tam tarama, cihazınızdaki tüm dosya ve uygulamaları kapsamlı bir şekilde denetler. 15-20 dakika sürebilir.</p>
+                          <p><strong>Taranan alanlar:</strong></p>
+                          <ul>
+                            <li>Sistem belleği ve çalışan işlemler</li>
+                            <li>Sistem ve kullanıcı uygulamaları</li>
+                            <li>Dahili ve harici depolama</li>
+                            <li>İndirilen tüm dosyalar</li>
+                            <li>Sistem dosyaları ve kayıt defterleri</li>
+                          </ul>
+                          <p>Haftada bir kez yapılması önerilir.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item border">
+                      <h2 class="accordion-header" id="headingCustomScan">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCustomScan" aria-expanded="false" aria-controls="collapseCustomScan">
+                          <i class="fas fa-sliders-h text-warning me-2"></i> Özel Tarama
+                        </button>
+                      </h2>
+                      <div id="collapseCustomScan" class="accordion-collapse collapse" aria-labelledby="headingCustomScan" data-bs-parent="#scanAccordion">
+                        <div class="accordion-body">
+                          <p>Özel tarama, belirli dosya, klasör veya uygulamaları seçerek taramanızı sağlar.</p>
+                          <p><strong>Kullanım senaryoları:</strong></p>
+                          <ul>
+                            <li>Şüpheli bir uygulama veya dosyayı taramak</li>
+                            <li>Belirli bir klasördeki tüm medya dosyalarını kontrol etmek</li>
+                            <li>Harici depolama birimlerini taramak</li>
+                            <li>İndirilen dosyaları ayrı olarak taramak</li>
+                          </ul>
+                          <p>İhtiyaç duyduğunuzda kullanabilirsiniz.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item border">
+                      <h2 class="accordion-header" id="headingScheduledScan">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseScheduledScan" aria-expanded="false" aria-controls="collapseScheduledScan">
+                          <i class="fas fa-calendar-alt text-info me-2"></i> Zamanlanmış Tarama
+                        </button>
+                      </h2>
+                      <div id="collapseScheduledScan" class="accordion-collapse collapse" aria-labelledby="headingScheduledScan" data-bs-parent="#scanAccordion">
+                        <div class="accordion-body">
+                          <p>Zamanlanmış taramalar, belirlediğiniz periyotlarda otomatik olarak gerçekleşir.</p>
+                          <p><strong>Ayarlama:</strong></p>
+                          <ol>
+                            <li>Ayarlar > Genel > Otomatik Taramalar bölümüne gidin</li>
+                            <li>Günlük veya haftalık tarama seçeneğini etkinleştirin</li>
+                            <li>Tarama zamanını ve gününü seçin</li>
+                            <li>Değişiklikleri kaydedin</li>
+                          </ol>
+                          <p>Düzenli taramalar için önerilir.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Tehdit Yönetimi -->
+                <div class="tab-pane fade" id="threats" role="tabpanel" aria-labelledby="threats-tab">
+                  <h4 class="fw-bold mb-3">Tehdit Yönetimi</h4>
+                  <p>AntiVirüs uygulaması, tespit ettiği tehditleri yönetmeniz için çeşitli seçenekler sunar:</p>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Tehdit Türleri</h5>
+                    <div class="table-responsive">
+                      <table class="table table-hover">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Tehdit Türü</th>
+                            <th>Açıklama</th>
+                            <th>Risk Seviyesi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><i class="fas fa-virus text-danger me-2"></i> Virüs ve Trojan</td>
+                            <td>Sisteme zarar verebilen kötü amaçlı yazılımlar</td>
+                            <td><span class="badge bg-danger">Yüksek</span></td>
+                          </tr>
+                          <tr>
+                            <td><i class="fas fa-user-secret text-warning me-2"></i> Casus Yazılım</td>
+                            <td>Kişisel verileri toplayan ve gönderen yazılımlar</td>
+                            <td><span class="badge bg-warning">Orta-Yüksek</span></td>
+                          </tr>
+                          <tr>
+                            <td><i class="fas fa-ad text-primary me-2"></i> Reklam Yazılımı</td>
+                            <td>İstenmeyen reklamlar gösteren yazılımlar</td>
+                            <td><span class="badge bg-primary">Orta</span></td>
+                          </tr>
+                          <tr>
+                            <td><i class="fas fa-lock text-danger me-2"></i> Fidye Yazılımı</td>
+                            <td>Dosyalarınızı şifreleyen ve fidye isteyen yazılımlar</td>
+                            <td><span class="badge bg-danger">Çok Yüksek</span></td>
+                          </tr>
+                          <tr>
+                            <td><i class="fas fa-robot text-info me-2"></i> Potansiyel İstenmeyen Program</td>
+                            <td>Sistem performansını etkileyebilen programlar</td>
+                            <td><span class="badge bg-info">Düşük-Orta</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Tehdit İşlemleri</h5>
+                    <ul>
+                      <li><strong>Temizle:</strong> Zararlı yazılımı sistemden kaldırır</li>
+                      <li><strong>Karantinaya Al:</strong> Zararlı yazılımı izole eder ama silmez</li>
+                      <li><strong>Yoksay:</strong> Tehdidi görmezden gelir (önerilmez)</li>
+                      <li><strong>Rapor Et:</strong> Tehdit veritabanımızı geliştirmek için bilgi gönderir</li>
+                    </ul>
+                  </div>
+                  
+                  <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Önemli:</strong> Tespit edilen tehditleri mümkün olan en kısa sürede temizlemenizi öneririz. Tehditler temizlenmeden bırakılırsa, verileriniz risk altında olabilir.
+                  </div>
+                </div>
+                
+                <!-- Gerçek Zamanlı Koruma -->
+                <div class="tab-pane fade" id="real-time" role="tabpanel" aria-labelledby="real-time-tab">
+                  <h4 class="fw-bold mb-3">Gerçek Zamanlı Koruma</h4>
+                  <p>Gerçek zamanlı koruma, cihazınızı sürekli olarak tehditlerden korur ve arka planda çalışır.</p>
+                  
+                  <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Bilgi:</strong> Gerçek zamanlı koruma etkinleştirildiğinde pil tüketimi minimal düzeyde artabilir.
+                  </div>
+                  
+                  <h5 class="fw-bold mb-3">Nasıl Çalışır?</h5>
+                  <ol>
+                    <li class="mb-2">Sisteminizde gerçekleşen dosya aktivitelerini sürekli izler</li>
+                    <li class="mb-2">Yeni indirilen veya yüklenen uygulamaları otomatik tarar</li>
+                    <li class="mb-2">Şüpheli işlemleri ve uygulamaları tespit eder</li>
+                    <li class="mb-2">Tehdit tespit edildiğinde anında bildirim gönderir</li>
+                    <li class="mb-2">Güvenlik tehditlerini gerçek zamanlı olarak engeller</li>
+                  </ol>
+                  
+                  <h5 class="fw-bold mt-4 mb-3">Nasıl Etkinleştirilir?</h5>
+                  <p>Gerçek zamanlı korumayı açmak veya kapatmak için:</p>
+                  <ol>
+                    <li class="mb-2"><strong>Ayarlar > Koruma</strong> bölümüne gidin</li>
+                    <li class="mb-2"><strong>Gerçek zamanlı koruma</strong> seçeneğini açık konuma getirin</li>
+                    <li class="mb-2"><strong>Bulut tabanlı koruma</strong> ve <strong>Davranış izleme</strong> özelliklerini de etkinleştirmenizi öneririz</li>
+                  </ol>
+                  
+                  <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Öneri:</strong> En iyi koruma için gerçek zamanlı korumayı her zaman açık tutmanızı öneririz.
+                  </div>
+                </div>
+                
+                <!-- Wi-Fi Güvenliği -->
+                <div class="tab-pane fade" id="wifi-security" role="tabpanel" aria-labelledby="wifi-security-tab">
+                  <h4 class="fw-bold mb-3">Wi-Fi Güvenliği</h4>
+                  <p>Wi-Fi güvenliği özelliği, bağlandığınız kablosuz ağların güvenliğini analiz eder ve potansiyel riskleri tespit eder.</p>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Neleri Kontrol Eder?</h5>
+                    <ul>
+                      <li class="mb-2"><strong>Şifreleme:</strong> Ağın WEP, WPA veya WPA2 gibi hangi şifreleme yöntemini kullandığını kontrol eder</li>
+                      <li class="mb-2"><strong>Açık Ağlar:</strong> Şifre koruması olmayan ağları tespit eder</li>
+                      <li class="mb-2"><strong>Man-in-the-middle Saldırıları:</strong> Ağ trafiğini dinleme girişimlerini tespit eder</li>
+                      <li class="mb-2"><strong>Sahtekâr Ağlar:</strong> Güvenilir ağları taklit eden sahte Wi-Fi noktalarını tespit eder</li>
+                      <li class="mb-2"><strong>ARP Zehirlenmesi:</strong> Ağ trafiğinin yönlendirilmesini değiştiren saldırıları tespit eder</li>
+                    </ul>
+                  </div>
+                  
+                  <div class="card mb-4">
+                    <div class="card-header fw-bold">Wi-Fi Güvenlik Seviyeleri</div>
+                    <div class="card-body">
+                      <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-success me-3">Güvenli</span>
+                        <p class="mb-0">Ağ en yüksek seviyede şifreleme ve güvenlik önlemleri kullanıyor.</p>
+                      </div>
+                      <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-warning me-3">Dikkat</span>
+                        <p class="mb-0">Ağ güvenli, ancak bazı zayıf noktalar var. Hassas işlemler için dikkatli olun.</p>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span class="badge bg-danger me-3">Tehlikeli</span>
+                        <p class="mb-0">Ağ güvensiz veya olası bir saldırı riski altında. Bağlantıyı kesmenizi öneririz.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>İpucu:</strong> Halka açık Wi-Fi ağlarını kullanırken VPN hizmetimizi etkinleştirerek güvenliğinizi artırabilirsiniz.
+                  </div>
+                </div>
+                
+                <!-- VPN Hizmeti -->
+                <div class="tab-pane fade" id="vpn" role="tabpanel" aria-labelledby="vpn-tab">
+                  <h4 class="fw-bold mb-3">VPN Hizmeti <span class="badge bg-warning">Premium</span></h4>
+                  <p>VPN (Sanal Özel Ağ) hizmeti, internet bağlantınızı şifreleyerek veri güvenliğinizi ve gizliliğinizi korur.</p>
+                  
+                  <div class="alert alert-secondary mb-4">
+                    <i class="fas fa-crown me-2"></i>
+                    <strong>Premium Özellik:</strong> VPN hizmetini kullanmak için Premium üyelik gereklidir.
+                  </div>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">VPN'in Avantajları</h5>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-user-secret text-primary me-2"></i> Gizlilik</h6>
+                            <p class="card-text small">İnternet trafiğinizi şifreleyerek çevrimiçi etkinliklerinizi gizler.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-shield-alt text-success me-2"></i> Güvenlik</h6>
+                            <p class="card-text small">Halka açık Wi-Fi ağlarında bile güvenli bir bağlantı sağlar.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-globe text-info me-2"></i> Coğrafi Erişim</h6>
+                            <p class="card-text small">Farklı ülkelerden içeriklere erişmenizi sağlar.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-ban text-danger me-2"></i> Reklam Engelleme</h6>
+                            <p class="card-text small">İzleyicileri ve reklamları engelleyerek daha temiz bir internet deneyimi sunar.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Nasıl Kullanılır?</h5>
+                    <ol>
+                      <li class="mb-2"><strong>Ayarlar > Koruma > VPN koruması</strong> bölümüne gidin</li>
+                      <li class="mb-2">VPN koruması seçeneğini açık konuma getirin</li>
+                      <li class="mb-2">Bağlanmak istediğiniz sunucu konumunu seçin</li>
+                      <li class="mb-2">"Bağlan" düğmesine tıklayın</li>
+                    </ol>
+                  </div>
+                  
+                  <div class="text-center">
+                    <a href="/premium" class="btn btn-warning">
+                      <i class="fas fa-crown me-2"></i> Premium'a Yükselt
+                    </a>
+                  </div>
+                </div>
+                
+                <!-- Uygulama Kilidi -->
+                <div class="tab-pane fade" id="app-lock" role="tabpanel" aria-labelledby="app-lock-tab">
+                  <h4 class="fw-bold mb-3">Uygulama Kilidi <span class="badge bg-warning">Premium</span></h4>
+                  <p>Uygulama kilidi özelliği, önemli uygulamalarınızı yetkisiz erişimlere karşı PIN, desen veya biyometrik kimlik doğrulama ile korur.</p>
+                  
+                  <div class="alert alert-secondary mb-4">
+                    <i class="fas fa-crown me-2"></i>
+                    <strong>Premium Özellik:</strong> Uygulama kilidi özelliğini kullanmak için Premium üyelik gereklidir.
+                  </div>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Nasıl Kurulur?</h5>
+                    <ol>
+                      <li class="mb-2"><strong>Ayarlar > Koruma > Uygulama kilidi</strong> bölümüne gidin</li>
+                      <li class="mb-2">Uygulama kilidi seçeneğini açık konuma getirin</li>
+                      <li class="mb-2">Tercih ettiğiniz kilit yöntemini seçin (PIN, desen veya parmak izi)</li>
+                      <li class="mb-2">Kilitlemek istediğiniz uygulamaları seçin</li>
+                    </ol>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Kilit Yöntemleri</h5>
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <div class="card text-center h-100">
+                          <div class="card-body">
+                            <i class="fas fa-hashtag fa-2x text-primary mb-3"></i>
+                            <h6 class="card-title">PIN Kodu</h6>
+                            <p class="card-text small">4-8 haneli sayısal bir kod kullanır.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="card text-center h-100">
+                          <div class="card-body">
+                            <i class="fas fa-grip-horizontal fa-2x text-warning mb-3"></i>
+                            <h6 class="card-title">Desen</h6>
+                            <p class="card-text small">Noktaları birleştirerek oluşturduğunuz bir desen kullanır.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="card text-center h-100">
+                          <div class="card-body">
+                            <i class="fas fa-fingerprint fa-2x text-success mb-3"></i>
+                            <h6 class="card-title">Biyometrik</h6>
+                            <p class="card-text small">Parmak izi veya yüz tanıma kullanır.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>İpucu:</strong> Bankacılık, mesajlaşma ve sosyal medya gibi hassas veriler içeren uygulamaları kilitlemenizi öneririz.
+                  </div>
+                  
+                  <div class="text-center">
+                    <a href="/premium" class="btn btn-warning">
+                      <i class="fas fa-crown me-2"></i> Premium'a Yükselt
+                    </a>
+                  </div>
+                </div>
+                
+                <!-- QR Kod Güvenliği -->
+                <div class="tab-pane fade" id="qr-scan" role="tabpanel" aria-labelledby="qr-scan-tab">
+                  <h4 class="fw-bold mb-3">QR Kod Güvenliği</h4>
+                  <p>QR kod güvenlik taraması, taradığınız QR kodlarının güvenilir olup olmadığını kontrol ederek sizi kötü amaçlı bağlantılardan korur.</p>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Nasıl Çalışır?</h5>
+                    <ol>
+                      <li class="mb-2">Ana ekrandan QR tarama butonuna tıklayın</li>
+                      <li class="mb-2">Kameranız açılacak ve QR kodu kare içerisine alın</li>
+                      <li class="mb-2">Uygulama, QR kodun içeriğini tarar ve analiz eder</li>
+                      <li class="mb-2">URL güvenlik kontrolü yapılır ve sonuç gösterilir</li>
+                    </ol>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Güvenlik Seviyeleri</h5>
+                    <div class="card mb-3">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0 me-3">
+                            <span class="badge bg-success p-2"><i class="fas fa-check-circle fa-lg"></i></span>
+                          </div>
+                          <div>
+                            <h6 class="card-title mb-1">Güvenli</h6>
+                            <p class="card-text small mb-0">QR kod güvenli bir bağlantıya yönlendiriyor. Güvenle devam edebilirsiniz.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0 me-3">
+                            <span class="badge bg-warning p-2"><i class="fas fa-exclamation-triangle fa-lg"></i></span>
+                          </div>
+                          <div>
+                            <h6 class="card-title mb-1">Dikkat</h6>
+                            <p class="card-text small mb-0">QR kod şüpheli bir bağlantıya yönlendiriyor. Dikkatli olun ve devam etmeden önce iki kez düşünün.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0 me-3">
+                            <span class="badge bg-danger p-2"><i class="fas fa-times-circle fa-lg"></i></span>
+                          </div>
+                          <div>
+                            <h6 class="card-title mb-1">Tehlikeli</h6>
+                            <p class="card-text small mb-0">QR kod bilinen bir kötü amaçlı bağlantıya yönlendiriyor. Erişim engellendi ve cihazınız korundu.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Uyarı:</strong> Halka açık alanlardaki QR kodları her zaman uygulamamızla taramak, olası kimlik avı saldırılarına karşı korunmanıza yardımcı olur.
+                  </div>
+                </div>
+                
+                <!-- Ayarlar -->
+                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                  <h4 class="fw-bold mb-3">Ayarlar</h4>
+                  <p>AntiVirüs uygulaması ayarları, uygulamanın davranışını ve koruma özelliklerini kişiselleştirmenizi sağlar.</p>
+                  
+                  <div class="mb-4">
+                    <h5 class="fw-bold">Ayarlar Bölümleri</h5>
+                    <div class="accordion" id="settingsAccordion">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingGeneral">
+                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeneral" aria-expanded="true" aria-controls="collapseGeneral">
+                            <i class="fas fa-cog me-2"></i> Genel Ayarlar
+                          </button>
+                        </h2>
+                        <div id="collapseGeneral" class="accordion-collapse collapse show" aria-labelledby="headingGeneral" data-bs-parent="#settingsAccordion">
+                          <div class="accordion-body">
+                            <ul>
+                              <li><strong>Otomatik Taramalar:</strong> Günlük ve haftalık tarama zamanlaması</li>
+                              <li><strong>Tarama Zamanlaması:</strong> Tarama saat ve gün ayarları</li>
+                              <li><strong>Başlangıç Ayarları:</strong> Cihaz açılışında otomatik başlatma</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingProtection">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProtection" aria-expanded="false" aria-controls="collapseProtection">
+                            <i class="fas fa-shield-alt me-2"></i> Koruma Ayarları
+                          </button>
+                        </h2>
+                        <div id="collapseProtection" class="accordion-collapse collapse" aria-labelledby="headingProtection" data-bs-parent="#settingsAccordion">
+                          <div class="accordion-body">
+                            <ul>
+                              <li><strong>Gerçek Zamanlı Koruma:</strong> Anlık koruma özelliklerini yönetin</li>
+                              <li><strong>Özel Koruma:</strong> Wi-Fi güvenliği, VPN ve uygulama kilidi ayarları</li>
+                              <li><strong>Tehdit Eylem:</strong> Tehdit tespit edildiğinde yapılacak işlem seçenekleri</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingNotifications">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotifications" aria-expanded="false" aria-controls="collapseNotifications">
+                            <i class="fas fa-bell me-2"></i> Bildirim Ayarları
+                          </button>
+                        </h2>
+                        <div id="collapseNotifications" class="accordion-collapse collapse" aria-labelledby="headingNotifications" data-bs-parent="#settingsAccordion">
+                          <div class="accordion-body">
+                            <ul>
+                              <li><strong>Tehdit Bildirimleri:</strong> Tehdit tespiti ve temizlenmesi bildirimleri</li>
+                              <li><strong>Tarama Bildirimleri:</strong> Tarama tamamlanma bildirimleri</li>
+                              <li><strong>Bildirim Kanalları:</strong> Anlık bildirim, e-posta ve SMS seçenekleri</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingAdvanced">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced" aria-expanded="false" aria-controls="collapseAdvanced">
+                            <i class="fas fa-sliders-h me-2"></i> Gelişmiş Ayarlar
+                          </button>
+                        </h2>
+                        <div id="collapseAdvanced" class="accordion-collapse collapse" aria-labelledby="headingAdvanced" data-bs-parent="#settingsAccordion">
+                          <div class="accordion-body">
+                            <ul>
+                              <li><strong>Tarama Motorları:</strong> Derin tarama ve yapay zeka motoru seçenekleri</li>
+                              <li><strong>Performans:</strong> Kaynak kullanımı ve tarama önceliği ayarları</li>
+                              <li><strong>Hariç Tutulanlar:</strong> Taramadan hariç tutulacak dosya ve klasörler</li>
+                              <li><strong>Ek Ayarlar:</strong> Günlük kaydı ve anonim tehdit raporlama seçenekleri</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingData">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseData" aria-expanded="false" aria-controls="collapseData">
+                            <i class="fas fa-database me-2"></i> Veri Yönetimi
+                          </button>
+                        </h2>
+                        <div id="collapseData" class="accordion-collapse collapse" aria-labelledby="headingData" data-bs-parent="#settingsAccordion">
+                          <div class="accordion-body">
+                            <ul>
+                              <li><strong>Veri Temizleme:</strong> Tarama geçmişi, tehdit geçmişi, karantina ve önbellek temizleme</li>
+                              <li><strong>Yedekleme ve Geri Yükleme:</strong> Ayarları yedekleme ve geri yükleme seçenekleri</li>
+                              <li><strong>Sistem Sıfırlama:</strong> Tüm ayarları fabrika varsayılanlarına döndürme</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- SSS -->
+                <div class="tab-pane fade" id="faq" role="tabpanel" aria-labelledby="faq-tab">
+                  <h4 class="fw-bold mb-3">Sık Sorulan Sorular</h4>
+                  <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                          AntiVirüs uygulaması pil tüketimini etkiler mi?
+                        </button>
+                      </h2>
+                      <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                          <p>AntiVirüs uygulaması, minimal pil tüketimi için optimize edilmiştir. Gerçek zamanlı koruma açık olduğunda bile, arka planda düşük sistem kaynakları kullanır.</p>
+                          <p>Pil ömrünü daha da uzatmak için, ayarlar menüsünden tarama kaynak kullanımını düşük olarak ayarlayabilir ve taramaları cihazınız şarj olurken gerçekleştirecek şekilde zamanlamalarda bulunabilirsiniz.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                          Ne sıklıkta tarama yapmalıyım?
+                        </button>
+                      </h2>
+                      <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                          <p>Optimal güvenlik için şu tarama programını öneririz:</p>
+                          <ul>
+                            <li><strong>Hızlı Tarama:</strong> Günlük (otomatik olarak zamanlanabilir)</li>
+                            <li><strong>Tam Tarama:</strong> Haftalık (örneğin, her Pazar)</li>
+                            <li><strong>Özel Tarama:</strong> Şüpheli bir dosya indirdiğinizde veya yeni uygulama yüklediğinizde</li>
+                          </ul>
+                          <p>Gerçek zamanlı koruma her zaman açık olmalıdır, böylece sürekli koruma sağlanır.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                          Tehdit tespit edildiğinde ne yapmalıyım?
+                        </button>
+                      </h2>
+                      <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                          <p>Tehdit tespit edildiğinde şu adımları izlemenizi öneririz:</p>
+                          <ol>
+                            <li>Bildirimi inceleyerek tehdidin türü ve risk seviyesi hakkında bilgi edinin</li>
+                            <li>"Temizle" düğmesine tıklayarak tehdidi hemen kaldırın</li>
+                            <li>Eğer bu bir uygulama ise ve gerekli değilse, uygulamayı tamamen kaldırmayı düşünün</li>
+                            <li>Tam bir sistem taraması yaparak başka tehdit olup olmadığını kontrol edin</li>
+                          </ol>
+                          <p>Yüksek riskli tehditlerde (fidye yazılımı gibi), işlemleri hemen durdurmalı ve tehdidi temizlemelisiniz.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                          Ücretsiz ve Premium sürüm arasındaki farklar nelerdir?
+                        </button>
+                      </h2>
+                      <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                          <p><strong>Ücretsiz Sürüm Özellikleri:</strong></p>
+                          <ul>
+                            <li>Temel virüs ve kötü amaçlı yazılım taraması</li>
+                            <li>Hızlı, tam ve özel tarama seçenekleri</li>
+                            <li>Gerçek zamanlı koruma</li>
+                            <li>Wi-Fi güvenlik taraması</li>
+                          </ul>
+                          
+                          <p><strong>Premium Sürüm Ek Özellikleri:</strong></p>
+                          <ul>
+                            <li>VPN hizmeti</li>
+                            <li>Uygulama kilidi</li>
+                            <li>Gelişmiş QR kod güvenlik taraması</li>
+                            <li>SMS bildirimleri</li>
+                            <li>Öncelikli müşteri desteği</li>
+                            <li>Reklam engelleme</li>
+                            <li>Veri ihlali izleme</li>
+                          </ul>
+                          <a href="/premium" class="btn btn-sm btn-warning mt-2">Premium'a Yükselt</a>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingFive">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                          Yanlış alarm durumunda ne yapmalıyım?
+                        </button>
+                      </h2>
+                      <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                          <p>Bazen virüs tarayıcıları güvenli dosyaları yanlışlıkla tehdit olarak işaretleyebilir. Eğer bir dosyanın güvenli olduğundan eminseniz:</p>
+                          <ol>
+                            <li>Tehdit uyarısı ekranında "Yoksay" veya "Karantinaya Al" seçeneğini seçin</li>
+                            <li>Karantina klasöründen dosyayı geri yükleyebilirsiniz</li>
+                            <li>İsterseniz bu dosyayı veya klasörü hariç tutulanlar listesine ekleyebilirsiniz</li>
+                            <li>Sürekli yanlış alarmlar için destek ekibimizle iletişime geçin</li>
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingSix">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                          Virüs veritabanı nasıl güncellenir?
+                        </button>
+                      </h2>
+                      <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                          <p>AntiVirüs uygulaması, virüs veritabanını otomatik olarak günceller. Bu süreç şu şekilde gerçekleşir:</p>
+                          <ul>
+                            <li>Uygulama, internet bağlantısı olduğunda otomatik olarak güncellemeleri kontrol eder</li>
+                            <li>Yeni tehdit imzaları ve motor güncellemeleri arka planda indirilir</li>
+                            <li>Veritabanı genellikle günde bir kez güncellenir</li>
+                            <li>Kritik tehditler için daha sık güncellemeler yapılabilir</li>
+                          </ul>
+                          <p>Güncel tehdit veritabanı, cihazınızı en yeni tehditlere karşı korumanın en önemli parçasıdır.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- İletişim Kartı -->
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0 fw-bold">Destek İletişim</h5>
+        </div>
+        <div class="card-body">
+          <div class="row gy-4">
+            <div class="col-md-4">
+              <div class="text-center">
+                <div class="icon-circle bg-primary bg-opacity-10 mb-3 mx-auto">
+                  <i class="fas fa-envelope text-primary"></i>
+                </div>
+                <h6 class="fw-bold mb-2">E-posta Desteği</h6>
+                <p class="small text-muted mb-2">24 saat içinde yanıt garantisi</p>
+                <a href="mailto:support@antivirus.example.com" class="btn btn-sm btn-outline-primary">
+                  E-posta Gönder
+                </a>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="text-center">
+                <div class="icon-circle bg-success bg-opacity-10 mb-3 mx-auto">
+                  <i class="fas fa-comments text-success"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Canlı Sohbet</h6>
+                <p class="small text-muted mb-2">Hafta içi 09:00-18:00 arası</p>
+                <button class="btn btn-sm btn-outline-success" id="liveChatBtn">
+                  Sohbet Başlat
+                </button>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="text-center">
+                <div class="icon-circle bg-info bg-opacity-10 mb-3 mx-auto">
+                  <i class="fas fa-phone-alt text-info"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Telefon Desteği</h6>
+                <p class="small text-muted mb-2">Premium kullanıcılar için 7/24</p>
+                <a href="tel:+902121234567" class="btn btn-sm btn-outline-info">
+                  Bizi Arayın
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    margin: 0 auto;
+  }
+  
+  .icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Arama işlevselliği
+    const searchInput = document.getElementById('helpSearchInput');
+    const searchButton = document.getElementById('helpSearchButton');
+    
+    function performSearch() {
+      const searchTerm = searchInput.value.toLowerCase();
+      if (searchTerm.length < 2) return;
+      
+      let foundMatch = false;
+      
+      // Tüm başlıkları ve içerikleri arayın
+      document.querySelectorAll('.tab-pane').forEach(tabPane => {
+        const content = tabPane.textContent.toLowerCase();
+        if (content.includes(searchTerm)) {
+          const tabId = tabPane.id;
+          const tab = document.querySelector(`[href="#${tabId}"]`);
+          if (tab) {
+            tab.click(); // İlgili sekmeyi açın
+            foundMatch = true;
+            
+            // İlk eşleşmeyi bulun ve vurgulayın
+            const highlightMatch = () => {
+              const textNodes = getTextNodesIn(tabPane);
+              for (let node of textNodes) {
+                const text = node.nodeValue.toLowerCase();
+                const index = text.indexOf(searchTerm);
+                if (index >= 0) {
+                  const range = document.createRange();
+                  range.setStart(node, index);
+                  range.setEnd(node, index + searchTerm.length);
+                  
+                  window.getSelection().removeAllRanges();
+                  window.getSelection().addRange(range);
+                  
+                  // Eşleşen elementı görünür alana kaydırın
+                  const container = range.commonAncestorContainer.parentElement;
+                  container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  
+                  return true;
+                }
+              }
+              return false;
+            };
+            
+            setTimeout(highlightMatch, 100);
+            return;
+          }
+        }
+      });
+      
+      if (!foundMatch) {
+        alert(`"${searchTerm}" ile ilgili sonuç bulunamadı.`);
+      }
+    }
+    
+    // Metin düğümlerini bulmak için yardımcı fonksiyon
+    function getTextNodesIn(node) {
+      const textNodes = [];
+      function getTextNodes(node) {
+        if (node.nodeType === 3) {
+          textNodes.push(node);
+        } else {
+          for (let i = 0; i < node.childNodes.length; i++) {
+            getTextNodes(node.childNodes[i]);
+          }
+        }
+      }
+      getTextNodes(node);
+      return textNodes;
+    }
+    
+    // Arama düğmesi ve Enter tuşu olaylarını ekleyin
+    if (searchButton) {
+      searchButton.addEventListener('click', performSearch);
+    }
+    
+    if (searchInput) {
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+    }
+    
+    // Canlı sohbet butonu
+    const liveChatButton = document.getElementById('liveChatBtn');
+    if (liveChatButton) {
+      liveChatButton.addEventListener('click', function() {
+        alert('Canlı destek şu anda geliştirme aşamasındadır. Lütfen e-posta desteği kullanın.');
+      });
+    }
+  });
+</script>

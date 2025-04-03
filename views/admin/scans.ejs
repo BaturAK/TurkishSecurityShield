@@ -1,0 +1,412 @@
+<!-- Admin - Tarama Yönetimi -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Tarama Yönetimi</h5>
+            <div>
+              <button class="btn btn-sm btn-outline-primary me-2" id="exportScansBtn">
+                <i class="fas fa-file-export me-1"></i> Dışa Aktar
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" id="refreshScansBtn">
+                <i class="fas fa-sync-alt me-1"></i> Yenile
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <!-- Arama ve Filtreleme -->
+          <div class="p-3 border-bottom">
+            <div class="row g-2">
+              <div class="col-md-3">
+                <div class="input-group">
+                  <input type="text" class="form-control" placeholder="Tarama ID, kullanıcı..." id="scanSearchInput">
+                  <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <select class="form-select" id="scanTypeFilter">
+                  <option value="all">Tüm Taramalar</option>
+                  <option value="QUICK">Hızlı Tarama</option>
+                  <option value="FULL">Tam Tarama</option>
+                  <option value="CUSTOM">Özel Tarama</option>
+                  <option value="WIFI">Wi-Fi Tarama</option>
+                  <option value="QR">QR Tarama</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <select class="form-select" id="scanStatusFilter">
+                  <option value="all">Tüm Durumlar</option>
+                  <option value="COMPLETED">Tamamlandı</option>
+                  <option value="RUNNING">Devam Ediyor</option>
+                  <option value="FAILED">Başarısız</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <div class="input-group">
+                  <span class="input-group-text">Tarih</span>
+                  <input type="date" class="form-control" id="scanDateFrom">
+                  <input type="date" class="form-control" id="scanDateTo">
+                </div>
+              </div>
+              <div class="col-md-2 text-end">
+                <button class="btn btn-outline-secondary w-100" id="resetScanFilters">
+                  <i class="fas fa-sync-alt me-1"></i> Sıfırla
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tarama Listesi -->
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th scope="col" class="ps-3">Tarama ID</th>
+                  <th scope="col">Kullanıcı</th>
+                  <th scope="col">Tip</th>
+                  <th scope="col">Başlangıç</th>
+                  <th scope="col">Süre</th>
+                  <th scope="col">Taranan</th>
+                  <th scope="col">Tehditler</th>
+                  <th scope="col">Durum</th>
+                  <th scope="col">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="scanTableBody">
+                <% if (scans && scans.length > 0) { %>
+                  <% scans.forEach(function(scan) { %>
+                    <tr>
+                      <td class="ps-3 text-muted">
+                        <small><%= scan.id.substring(0, 8) %>...</small>
+                      </td>
+                      <td>
+                        <% if (scan.userId) { %>
+                          <a href="/admin/users/<%= scan.userId %>" class="text-decoration-none">
+                            <%= scan.user ? (scan.user.displayName || scan.user.email) : scan.userId.substring(0, 8) + '...' %>
+                          </a>
+                        <% } else { %>
+                          <span class="text-muted">Sistem</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (scan.type === 'QUICK') { %>
+                          <span class="badge bg-primary">Hızlı</span>
+                        <% } else if (scan.type === 'FULL') { %>
+                          <span class="badge bg-success">Tam</span>
+                        <% } else if (scan.type === 'CUSTOM') { %>
+                          <span class="badge bg-warning">Özel</span>
+                        <% } else if (scan.type === 'WIFI') { %>
+                          <span class="badge bg-info">Wi-Fi</span>
+                        <% } else if (scan.type === 'QR') { %>
+                          <span class="badge bg-secondary">QR</span>
+                        <% } else { %>
+                          <span class="badge bg-light text-dark"><%= scan.type %></span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (scan.startTime) { %>
+                          <span title="<%= scan.startTime.toLocaleString('tr-TR') %>">
+                            <%= scan.startTime.toLocaleDateString('tr-TR') %>
+                          </span>
+                        <% } else { %>
+                          <span class="text-muted">-</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (scan.endTime && scan.startTime) { %>
+                          <% const durationMs = scan.endTime - scan.startTime; %>
+                          <% const minutes = Math.floor(durationMs / 60000); %>
+                          <% const seconds = ((durationMs % 60000) / 1000).toFixed(0); %>
+                          <%= minutes %>dk <%= seconds %>sn
+                        <% } else if (scan.startTime) { %>
+                          <span class="text-muted">Devam ediyor</span>
+                        <% } else { %>
+                          <span class="text-muted">-</span>
+                        <% } %>
+                      </td>
+                      <td><%= scan.totalScanned || 0 %></td>
+                      <td>
+                        <% if (scan.threatsFound && scan.threatsFound.length > 0) { %>
+                          <span class="badge bg-danger"><%= scan.threatsFound.length %></span>
+                        <% } else { %>
+                          <span class="badge bg-success">0</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (scan.getStatus() === 'COMPLETED') { %>
+                          <span class="badge bg-success">Tamamlandı</span>
+                        <% } else if (scan.getStatus() === 'RUNNING') { %>
+                          <span class="badge bg-warning">Devam Ediyor</span>
+                        <% } else if (scan.getStatus() === 'FAILED') { %>
+                          <span class="badge bg-danger">Başarısız</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary"><%= scan.getStatus() %></span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <div class="btn-group">
+                          <a href="/admin/scans/<%= scan.id %>" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                          <button type="button" class="btn btn-sm btn-outline-danger" 
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#deleteScanModal" 
+                                  data-scan-id="<%= scan.id %>">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="9" class="text-center py-4">
+                      <div class="py-5">
+                        <i class="fas fa-shield-virus fa-3x text-muted mb-3"></i>
+                        <h5>Henüz tarama kaydı bulunmuyor</h5>
+                        <p class="text-muted">Taramalar gerçekleştirildikçe burada görüntülenecekler</p>
+                      </div>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Sayfalama -->
+          <div class="d-flex justify-content-between align-items-center p-3">
+            <div>
+              <span class="text-muted small">Toplam <strong><%= scans ? scans.length : 0 %></strong> tarama</span>
+            </div>
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled">
+                  <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Önceki</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                  <a class="page-link" href="#">Sonraki</a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tarama İstatistikleri -->
+  <div class="row">
+    <div class="col-md-4 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Toplam Tarama</h6>
+              <h3 class="fw-bold mb-0"><%= totalScans || 0 %></h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 p-3 rounded">
+              <i class="fas fa-shield-virus text-primary"></i>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div>
+              <span class="text-muted">Bu ay</span>
+              <h6 class="mb-0 fw-bold"><%= monthlyScans || 0 %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Bugün</span>
+              <h6 class="mb-0 fw-bold"><%= dailyScans || 0 %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Devam Eden</span>
+              <h6 class="mb-0 fw-bold"><%= runningScans || 0 %></h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Bulunan Tehditler</h6>
+              <h3 class="fw-bold mb-0"><%= totalThreats || 0 %></h3>
+            </div>
+            <div class="bg-danger bg-opacity-10 p-3 rounded">
+              <i class="fas fa-bug text-danger"></i>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div>
+              <span class="text-muted">Bu ay</span>
+              <h6 class="mb-0 fw-bold"><%= monthlyThreats || 0 %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Bugün</span>
+              <h6 class="mb-0 fw-bold"><%= dailyThreats || 0 %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Temizlenen</span>
+              <h6 class="mb-0 fw-bold"><%= cleanedThreats || 0 %></h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+      <div class="card border-0 shadow h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="text-muted mb-1">Ortalama Tarama Süresi</h6>
+              <h3 class="fw-bold mb-0"><%= averageDuration ? Math.floor(averageDuration / 60) + ' dk' : '-' %></h3>
+            </div>
+            <div class="bg-success bg-opacity-10 p-3 rounded">
+              <i class="fas fa-clock text-success"></i>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div>
+              <span class="text-muted">Hızlı Tarama</span>
+              <h6 class="mb-0 fw-bold"><%= quickScanAvg ? Math.floor(quickScanAvg / 60) + ' dk' : '-' %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Tam Tarama</span>
+              <h6 class="mb-0 fw-bold"><%= fullScanAvg ? Math.floor(fullScanAvg / 60) + ' dk' : '-' %></h6>
+            </div>
+            <div>
+              <span class="text-muted">Diğer</span>
+              <h6 class="mb-0 fw-bold"><%= otherScanAvg ? Math.floor(otherScanAvg / 60) + ' dk' : '-' %></h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tarama Silme Modal -->
+<div class="modal fade" id="deleteScanModal" tabindex="-1" aria-labelledby="deleteScanModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteScanModalLabel">Tarama Kaydını Sil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Bu tarama kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+        <p class="fw-bold"><span id="scanIdDisplay"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <form id="deleteScanForm" action="/admin/scans/delete" method="POST">
+          <input type="hidden" name="scanId" id="deleteScanId">
+          <button type="submit" class="btn btn-danger">Sil</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tarama silme modalı
+    const deleteScanModal = document.getElementById('deleteScanModal');
+    if (deleteScanModal) {
+      deleteScanModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const scanId = button.getAttribute('data-scan-id');
+        
+        const scanIdDisplay = document.getElementById('scanIdDisplay');
+        const deleteScanId = document.getElementById('deleteScanId');
+        
+        scanIdDisplay.textContent = scanId;
+        deleteScanId.value = scanId;
+      });
+    }
+    
+    // Arama fonksiyonu
+    const searchInput = document.getElementById('scanSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const scanRows = document.querySelectorAll('#scanTableBody tr');
+        
+        scanRows.forEach(function(row) {
+          let found = false;
+          const cells = row.querySelectorAll('td');
+          
+          cells.forEach(function(cell) {
+            if (cell.textContent.toLowerCase().includes(searchValue)) {
+              found = true;
+            }
+          });
+          
+          if (found) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
+    
+    // Filtre resetleme
+    const resetButton = document.getElementById('resetScanFilters');
+    if (resetButton) {
+      resetButton.addEventListener('click', function() {
+        const filters = document.querySelectorAll('#scanTypeFilter, #scanStatusFilter');
+        filters.forEach(function(filter) {
+          filter.value = 'all';
+        });
+        
+        const dateInputs = document.querySelectorAll('#scanDateFrom, #scanDateTo');
+        dateInputs.forEach(function(input) {
+          input.value = '';
+        });
+        
+        // Tüm satırları göster
+        const scanRows = document.querySelectorAll('#scanTableBody tr');
+        scanRows.forEach(function(row) {
+          row.style.display = '';
+        });
+      });
+    }
+    
+    // Veri yenileme
+    const refreshButton = document.getElementById('refreshScansBtn');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', function() {
+        // Yenileme ikonunu döndür
+        this.querySelector('i').classList.add('fa-spin');
+        
+        // Normalde burada bir AJAX isteği yapılır
+        // Şimdilik sadece simülasyon yapalım
+        setTimeout(() => {
+          this.querySelector('i').classList.remove('fa-spin');
+          alert('Tarama verileri yenilendi.');
+        }, 1000);
+      });
+    }
+    
+    // Dışa aktarma
+    const exportButton = document.getElementById('exportScansBtn');
+    if (exportButton) {
+      exportButton.addEventListener('click', function() {
+        alert('Tarama verileri CSV olarak dışa aktarılıyor...');
+        // Normalde burada CSV indirme işlemi yapılır
+      });
+    }
+  });
+</script>

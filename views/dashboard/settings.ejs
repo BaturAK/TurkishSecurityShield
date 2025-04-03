@@ -1,0 +1,694 @@
+<!-- Kullanıcı Dashboard - Ayarlar -->
+<div class="container py-5">
+  <div class="row">
+    <!-- Sol Kenar Çubuğu - Kullanıcı Profili ve Menü -->
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow mb-4">
+        <div class="card-body text-center py-4">
+          <div class="avatar mb-3">
+            <% if (user && user.photoURL) { %>
+              <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle" width="100" height="100">
+            <% } else { %>
+              <div class="avatar-placeholder">
+                <i class="fas fa-user fa-3x"></i>
+              </div>
+            <% } %>
+          </div>
+          <h5 class="fw-bold"><%= user.displayName || 'Kullanıcı' %></h5>
+          <p class="text-muted small mb-3"><%= user.email %></p>
+          <div class="d-grid">
+            <a href="/profile" class="btn btn-sm btn-outline-primary">Profili Düzenle</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dashboard Menü -->
+      <div class="list-group border-0 shadow">
+        <a href="/dashboard" class="list-group-item list-group-item-action">
+          <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+        </a>
+        <a href="/dashboard/scans" class="list-group-item list-group-item-action">
+          <i class="fas fa-shield-virus me-2"></i> Taramalarım
+        </a>
+        <a href="/dashboard/threats" class="list-group-item list-group-item-action">
+          <i class="fas fa-bug me-2"></i> Tehdit Koruması
+        </a>
+        <a href="/dashboard/settings" class="list-group-item list-group-item-action active">
+          <i class="fas fa-cog me-2"></i> Ayarlar
+        </a>
+        <a href="/dashboard/help" class="list-group-item list-group-item-action">
+          <i class="fas fa-question-circle me-2"></i> Yardım
+        </a>
+      </div>
+    </div>
+    
+    <!-- Ana İçerik Alanı -->
+    <div class="col-md-9">
+      <!-- Ayarlar Sekmeler -->
+      <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white p-0">
+          <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active py-3 px-4" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
+                <i class="fas fa-cog me-2"></i> Genel
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link py-3 px-4" id="protection-tab" data-bs-toggle="tab" data-bs-target="#protection" type="button" role="tab" aria-controls="protection" aria-selected="false">
+                <i class="fas fa-shield-alt me-2"></i> Koruma
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link py-3 px-4" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab" aria-controls="notifications" aria-selected="false">
+                <i class="fas fa-bell me-2"></i> Bildirimler
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link py-3 px-4" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab" aria-controls="advanced" aria-selected="false">
+                <i class="fas fa-sliders-h me-2"></i> Gelişmiş
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body p-4">
+          <div class="tab-content" id="settingsTabsContent">
+            <!-- Genel Ayarlar -->
+            <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+              <h5 class="fw-bold mb-4">Genel Ayarlar</h5>
+              
+              <form id="generalSettingsForm">
+                <!-- Otomatik Taramalar -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Otomatik Taramalar</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoScanDaily" <%= settings?.autoScanDaily ? 'checked' : '' %>>
+                    <label class="form-check-label" for="autoScanDaily">
+                      Günlük otomatik tarama
+                      <small class="text-muted d-block">Her gün bir hızlı tarama gerçekleştir</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoScanWeekly" <%= settings?.autoScanWeekly ? 'checked' : '' %>>
+                    <label class="form-check-label" for="autoScanWeekly">
+                      Haftalık tam tarama
+                      <small class="text-muted d-block">Her hafta bir tam tarama gerçekleştir</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="scanNewDownloads" <%= settings?.scanNewDownloads ? 'checked' : '' %>>
+                    <label class="form-check-label" for="scanNewDownloads">
+                      Yeni indirilen dosyaları tara
+                      <small class="text-muted d-block">İndirme işlemi bittiğinde otomatik tara</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="scanNewApps" <%= settings?.scanNewApps ? 'checked' : '' %>>
+                    <label class="form-check-label" for="scanNewApps">
+                      Yeni yüklenen uygulamaları tara
+                      <small class="text-muted d-block">Uygulama kurulumundan sonra otomatik tara</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Tarama Zamanlaması -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Tarama Zamanlaması</h6>
+                  <div class="row mb-3">
+                    <label for="dailyScanTime" class="col-sm-4 col-form-label">Günlük tarama saati</label>
+                    <div class="col-sm-8">
+                      <input type="time" class="form-control" id="dailyScanTime" value="<%= settings?.dailyScanTime || '02:00' %>">
+                      <small class="text-muted">Cihazınızın kullanımda olmadığı bir saati seçin</small>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-3">
+                    <label for="weeklyScanDay" class="col-sm-4 col-form-label">Haftalık tarama günü</label>
+                    <div class="col-sm-8">
+                      <select class="form-select" id="weeklyScanDay">
+                        <option value="1" <%= settings?.weeklyScanDay === 1 ? 'selected' : '' %>>Pazartesi</option>
+                        <option value="2" <%= settings?.weeklyScanDay === 2 ? 'selected' : '' %>>Salı</option>
+                        <option value="3" <%= settings?.weeklyScanDay === 3 ? 'selected' : '' %>>Çarşamba</option>
+                        <option value="4" <%= settings?.weeklyScanDay === 4 ? 'selected' : '' %>>Perşembe</option>
+                        <option value="5" <%= settings?.weeklyScanDay === 5 ? 'selected' : '' %>>Cuma</option>
+                        <option value="6" <%= settings?.weeklyScanDay === 6 ? 'selected' : '' %>>Cumartesi</option>
+                        <option value="0" <%= settings?.weeklyScanDay === 0 ? 'selected' : '' %>>Pazar</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-3">
+                    <label for="weeklyScanTime" class="col-sm-4 col-form-label">Haftalık tarama saati</label>
+                    <div class="col-sm-8">
+                      <input type="time" class="form-control" id="weeklyScanTime" value="<%= settings?.weeklyScanTime || '03:00' %>">
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Başlangıç Ayarları -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Başlangıç Ayarları</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="startOnBootup" <%= settings?.startOnBootup ? 'checked' : '' %>>
+                    <label class="form-check-label" for="startOnBootup">
+                      Cihaz açılışında başlat
+                      <small class="text-muted d-block">Cihaz açıldığında koruma hizmetlerini otomatik başlat</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary" id="saveGeneralSettingsBtn">
+                    <i class="fas fa-save me-2"></i> Ayarları Kaydet
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Koruma Ayarları -->
+            <div class="tab-pane fade" id="protection" role="tabpanel" aria-labelledby="protection-tab">
+              <h5 class="fw-bold mb-4">Koruma Ayarları</h5>
+              
+              <form id="protectionSettingsForm">
+                <!-- Gerçek Zamanlı Koruma -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Gerçek Zamanlı Koruma</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="realTimeProtection" <%= settings?.realTimeProtection ? 'checked' : '' %>>
+                    <label class="form-check-label" for="realTimeProtection">
+                      Gerçek zamanlı koruma
+                      <small class="text-muted d-block">Tüm dosya ve programları anında kontrol eder</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="cloudProtection" <%= settings?.cloudProtection ? 'checked' : '' %>>
+                    <label class="form-check-label" for="cloudProtection">
+                      Bulut tabanlı koruma
+                      <small class="text-muted d-block">En güncel tehdit veritabanıyla dosyaları analiz eder</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="behaviorMonitoring" <%= settings?.behaviorMonitoring ? 'checked' : '' %>>
+                    <label class="form-check-label" for="behaviorMonitoring">
+                      Davranış izleme
+                      <small class="text-muted d-block">Şüpheli yazılım davranışlarını tespit eder</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Özel Koruma -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Özel Koruma</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="wifiProtection" <%= settings?.wifiProtection ? 'checked' : '' %>>
+                    <label class="form-check-label" for="wifiProtection">
+                      Wi-Fi güvenliği
+                      <small class="text-muted d-block">Güvensiz ağ bağlantılarını tespit eder</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="vpnProtection" <%= settings?.vpnProtection ? 'checked' : '' %>>
+                    <label class="form-check-label" for="vpnProtection">
+                      VPN koruması
+                      <small class="text-muted d-block">Güvenli bir VPN bağlantısı kullanır (Premium özellik)</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="appLock" <%= settings?.appLock ? 'checked' : '' %>>
+                    <label class="form-check-label" for="appLock">
+                      Uygulama kilidi
+                      <small class="text-muted d-block">Önemli uygulamalarınızı şifre ile korur (Premium özellik)</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Tehdit Eylem -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Tehdit Tespit Edildiğinde</h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="threatAction" id="threatActionAsk" value="ASK" <%= settings?.threatAction === 'ASK' ? 'checked' : '' %>>
+                    <label class="form-check-label" for="threatActionAsk">
+                      Bana sor
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="threatAction" id="threatActionClean" value="CLEAN" <%= settings?.threatAction === 'CLEAN' ? 'checked' : '' %>>
+                    <label class="form-check-label" for="threatActionClean">
+                      Otomatik temizle
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="threatAction" id="threatActionQuarantine" value="QUARANTINE" <%= settings?.threatAction === 'QUARANTINE' ? 'checked' : '' %>>
+                    <label class="form-check-label" for="threatActionQuarantine">
+                      Karantinaya al
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary" id="saveProtectionSettingsBtn">
+                    <i class="fas fa-save me-2"></i> Ayarları Kaydet
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Bildirim Ayarları -->
+            <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+              <h5 class="fw-bold mb-4">Bildirim Ayarları</h5>
+              
+              <form id="notificationSettingsForm">
+                <!-- Tehdit Bildirimleri -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Tehdit Bildirimleri</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifyThreats" <%= settings?.notifyThreats ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifyThreats">
+                      Tehdit tespit edildiğinde bildir
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifyThreatsClean" <%= settings?.notifyThreatsClean ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifyThreatsClean">
+                      Tehdit temizlendiğinde bildir
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Tarama Bildirimleri -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Tarama Bildirimleri</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifyScanComplete" <%= settings?.notifyScanComplete ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifyScanComplete">
+                      Tarama tamamlandığında bildir
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifyWeeklySummary" <%= settings?.notifyWeeklySummary ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifyWeeklySummary">
+                      Haftalık güvenlik özeti gönder
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Bildirim Kanalları -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Bildirim Kanalları</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifyPushNotifications" <%= settings?.notifyPushNotifications ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifyPushNotifications">
+                      Anlık bildirimler
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifyEmail" <%= settings?.notifyEmail ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifyEmail">
+                      E-posta bildirimleri
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="notifySMS" <%= settings?.notifySMS ? 'checked' : '' %>>
+                    <label class="form-check-label" for="notifySMS">
+                      SMS bildirimleri (Premium özellik)
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary" id="saveNotificationSettingsBtn">
+                    <i class="fas fa-save me-2"></i> Ayarları Kaydet
+                  </button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Gelişmiş Ayarlar -->
+            <div class="tab-pane fade" id="advanced" role="tabpanel" aria-labelledby="advanced-tab">
+              <h5 class="fw-bold mb-4">Gelişmiş Ayarlar</h5>
+              
+              <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Dikkat!</strong> Bu ayarlar deneyimli kullanıcılar içindir. Yanlış yapılandırma sistem performansını etkileyebilir.
+              </div>
+              
+              <form id="advancedSettingsForm">
+                <!-- Tarama Ayarları -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Tarama Motorları</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="enableDeepScan" <%= settings?.enableDeepScan ? 'checked' : '' %>>
+                    <label class="form-check-label" for="enableDeepScan">
+                      Derin tarama motoru
+                      <small class="text-muted d-block">Daha kapsamlı dosya analizi sağlar, ancak daha yavaştır</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="enableAIEngine" <%= settings?.enableAIEngine ? 'checked' : '' %>>
+                    <label class="form-check-label" for="enableAIEngine">
+                      Yapay zeka tabanlı tehdit tespiti
+                      <small class="text-muted d-block">Sıfır gün açıklarını tespit etmede daha etkilidir</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Performans Ayarları -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Performans</h6>
+                  <div class="mb-3">
+                    <label for="scanResourceUsage" class="form-label">Tarama sırasında kaynak kullanımı</label>
+                    <select class="form-select" id="scanResourceUsage">
+                      <option value="LOW" <%= settings?.scanResourceUsage === 'LOW' ? 'selected' : '' %>>Düşük (daha yavaş tarama)</option>
+                      <option value="MEDIUM" <%= settings?.scanResourceUsage === 'MEDIUM' ? 'selected' : '' %>>Orta (dengeli)</option>
+                      <option value="HIGH" <%= settings?.scanResourceUsage === 'HIGH' ? 'selected' : '' %>>Yüksek (daha hızlı tarama)</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="scanPriority" class="form-label">Tarama önceliği</label>
+                    <select class="form-select" id="scanPriority">
+                      <option value="BACKGROUND" <%= settings?.scanPriority === 'BACKGROUND' ? 'selected' : '' %>>Arka planda (en düşük öncelik)</option>
+                      <option value="NORMAL" <%= settings?.scanPriority === 'NORMAL' ? 'selected' : '' %>>Normal</option>
+                      <option value="HIGH" <%= settings?.scanPriority === 'HIGH' ? 'selected' : '' %>>Yüksek</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <!-- Hariç Tutulanlar -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Hariç Tutulanlar</h6>
+                  <div class="mb-3">
+                    <label for="excludedPaths" class="form-label">Taramadan hariç tutulacak klasörler</label>
+                    <textarea class="form-control" id="excludedPaths" rows="3" placeholder="/sdcard/Download&#10;/sdcard/Music"><%= settings?.excludedPaths || '' %></textarea>
+                    <small class="text-muted">Her satıra bir klasör yolu girin</small>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="excludedFiles" class="form-label">Taramadan hariç tutulacak dosyalar</label>
+                    <textarea class="form-control" id="excludedFiles" rows="3" placeholder="*.mp3&#10;*.mp4&#10;backup.zip"><%= settings?.excludedFiles || '' %></textarea>
+                    <small class="text-muted">Dosya adları veya uzantıları (her satıra bir tane)</small>
+                  </div>
+                </div>
+                
+                <!-- Ek Ayarlar -->
+                <div class="mb-4">
+                  <h6 class="fw-bold">Ek Ayarlar</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="enableLogging" <%= settings?.enableLogging ? 'checked' : '' %>>
+                    <label class="form-check-label" for="enableLogging">
+                      Detaylı günlük kaydı
+                      <small class="text-muted d-block">Sorun giderme için gerektiğinde etkinleştirin</small>
+                    </label>
+                  </div>
+                  
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="enableAnonymousReporting" <%= settings?.enableAnonymousReporting ? 'checked' : '' %>>
+                    <label class="form-check-label" for="enableAnonymousReporting">
+                      Anonim tehdit raporlama
+                      <small class="text-muted d-block">Tehdit veritabanının iyileştirilmesine katkıda bulunun</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary" id="saveAdvancedSettingsBtn">
+                    <i class="fas fa-save me-2"></i> Ayarları Kaydet
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Veri Yönetimi -->
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0 fw-bold">Veri Yönetimi</h5>
+        </div>
+        <div class="card-body p-4">
+          <!-- Veri Temizleme -->
+          <div class="mb-4">
+            <h6 class="fw-bold mb-3">Veri Temizleme</h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <span>Tarama geçmişi</span>
+                <small class="text-muted d-block">Tüm tarama kayıtlarını temizle</small>
+              </div>
+              <button class="btn btn-outline-danger btn-sm" id="clearScanHistory">
+                <i class="fas fa-trash me-1"></i> Temizle
+              </button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <span>Tehdit geçmişi</span>
+                <small class="text-muted d-block">Temizlenen tehditleri listeden kaldır</small>
+              </div>
+              <button class="btn btn-outline-danger btn-sm" id="clearThreatHistory">
+                <i class="fas fa-trash me-1"></i> Temizle
+              </button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <span>Karantina klasörü</span>
+                <small class="text-muted d-block">Karantinaya alınan dosyaları temizle</small>
+              </div>
+              <button class="btn btn-outline-danger btn-sm" id="clearQuarantine">
+                <i class="fas fa-trash me-1"></i> Temizle
+              </button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span>Uygulama önbelleği</span>
+                <small class="text-muted d-block">Geçici dosyaları ve günlükleri temizle</small>
+              </div>
+              <button class="btn btn-outline-danger btn-sm" id="clearCache">
+                <i class="fas fa-trash me-1"></i> Temizle
+              </button>
+            </div>
+          </div>
+          
+          <!-- Veri Yedekleme ve Geri Yükleme -->
+          <div class="mb-4">
+            <h6 class="fw-bold mb-3">Yedekleme ve Geri Yükleme</h6>
+            <p class="small text-muted mb-3">Tüm ayarlarınızı ve hariç tutulan listeleri yedekleyin veya geri yükleyin.</p>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-primary" id="backupSettings">
+                <i class="fas fa-download me-1"></i> Ayarları Yedekle
+              </button>
+              <button class="btn btn-outline-secondary" id="restoreSettings">
+                <i class="fas fa-upload me-1"></i> Ayarları Geri Yükle
+              </button>
+            </div>
+          </div>
+          
+          <!-- Sistem Sıfırlama -->
+          <div>
+            <h6 class="fw-bold mb-3">Sistem Sıfırlama</h6>
+            <p class="small text-muted mb-3">Tüm ayarları fabrika varsayılanlarına sıfırlayın. Bu işlem geri alınamaz.</p>
+            <button class="btn btn-danger" id="resetSettings" data-bs-toggle="modal" data-bs-target="#resetConfirmModal">
+              <i class="fas fa-exclamation-triangle me-1"></i> Tüm Ayarları Sıfırla
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sıfırlama Onay Modalı -->
+<div class="modal fade" id="resetConfirmModal" tabindex="-1" aria-labelledby="resetConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resetConfirmModalLabel">Ayarları Sıfırla</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger mb-3">
+          <i class="fas fa-exclamation-triangle me-2"></i> Bu işlem geri alınamaz!
+        </div>
+        <p>Tüm ayarlarınız fabrika varsayılanlarına sıfırlanacak. Özelleştirilmiş tüm yapılandırmalarınız kaybolacak.</p>
+        <p>Devam etmek istediğinizden emin misiniz?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-danger" id="confirmResetBtn">
+          <i class="fas fa-exclamation-triangle me-1"></i> Evet, Sıfırla
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    margin: 0 auto;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Form submit olaylarını yakala
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Form verilerini topla
+        const formData = new FormData(this);
+        const formId = this.id;
+        
+        // Buton durumunu güncelle
+        const button = this.querySelector('button[type="submit"]');
+        const originalButtonText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Kaydediliyor...';
+        
+        // API isteğini simüle et
+        setTimeout(() => {
+          // Başarılı cevap alındığında
+          button.innerHTML = '<i class="fas fa-check me-2"></i> Kaydedildi';
+          
+          setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = originalButtonText;
+          }, 2000);
+          
+          // Kullanıcıya bildirim göster
+          alert('Ayarlar başarıyla kaydedildi!');
+          
+          console.log('Form gönderildi:', formId);
+          
+          // Form verilerini konsola yazdır (test amaçlı)
+          const formDataObject = {};
+          formData.forEach((value, key) => {
+            formDataObject[key] = value;
+          });
+          console.log('Form verileri:', formDataObject);
+        }, 1500);
+      });
+    });
+    
+    // Veri temizleme butonları
+    const clearButtons = document.querySelectorAll('#clearScanHistory, #clearThreatHistory, #clearQuarantine, #clearCache');
+    clearButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const actionType = this.id.replace('clear', '');
+        
+        // Buton durumunu güncelle
+        const originalButtonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Temizleniyor...';
+        
+        // API isteğini simüle et
+        setTimeout(() => {
+          this.innerHTML = '<i class="fas fa-check me-1"></i> Temizlendi';
+          
+          setTimeout(() => {
+            this.disabled = false;
+            this.innerHTML = originalButtonText;
+          }, 2000);
+          
+          // Kullanıcıya bildirim göster
+          alert(`${actionType} başarıyla temizlendi!`);
+        }, 1500);
+      });
+    });
+    
+    // Yedekleme butonu
+    const backupButton = document.getElementById('backupSettings');
+    if (backupButton) {
+      backupButton.addEventListener('click', function() {
+        // Buton durumunu güncelle
+        const originalButtonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Yedekleniyor...';
+        
+        // API isteğini simüle et
+        setTimeout(() => {
+          this.disabled = false;
+          this.innerHTML = originalButtonText;
+          
+          // Kullanıcıya bildirim göster
+          alert('Ayarlar başarıyla yedeklendi!');
+        }, 1500);
+      });
+    }
+    
+    // Geri yükleme butonu
+    const restoreButton = document.getElementById('restoreSettings');
+    if (restoreButton) {
+      restoreButton.addEventListener('click', function() {
+        // Normalde burada dosya seçim penceresini aç
+        alert('Yedek dosyasını seçin (Bu bir demo simülasyonudur)');
+        
+        // Buton durumunu güncelle
+        const originalButtonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Geri Yükleniyor...';
+        
+        // API isteğini simüle et
+        setTimeout(() => {
+          this.disabled = false;
+          this.innerHTML = originalButtonText;
+          
+          // Kullanıcıya bildirim göster
+          alert('Ayarlar başarıyla geri yüklendi!');
+        }, 2000);
+      });
+    }
+    
+    // Sıfırlama onay butonu
+    const confirmResetButton = document.getElementById('confirmResetBtn');
+    if (confirmResetButton) {
+      confirmResetButton.addEventListener('click', function() {
+        // Buton durumunu güncelle
+        const originalButtonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sıfırlanıyor...';
+        
+        // API isteğini simüle et
+        setTimeout(() => {
+          // Modalı kapat
+          const modal = bootstrap.Modal.getInstance(document.getElementById('resetConfirmModal'));
+          modal.hide();
+          
+          // Buton durumunu geri al
+          this.disabled = false;
+          this.innerHTML = originalButtonText;
+          
+          // Kullanıcıya bildirim göster
+          alert('Tüm ayarlar başarıyla sıfırlandı! Sayfa yenileniyor...');
+          
+          // Sayfayı yenile
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }, 2000);
+      });
+    }
+  });
+</script>

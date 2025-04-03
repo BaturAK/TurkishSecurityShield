@@ -1,0 +1,649 @@
+<!-- Kullanıcı Dashboard - Tehdit Koruması -->
+<div class="container py-5">
+  <div class="row">
+    <!-- Sol Kenar Çubuğu - Kullanıcı Profili ve Menü -->
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow mb-4">
+        <div class="card-body text-center py-4">
+          <div class="avatar mb-3">
+            <% if (user && user.photoURL) { %>
+              <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle" width="100" height="100">
+            <% } else { %>
+              <div class="avatar-placeholder">
+                <i class="fas fa-user fa-3x"></i>
+              </div>
+            <% } %>
+          </div>
+          <h5 class="fw-bold"><%= user.displayName || 'Kullanıcı' %></h5>
+          <p class="text-muted small mb-3"><%= user.email %></p>
+          <div class="d-grid">
+            <a href="/profile" class="btn btn-sm btn-outline-primary">Profili Düzenle</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dashboard Menü -->
+      <div class="list-group border-0 shadow">
+        <a href="/dashboard" class="list-group-item list-group-item-action">
+          <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+        </a>
+        <a href="/dashboard/scans" class="list-group-item list-group-item-action">
+          <i class="fas fa-shield-virus me-2"></i> Taramalarım
+        </a>
+        <a href="/dashboard/threats" class="list-group-item list-group-item-action active">
+          <i class="fas fa-bug me-2"></i> Tehdit Koruması
+        </a>
+        <a href="/dashboard/settings" class="list-group-item list-group-item-action">
+          <i class="fas fa-cog me-2"></i> Ayarlar
+        </a>
+        <a href="/dashboard/help" class="list-group-item list-group-item-action">
+          <i class="fas fa-question-circle me-2"></i> Yardım
+        </a>
+      </div>
+    </div>
+    
+    <!-- Ana İçerik Alanı -->
+    <div class="col-md-9">
+      <!-- Tehdit İstatistikleri -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="card border-0 shadow h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded-circle me-3">
+                  <i class="fas fa-bug text-danger"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Aktif Tehditler</h6>
+                  <h3 class="fw-bold mb-0"><%= activeThreats || 0 %></h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card border-0 shadow h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                  <i class="fas fa-exclamation-triangle text-warning"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Ortalama Risk</h6>
+                  <h3 class="fw-bold mb-0"><%= averageRisk || 'Düşük' %></h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card border-0 shadow h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                  <i class="fas fa-check-circle text-success"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Temizlenen</h6>
+                  <h3 class="fw-bold mb-0"><%= cleanedThreats || 0 %></h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tehdit Durum Kartı -->
+      <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Tehdit Durumu</h5>
+            <button class="btn btn-sm btn-primary" id="refreshThreatsBtn">
+              <i class="fas fa-sync-alt me-2"></i> Yenile
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="p-4">
+            <div class="d-flex align-items-center mb-4">
+              <% if (activeThreats && activeThreats > 0) { %>
+                <div class="flex-shrink-0 me-3">
+                  <div class="status-icon bg-danger text-white">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-1 text-danger">Tehditler Tespit Edildi!</h5>
+                  <p class="mb-0">Cihazınızda <%= activeThreats %> aktif tehdit bulunuyor. Güvenliğiniz için hemen temizleyin.</p>
+                </div>
+              <% } else { %>
+                <div class="flex-shrink-0 me-3">
+                  <div class="status-icon bg-success text-white">
+                    <i class="fas fa-check"></i>
+                  </div>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-1 text-success">Sistem Güvende</h5>
+                  <p class="mb-0">Cihazınızda aktif tehdit bulunmuyor. Son tarama: <%= lastScanDate ? new Date(lastScanDate).toLocaleString('tr-TR') : 'Bilinmiyor' %></p>
+                </div>
+              <% } %>
+            </div>
+            
+            <% if (activeThreats && activeThreats > 0) { %>
+              <button class="btn btn-danger w-100 mb-3" id="cleanAllThreatsBtn">
+                <i class="fas fa-broom me-2"></i> Tüm Tehditleri Temizle
+              </button>
+            <% } else { %>
+              <a href="/scan/quick" class="btn btn-primary w-100 mb-3">
+                <i class="fas fa-shield-alt me-2"></i> Hızlı Tarama Başlat
+              </a>
+            <% } %>
+            
+            <!-- Koruma Durumu -->
+            <h6 class="fw-bold mt-4 mb-3">Koruma Ayarları</h6>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <span class="fw-bold">Gerçek Zamanlı Koruma</span>
+                  <small class="d-block text-muted">Yüklenen uygulamaları otomatik tara</small>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="realTimeProtectionSwitch" <%= realTimeProtection ? 'checked' : '' %>>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <span class="fw-bold">Wi-Fi Güvenliği</span>
+                  <small class="d-block text-muted">Ağ güvenliğini sürekli izle</small>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="wifiProtectionSwitch" <%= wifiProtection ? 'checked' : '' %>>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <span class="fw-bold">VPN Koruması</span>
+                  <small class="d-block text-muted">Güvenli bağlantı kullan</small>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="vpnProtectionSwitch" <%= vpnProtection ? 'checked' : '' %>>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="fw-bold">Uygulama Kilidi</span>
+                  <small class="d-block text-muted">Önemli uygulamaları korur</small>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="appLockSwitch" <%= appLock ? 'checked' : '' %>>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Aktif Tehditler -->
+          <% if (threats && threats.length > 0) { %>
+            <hr class="m-0">
+            <div class="p-3">
+              <h6 class="fw-bold mb-3">Tespit Edilen Tehditler</h6>
+              <div class="list-group list-group-flush">
+                <% threats.forEach(function(threat) { %>
+                  <div class="list-group-item p-3 border rounded mb-2">
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <h6 class="mb-1 fw-bold"><%= threat.name %></h6>
+                        <p class="mb-1 small">
+                          <% if (threat.type === 'Trojan') { %>
+                            <i class="fas fa-virus text-danger me-1"></i>
+                          <% } else if (threat.type === 'Spyware') { %>
+                            <i class="fas fa-user-secret text-warning me-1"></i>
+                          <% } else if (threat.type === 'Adware') { %>
+                            <i class="fas fa-ad text-info me-1"></i>
+                          <% } else if (threat.type === 'Ransomware') { %>
+                            <i class="fas fa-lock text-danger me-1"></i>
+                          <% } else { %>
+                            <i class="fas fa-bug text-secondary me-1"></i>
+                          <% } %>
+                          <%= threat.type %> | 
+                          <% if (threat.severity === 'HIGH') { %>
+                            <span class="text-danger">Yüksek Risk</span>
+                          <% } else if (threat.severity === 'MEDIUM') { %>
+                            <span class="text-warning">Orta Risk</span>
+                          <% } else { %>
+                            <span class="text-success">Düşük Risk</span>
+                          <% } %>
+                        </p>
+                        <small class="text-muted">
+                          Tespit: <%= new Date(threat.detectionDate).toLocaleString('tr-TR') %>
+                          <% if (threat.filePath) { %>
+                            | Konum: <%= threat.filePath %>
+                          <% } %>
+                        </small>
+                      </div>
+                      <div>
+                        <% if (threat.isCleaned) { %>
+                          <span class="badge bg-success">Temizlendi</span>
+                        <% } else { %>
+                          <div class="btn-group">
+                            <button class="btn btn-sm btn-danger clean-threat-btn" data-threat-id="<%= threat.id %>">
+                              Temizle
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#threatDetails<%= threat.id %>">
+                              <i class="fas fa-info-circle"></i>
+                            </button>
+                          </div>
+                        <% } %>
+                      </div>
+                    </div>
+                    
+                    <!-- Tehdit Detayları (Gizli) -->
+                    <div class="collapse mt-3" id="threatDetails<%= threat.id %>">
+                      <div class="card card-body bg-light">
+                        <h6 class="fw-bold mb-2">Tehdit Detayları</h6>
+                        <p class="small mb-2"><%= threat.description || 'Bu zararlı yazılım, cihazınızın güvenliğini tehdit ediyor. Hemen temizlemeniz önerilir.' %></p>
+                        
+                        <div class="mb-2">
+                          <strong class="small">Tehdit Tipi:</strong>
+                          <span class="small"><%= threat.type %></span>
+                        </div>
+                        
+                        <div class="mb-2">
+                          <strong class="small">Risk Seviyesi:</strong>
+                          <span class="small">
+                            <% if (threat.severity === 'HIGH') { %>
+                              <span class="text-danger">Yüksek</span>
+                            <% } else if (threat.severity === 'MEDIUM') { %>
+                              <span class="text-warning">Orta</span>
+                            <% } else { %>
+                              <span class="text-success">Düşük</span>
+                            <% } %>
+                          </span>
+                        </div>
+                        
+                        <div class="mb-2">
+                          <strong class="small">Tespit Tarihi:</strong>
+                          <span class="small"><%= new Date(threat.detectionDate).toLocaleString('tr-TR') %></span>
+                        </div>
+                        
+                        <% if (threat.filePath) { %>
+                          <div class="mb-2">
+                            <strong class="small">Dosya Konumu:</strong>
+                            <span class="small"><%= threat.filePath %></span>
+                          </div>
+                        <% } %>
+                        
+                        <div class="mt-3">
+                          <button class="btn btn-sm btn-danger clean-threat-btn" data-threat-id="<%= threat.id %>">
+                            Tehdidi Temizle
+                          </button>
+                          <button class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="collapse" data-bs-target="#threatDetails<%= threat.id %>">
+                            Kapat
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- Tehdit Geçmişi -->
+      <div class="card border-0 shadow">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Tehdit Geçmişi</h5>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="threatHistoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-filter me-1"></i> Filtrele
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="threatHistoryDropdown">
+                <li><a class="dropdown-item" href="#">Tüm Teliditler</a></li>
+                <li><a class="dropdown-item" href="#">Temizlenenler</a></li>
+                <li><a class="dropdown-item" href="#">Temizlenemeyenler</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Son 7 Gün</a></li>
+                <li><a class="dropdown-item" href="#">Son 30 Gün</a></li>
+                <li><a class="dropdown-item" href="#">Tüm Zamanlar</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th scope="col">Tehdit Adı</th>
+                  <th scope="col">Tip</th>
+                  <th scope="col">Risk</th>
+                  <th scope="col">Tespit Tarihi</th>
+                  <th scope="col">Durum</th>
+                  <th scope="col" class="text-end pe-3">İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (threatHistory && threatHistory.length > 0) { %>
+                  <% threatHistory.forEach(function(threat) { %>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <% if (threat.type === 'Trojan') { %>
+                            <i class="fas fa-virus text-danger me-2"></i>
+                          <% } else if (threat.type === 'Spyware') { %>
+                            <i class="fas fa-user-secret text-warning me-2"></i>
+                          <% } else if (threat.type === 'Adware') { %>
+                            <i class="fas fa-ad text-info me-2"></i>
+                          <% } else if (threat.type === 'Ransomware') { %>
+                            <i class="fas fa-lock text-danger me-2"></i>
+                          <% } else { %>
+                            <i class="fas fa-bug text-secondary me-2"></i>
+                          <% } %>
+                          <%= threat.name %>
+                        </div>
+                      </td>
+                      <td><%= threat.type %></td>
+                      <td>
+                        <% if (threat.severity === 'HIGH') { %>
+                          <span class="badge bg-danger">Yüksek</span>
+                        <% } else if (threat.severity === 'MEDIUM') { %>
+                          <span class="badge bg-warning">Orta</span>
+                        <% } else { %>
+                          <span class="badge bg-success">Düşük</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <%= new Date(threat.detectionDate).toLocaleDateString('tr-TR') %>
+                        <small class="text-muted d-block">
+                          <%= new Date(threat.detectionDate).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}) %>
+                        </small>
+                      </td>
+                      <td>
+                        <% if (threat.isCleaned) { %>
+                          <span class="badge bg-success">Temizlendi</span>
+                        <% } else { %>
+                          <span class="badge bg-danger">Aktif</span>
+                        <% } %>
+                      </td>
+                      <td class="text-end pe-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#threatDetailModal" data-threat-id="<%= threat.id %>">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center py-5">
+                      <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                      <h5>Henüz tehdit geçmişi bulunmuyor</h5>
+                      <p class="text-muted">Tarama yaparak cihazınızdaki tehditleri tespit edin</p>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+          <% if (threatHistory && threatHistory.length > 0) { %>
+            <div class="d-flex justify-content-between align-items-center p-3">
+              <div>
+                <span class="text-muted small">Toplam <strong><%= threatHistory.length %></strong> kayıt</span>
+              </div>
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Önceki</a>
+                  </li>
+                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">Sonraki</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tehdit Detay Modalı -->
+<div class="modal fade" id="threatDetailModal" tabindex="-1" aria-labelledby="threatDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="threatDetailModalLabel">Tehdit Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="fw-bold mb-3">Tehdit Bilgileri</h6>
+            <div class="mb-3">
+              <strong>Tehdit Adı:</strong>
+              <span id="modalThreatName">...</span>
+            </div>
+            <div class="mb-3">
+              <strong>Tehdit Tipi:</strong>
+              <span id="modalThreatType">...</span>
+            </div>
+            <div class="mb-3">
+              <strong>Risk Seviyesi:</strong>
+              <span id="modalThreatSeverity">...</span>
+            </div>
+            <div class="mb-3">
+              <strong>Tespit Tarihi:</strong>
+              <span id="modalThreatDate">...</span>
+            </div>
+            <div class="mb-3">
+              <strong>Durum:</strong>
+              <span id="modalThreatStatus">...</span>
+            </div>
+            <div class="mb-3">
+              <strong>Dosya Yolu:</strong>
+              <span id="modalThreatFilePath">...</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold mb-3">Tehdit Açıklaması</h6>
+            <p id="modalThreatDescription">...</p>
+            
+            <h6 class="fw-bold mb-3 mt-4">Önerilen İşlemler</h6>
+            <ul id="modalThreatActions">
+              <li>Tehdidi hemen temizleyin</li>
+              <li>Sistem güncellemelerini kontrol edin</li>
+              <li>Tam sistem taraması yapın</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        <button type="button" class="btn btn-danger" id="modalCleanThreatBtn">Tehdidi Temizle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    margin: 0 auto;
+  }
+  
+  .status-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tehdit temizleme butonları
+    const cleanThreatButtons = document.querySelectorAll('.clean-threat-btn');
+    cleanThreatButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const threatId = this.getAttribute('data-threat-id');
+        cleanThreat(threatId, this);
+      });
+    });
+    
+    // Tehdit temizleme fonksiyonu
+    function cleanThreat(threatId, button) {
+      // Buton durumunu güncelle
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Temizleniyor...';
+      
+      // API isteğini simüle et
+      setTimeout(() => {
+        // Normalde burada fetch API kullanılarak tehdit temizleme isteği yapılır
+        // Başarılı cevap geldiğinde:
+        const threatContainer = button.closest('.list-group-item');
+        const buttonGroup = button.closest('.btn-group');
+        
+        if (buttonGroup) {
+          buttonGroup.innerHTML = '<span class="badge bg-success">Temizlendi</span>';
+        } else {
+          button.classList.remove('btn-danger');
+          button.classList.add('btn-success');
+          button.innerHTML = 'Temizlendi';
+          button.disabled = true;
+        }
+        
+        // Temizlenen tehdit sayısını güncelle
+        const cleanedCounter = document.querySelector('.col-md-4:nth-child(3) h3');
+        if (cleanedCounter) {
+          cleanedCounter.textContent = parseInt(cleanedCounter.textContent) + 1;
+        }
+        
+        // Aktif tehdit sayısını güncelle
+        const activeCounter = document.querySelector('.col-md-4:nth-child(1) h3');
+        if (activeCounter && parseInt(activeCounter.textContent) > 0) {
+          activeCounter.textContent = parseInt(activeCounter.textContent) - 1;
+          
+          // Eğer aktif tehdit kalmadıysa, durum mesajını güncelle
+          if (parseInt(activeCounter.textContent) === 0) {
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          }
+        }
+      }, 1500);
+    }
+    
+    // Tüm tehditleri temizleme butonu
+    const cleanAllButton = document.getElementById('cleanAllThreatsBtn');
+    if (cleanAllButton) {
+      cleanAllButton.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Tüm Tehditler Temizleniyor...';
+        
+        // Tüm temizleme butonlarını tetikle
+        cleanThreatButtons.forEach(button => {
+          if (!button.disabled) {
+            setTimeout(() => {
+              button.click();
+            }, 500 + Math.random() * 1000); // Rastgele gecikme ekle
+          }
+        });
+        
+        // Sayfayı yenile
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      });
+    }
+    
+    // Koruma ayarları switch'leri için event listener
+    const protectionSwitches = document.querySelectorAll('.form-check-input');
+    protectionSwitches.forEach(switchEl => {
+      switchEl.addEventListener('change', function() {
+        const settingName = this.id.replace('Switch', '');
+        const isEnabled = this.checked;
+        
+        // Normalde burada fetch API kullanılarak koruma ayarı güncelleme isteği yapılır
+        console.log(`${settingName} ayarı ${isEnabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}`);
+        
+        // Kullanıcıya bildirim göster
+        alert(`${settingName} koruma özelliği ${isEnabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}`);
+      });
+    });
+    
+    // Tehdit detay modalı
+    const threatDetailModal = document.getElementById('threatDetailModal');
+    if (threatDetailModal) {
+      threatDetailModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const threatId = button.getAttribute('data-threat-id');
+        
+        // Normalde burada fetch API kullanılarak tehdit detayı getirme isteği yapılır
+        // Şimdilik sabit değerler gösterelim
+        document.getElementById('modalThreatName').textContent = "Android.Trojan.BankBot.ABC";
+        document.getElementById('modalThreatType').textContent = "Trojan";
+        document.getElementById('modalThreatSeverity').innerHTML = '<span class="text-danger">Yüksek</span>';
+        document.getElementById('modalThreatDate').textContent = new Date().toLocaleString('tr-TR');
+        document.getElementById('modalThreatStatus').innerHTML = '<span class="badge bg-danger">Aktif</span>';
+        document.getElementById('modalThreatFilePath').textContent = "/data/app/com.example.suspicious.app-1.apk";
+        document.getElementById('modalThreatDescription').textContent = 
+          "Bu tehlikeli Trojan, bankacılık uygulamalarını hedef alır ve kullanıcı bilgilerini çalabilir. " +
+          "Gizli SMS izinleri kullanarak iki faktörlü kimlik doğrulama kodlarını ele geçirebilir ve " +
+          "banka hesaplarınıza yetkisiz erişim sağlayabilir.";
+        
+        // Temizleme butonuna tıklama olayı ekle
+        document.getElementById('modalCleanThreatBtn').onclick = function() {
+          this.disabled = true;
+          this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Temizleniyor...';
+          
+          setTimeout(() => {
+            document.getElementById('modalThreatStatus').innerHTML = '<span class="badge bg-success">Temizlendi</span>';
+            this.classList.remove('btn-danger');
+            this.classList.add('btn-success');
+            this.innerHTML = 'Temizlendi';
+            this.disabled = true;
+            
+            // Tehdit sayacını güncelle
+            const cleanedCounter = document.querySelector('.col-md-4:nth-child(3) h3');
+            if (cleanedCounter) {
+              cleanedCounter.textContent = parseInt(cleanedCounter.textContent) + 1;
+            }
+            
+            const activeCounter = document.querySelector('.col-md-4:nth-child(1) h3');
+            if (activeCounter && parseInt(activeCounter.textContent) > 0) {
+              activeCounter.textContent = parseInt(activeCounter.textContent) - 1;
+            }
+          }, 1500);
+        };
+      });
+    }
+    
+    // Yenile butonu
+    const refreshButton = document.getElementById('refreshThreatsBtn');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', function() {
+        this.querySelector('i').classList.add('fa-spin');
+        setTimeout(() => {
+          this.querySelector('i').classList.remove('fa-spin');
+          window.location.reload();
+        }, 1000);
+      });
+    }
+  });
+</script>
