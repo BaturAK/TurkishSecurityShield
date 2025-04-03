@@ -1,70 +1,198 @@
-<section class="py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-4 p-md-5">
-            <div class="text-center mb-4">
-              <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
-              <h2 class="fw-bold">Hesap Oluştur</h2>
-              <p class="text-muted">Ücretsiz hesap oluşturun ve cihazlarınızı korumaya başlayın</p>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card auth-form border-0 shadow">
+        <div class="card-body p-4 p-md-5">
+          <div class="text-center mb-4">
+            <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+            <h2 class="fw-bold">Hesap Oluşturun</h2>
+            <p class="text-muted">Hızlı ve güvenli bir şekilde kaydolun</p>
+          </div>
+          
+          <form action="/auth/register" method="POST">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="firstName" class="form-label">Adınız</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-user"></i></span>
+                  <input type="text" class="form-control" id="firstName" name="firstName" 
+                    placeholder="Adınız" required autofocus
+                    value="<%= locals.formData ? formData.firstName : '' %>">
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="lastName" class="form-label">Soyadınız</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-user"></i></span>
+                  <input type="text" class="form-control" id="lastName" name="lastName" 
+                    placeholder="Soyadınız" required
+                    value="<%= locals.formData ? formData.lastName : '' %>">
+                </div>
+              </div>
             </div>
             
-            <% if (locals.error) { %>
-              <div class="alert alert-danger mb-4">
-                <%= error %>
+            <div class="mb-3">
+              <label for="email" class="form-label">E-posta Adresi</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                <input type="email" class="form-control" id="email" name="email" 
+                  placeholder="ornek@mail.com" required
+                  value="<%= locals.formData ? formData.email : '' %>">
               </div>
-            <% } %>
+              <small class="form-text text-muted">E-posta adresiniz hesap kurtarma ve önemli bildirimler için kullanılacaktır.</small>
+            </div>
             
-            <form action="/auth/register" method="POST">
-              <div class="mb-3">
-                <label for="name" class="form-label">Adınız Soyadınız</label>
-                <input type="text" class="form-control" id="name" name="name" value="<%= locals.name || '' %>" required>
+            <div class="mb-3">
+              <label for="password" class="form-label">Şifre</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" class="form-control" id="password" name="password" 
+                  placeholder="Şifreniz" required minlength="8">
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                  <i class="fas fa-eye"></i>
+                </button>
               </div>
-              
-              <div class="mb-3">
-                <label for="email" class="form-label">E-posta Adresi</label>
-                <input type="email" class="form-control" id="email" name="email" value="<%= locals.email || '' %>" required>
-                <div class="form-text">E-posta adresiniz oturum açmak için kullanılacaktır.</div>
+              <div class="password-strength mt-1">
+                <div class="progress" style="height: 5px;">
+                  <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%;"></div>
+                </div>
+                <small class="form-text text-muted" id="passwordFeedback">En az 8 karakter, büyük/küçük harf ve sayı içermelidir.</small>
               </div>
-              
-              <div class="mb-3">
-                <label for="password" class="form-label">Şifre</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-                <div class="form-text">Şifreniz en az 6 karakter olmalıdır.</div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="confirmPassword" class="form-label">Şifre Tekrarı</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                  placeholder="Şifrenizi tekrar girin" required minlength="8">
               </div>
-              
-              <div class="mb-4">
-                <label for="passwordConfirm" class="form-label">Şifre Onayı</label>
-                <input type="password" class="form-control" id="passwordConfirm" name="passwordConfirm" required>
-              </div>
-              
-              <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" id="termsAgree" name="termsAgree" required>
-                <label class="form-check-label" for="termsAgree">
-                  <a href="#" class="text-decoration-none">Kullanım Şartları</a> ve <a href="#" class="text-decoration-none">Gizlilik Politikası</a>'nı kabul ediyorum.
-                </label>
-              </div>
-              
-              <div class="d-grid mb-4">
-                <button type="submit" class="btn btn-primary btn-lg">Kayıt Ol</button>
-              </div>
-            </form>
+              <small class="form-text text-danger d-none" id="passwordMismatch">Şifreler eşleşmiyor!</small>
+            </div>
+            
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="termsAgree" name="termsAgree" required 
+                <%= locals.formData && formData.termsAgree ? 'checked' : '' %>>
+              <label class="form-check-label" for="termsAgree">
+                <a href="/terms" class="text-primary">Kullanım Şartları</a> ve 
+                <a href="/privacy" class="text-primary">Gizlilik Politikası</a>'nı kabul ediyorum.
+              </label>
+            </div>
+            
+            <div class="d-grid mb-4">
+              <button type="submit" class="btn btn-primary btn-lg" id="registerBtn">
+                <i class="fas fa-user-plus me-2"></i> Kaydol
+              </button>
+            </div>
             
             <div class="text-center">
-              <p class="text-muted">Veya şununla kayıt olun</p>
-              <div class="d-flex justify-content-center gap-3 mb-4">
-                <a href="/auth/google" class="btn btn-outline-danger">
-                  <i class="fab fa-google me-2"></i> Google
-                </a>
-              </div>
-              <p class="mb-0">
-                Zaten hesabınız var mı? <a href="/auth/login" class="text-decoration-none">Giriş Yap</a>
-              </p>
+              <p class="mb-0">Zaten hesabınız var mı? <a href="/auth/login" class="text-primary fw-bold">Giriş Yapın</a></p>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
-</section>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Şifre göster/gizle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener('click', function () {
+        // Şifre görünürlüğünü değiştir
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        // İkon değiştir
+        this.querySelector('i').classList.toggle('fa-eye');
+        this.querySelector('i').classList.toggle('fa-eye-slash');
+      });
+    }
+    
+    // Şifre gücü kontrol
+    const passwordStrength = document.getElementById('passwordStrength');
+    const passwordFeedback = document.getElementById('passwordFeedback');
+    
+    if (passwordInput && passwordStrength && passwordFeedback) {
+      passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        let strength = 0;
+        let feedback = "";
+        
+        if (password.length >= 8) {
+          strength += 25;
+        } else {
+          feedback = "Şifre en az 8 karakter olmalıdır.";
+        }
+        
+        if (password.match(/[A-Z]/)) {
+          strength += 25;
+        } else if (password.length > 0) {
+          feedback = feedback || "Şifrenizde en az bir büyük harf olmalıdır.";
+        }
+        
+        if (password.match(/[a-z]/)) {
+          strength += 25;
+        } else if (password.length > 0) {
+          feedback = feedback || "Şifrenizde en az bir küçük harf olmalıdır.";
+        }
+        
+        if (password.match(/[0-9]/)) {
+          strength += 25;
+        } else if (password.length > 0) {
+          feedback = feedback || "Şifrenizde en az bir rakam olmalıdır.";
+        }
+        
+        passwordStrength.style.width = strength + "%";
+        
+        // Renklendirme
+        if (strength < 25) {
+          passwordStrength.className = "progress-bar bg-danger";
+          passwordFeedback.className = "form-text text-danger";
+        } else if (strength < 50) {
+          passwordStrength.className = "progress-bar bg-warning";
+          passwordFeedback.className = "form-text text-warning";
+        } else if (strength < 75) {
+          passwordStrength.className = "progress-bar bg-info";
+          passwordFeedback.className = "form-text text-info";
+        } else {
+          passwordStrength.className = "progress-bar bg-success";
+          passwordFeedback.className = "form-text text-success";
+          feedback = "Güçlü şifre!";
+        }
+        
+        passwordFeedback.textContent = feedback || "En az 8 karakter, büyük/küçük harf ve sayı içermelidir.";
+      });
+    }
+    
+    // Şifre eşleşme kontrolü
+    const confirmPassword = document.getElementById('confirmPassword');
+    const passwordMismatch = document.getElementById('passwordMismatch');
+    const registerBtn = document.getElementById('registerBtn');
+    
+    if (confirmPassword && passwordInput && passwordMismatch && registerBtn) {
+      function checkPasswordMatch() {
+        if (passwordInput.value && confirmPassword.value) {
+          if (passwordInput.value !== confirmPassword.value) {
+            passwordMismatch.classList.remove('d-none');
+            registerBtn.disabled = true;
+          } else {
+            passwordMismatch.classList.add('d-none');
+            registerBtn.disabled = false;
+          }
+        } else {
+          passwordMismatch.classList.add('d-none');
+          registerBtn.disabled = false;
+        }
+      }
+      
+      confirmPassword.addEventListener('input', checkPasswordMatch);
+      passwordInput.addEventListener('input', checkPasswordMatch);
+    }
+  });
+</script>

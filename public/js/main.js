@@ -1,24 +1,15 @@
 /**
- * AntiVirüs Uygulaması Ana JavaScript Dosyası
+ * AntiVirüs Uygulaması JavaScript Dosyası
  */
 
-// Sayfa yüklendikten sonra çalışacak kodlar
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('AntiVirüs Uygulaması yüklendi!');
-  
-  // Bootstrap tooltips'i aktifleştir
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-  
   // Aktif menü öğesini işaretle
   markActiveMenuItem();
   
-  // Tarama durumu kontrolünü başlat (eğer sayfada varsa)
+  // Tarama ilerleme durumunu kontrol et (varsa)
   initScanProgress();
   
-  // Tehdit temizleme butonlarını başlat (eğer sayfada varsa)
+  // Tehdit temizleme butonlarını initialize et
   initThreatCleanButtons();
 });
 
@@ -26,25 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
  * Mevcut sayfanın URL'ine göre ilgili menü öğesini aktif olarak işaretler
  */
 function markActiveMenuItem() {
-  // Şu anki URL yolunu al
   const currentPath = window.location.pathname;
-  
-  // Tüm menü bağlantılarını döngüye al
   const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
   
-  // Her bağlantıyı kontrol et
   navLinks.forEach(link => {
     const href = link.getAttribute('href');
-    
-    // Ana sayfa kontrolü
-    if (href === '/' && currentPath === '/') {
-      link.classList.add('active');
-      return;
-    }
-    
-    // Diğer sayfalar için, URL yolunun bağlantı hedefiyle başlaması durumunda aktif işaretle
-    // Ancak ana sayfa için "/" ile başlayan tüm URL'leri işaretlememek için özel kontrol ekle
-    if (href !== '/' && currentPath.startsWith(href)) {
+    if (href === currentPath || 
+        (href !== '/' && currentPath.startsWith(href))) {
       link.classList.add('active');
     }
   });
@@ -54,44 +33,72 @@ function markActiveMenuItem() {
  * Tarama ilerleme durumunu kontrol eden ve güncelleyen fonksiyon
  */
 function initScanProgress() {
-  const scanProgressBar = document.getElementById('scanProgressBar');
-  const scanStatusText = document.getElementById('scanStatusText');
+  const scanProgressContainer = document.getElementById('scan-progress-container');
+  if (!scanProgressContainer) return;
   
-  if (!scanProgressBar || !scanStatusText) return; // Sayfada bu elementler yoksa çık
+  const scanId = scanProgressContainer.dataset.scanId;
+  if (!scanId) return;
   
-  // Sunucudan tarama durumunu kontrol eden fonksiyon
+  const progressElement = document.getElementById('scan-progress');
+  const progressTextElement = document.getElementById('scan-progress-text');
+  const statusTextElement = document.getElementById('scan-status-text');
+  
+  // İlk durumu kontrol et
+  checkScanStatus();
+  
+  // Her 2 saniyede bir durumu güncelle
+  const intervalId = setInterval(() => {
+    checkScanStatus();
+  }, 2000);
+  
   function checkScanStatus() {
-    // Demo amaçlı rastgele ilerleme - gerçek uygulamada AJAX isteği ile sunucudan alınacak
-    const currentProgress = parseInt(scanProgressBar.getAttribute('aria-valuenow'));
+    fetch(`/api/scans/${scanId}/status`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+          clearInterval(intervalId);
+          
+          if (data.status === 'COMPLETED') {
+            updateScanProgress(100, 'Tarama tamamlandı');
+            
+            // Sayfayı 3 saniye sonra sonuçlara yönlendir
+            setTimeout(() => {
+              window.location.href = `/scans/${scanId}/results`;
+            }, 3000);
+          } else {
+            updateScanProgress(data.progress, 'Tarama başarısız oldu');
+          }
+        } else {
+          updateScanProgress(data.progress, 'Taranıyor...');
+        }
+      })
+      .catch(error => {
+        console.error('Tarama durumu alınamadı:', error);
+        clearInterval(intervalId);
+        updateScanProgress(0, 'Bağlantı hatası');
+      });
+  }
+  
+  function updateScanProgress(progress, statusText) {
+    if (progressElement) {
+      progressElement.style.width = `${progress}%`;
+      progressElement.setAttribute('aria-valuenow', progress);
+    }
     
-    if (currentProgress < 100) {
-      // Tarama devam ediyor, ilerlemeyi artır
-      const newProgress = Math.min(currentProgress + Math.floor(Math.random() * 10), 100);
-      updateScanProgress(newProgress, 'Tarama devam ediyor...');
-      
-      // Tarama tamamlandıysa bitir mesajını göster
-      if (newProgress === 100) {
-        setTimeout(() => {
-          updateScanProgress(100, 'Tarama tamamlandı!');
-          document.getElementById('scanComplete').classList.remove('d-none');
-        }, 1000);
-      } else {
-        // Devam ediyorsa, tekrar kontrol et
-        setTimeout(checkScanStatus, 500);
-      }
+    if (progressTextElement) {
+      progressTextElement.textContent = `${Math.round(progress)}%`;
+    }
+    
+    if (statusTextElement) {
+      statusTextElement.textContent = statusText;
+    }
+    
+    // Dairesel ilerleme için
+    const circleProgress = document.querySelector('.progress-circle');
+    if (circleProgress) {
+      circleProgress.style.background = `conic-gradient(var(--primary-color) ${progress}%, var(--light-color) 0%)`;
     }
   }
-  
-  // Tarama ilerleme çubuğunu güncelle
-  function updateScanProgress(progress, statusText) {
-    scanProgressBar.style.width = progress + '%';
-    scanProgressBar.setAttribute('aria-valuenow', progress);
-    scanStatusText.textContent = statusText;
-  }
-  
-  // Başlangıç değerleri
-  updateScanProgress(0, 'Tarama başlatılıyor...');
-  setTimeout(checkScanStatus, 1000);
 }
 
 /**
@@ -100,76 +107,96 @@ function initScanProgress() {
 function initThreatCleanButtons() {
   const cleanButtons = document.querySelectorAll('.clean-threat-btn');
   
-  if (cleanButtons.length === 0) return; // Sayfada bu butonlar yoksa çık
-  
   cleanButtons.forEach(button => {
     button.addEventListener('click', function() {
-      const threatId = this.getAttribute('data-threat-id');
-      const threatItem = document.getElementById('threat-' + threatId);
+      const threatId = this.dataset.threatId;
+      const threatCard = document.getElementById(`threat-${threatId}`);
       
-      // Temizleme işlemi başladığında butonu devre dışı bırak
+      if (!threatId || !threatCard) return;
+      
+      // Buton durumunu güncelle
       this.disabled = true;
-      this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Temizleniyor...';
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Temizleniyor...';
       
-      // Demo amaçlı gecikme - gerçek uygulamada AJAX isteği ile sunucuya gönderilecek
-      setTimeout(() => {
-        // AJAX isteği ile tehdidi temizle
-        fetch('/threat/clean/' + threatId, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Temizleme başarılı, tehdidi listeden kaldır
-            threatItem.classList.add('bg-success', 'bg-opacity-10');
-            this.innerHTML = '<i class="fas fa-check me-1"></i>Temizlendi';
-            
-            // Animasyon ile listeden kaldır
-            setTimeout(() => {
-              threatItem.style.height = threatItem.offsetHeight + 'px';
-              threatItem.style.overflow = 'hidden';
-              threatItem.style.transition = 'all 0.5s ease';
-              
-              setTimeout(() => {
-                threatItem.style.height = '0';
-                threatItem.style.padding = '0';
-                threatItem.style.margin = '0';
-                
-                setTimeout(() => {
-                  threatItem.remove();
-                  
-                  // Tehdit listesi boşaldıysa, temiz mesajını göster
-                  const threatsList = document.getElementById('threatsList');
-                  if (threatsList && threatsList.children.length === 0) {
-                    threatsList.innerHTML = `
-                      <div class="text-center py-5">
-                        <i class="fas fa-shield-alt fa-4x text-success mb-3"></i>
-                        <h5>Hiçbir tehdit bulunamadı</h5>
-                        <p class="text-muted">Cihazınız şu anda güvende görünüyor.</p>
-                      </div>
-                    `;
-                  }
-                }, 500);
-              }, 50);
-            }, 1000);
-          } else {
-            // Temizleme başarısız
-            this.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Hata';
-            this.classList.remove('btn-success');
-            this.classList.add('btn-danger');
-          }
-        })
-        .catch(error => {
-          console.error('Tehdit temizleme hatası:', error);
-          this.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Hata';
-          this.classList.remove('btn-success');
-          this.classList.add('btn-danger');
+      // API'ye temizleme isteği gönder
+      fetch(`/api/threats/${threatId}/clean`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Başarılı temizleme
+          threatCard.classList.add('bg-light');
+          threatCard.querySelector('.threat-status').innerHTML = 
+            '<span class="badge bg-success"><i class="fas fa-check me-1"></i> Temizlendi</span>';
+          
+          this.innerHTML = '<i class="fas fa-check me-1"></i> Temizlendi';
+          this.classList.remove('btn-danger');
+          this.classList.add('btn-success');
+          this.disabled = true;
+          
+          // Bildirim göster
+          showAlert('success', `"${data.threat.name}" tehdidi başarıyla temizlendi.`);
+        } else {
+          // Temizleme hatası
+          this.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Temizleme Başarısız';
           this.disabled = false;
-        });
-      }, 1500);
+          
+          // Hata bildirim
+          showAlert('danger', `Tehdit temizlenirken bir hata oluştu: ${data.error}`);
+        }
+      })
+      .catch(error => {
+        console.error('Tehdit temizleme hatası:', error);
+        this.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Bağlantı Hatası';
+        this.disabled = false;
+        
+        // Bağlantı hatası bildirimi
+        showAlert('danger', 'Sunucu ile bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
+      });
     });
   });
+}
+
+/**
+ * Kullanıcıya bildirim gösteren fonksiyon
+ * @param {string} type - Bildirim tipi (success, danger, warning, info)
+ * @param {string} message - Gösterilecek mesaj
+ */
+function showAlert(type, message) {
+  const alertContainer = document.createElement('div');
+  alertContainer.className = `alert alert-${type} alert-dismissible fade show`;
+  alertContainer.setAttribute('role', 'alert');
+  
+  // İkona karar ver
+  let icon = 'info-circle';
+  if (type === 'success') icon = 'check-circle';
+  if (type === 'danger') icon = 'exclamation-circle';
+  if (type === 'warning') icon = 'exclamation-triangle';
+  
+  alertContainer.innerHTML = `
+    <i class="fas fa-${icon} me-2"></i> ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+  
+  // Bildirim alanı varsa oraya ekle, yoksa body'nin en üstüne ekle
+  const alertArea = document.querySelector('.alert-area') || document.body;
+  if (alertArea === document.body) {
+    alertContainer.style.position = 'fixed';
+    alertContainer.style.top = '20px';
+    alertContainer.style.right = '20px';
+    alertContainer.style.zIndex = '9999';
+    alertContainer.style.maxWidth = '400px';
+  }
+  
+  alertArea.appendChild(alertContainer);
+  
+  // 5 saniye sonra otomatik kapat
+  setTimeout(() => {
+    alertContainer.classList.remove('show');
+    setTimeout(() => alertContainer.remove(), 300);
+  }, 5000);
 }

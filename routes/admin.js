@@ -5,275 +5,489 @@
 
 const express = require('express');
 const router = express.Router();
-const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const { isAdmin } = require('../middleware/auth');
 const User = require('../models/user');
 const Threat = require('../models/threat');
 const ScanResult = require('../models/scanResult');
+const { getDb } = require('../config/database');
 
-// Admin paneline erişim için önce kimlik doğrulama ve admin yetkisi kontrolü
-router.use(isAuthenticated);
-router.use(isAdmin);
-
-// Admin Ana Sayfası
-router.get('/dashboard', async (req, res) => {
+// Admin ana sayfa
+router.get('/', isAdmin, async (req, res) => {
   try {
-    // İstatistikleri getir
-    const userCount = await User.findAll().then(users => users.length);
-    const threatCount = await Threat.count();
-    const scanCount = await ScanResult.count();
-    const activeThreatsCount = await Threat.count({ isCleaned: false });
+    // İstatistikler
+    const stats = {
+      userCount: await User.count(),
+      scanCount: await ScanResult.count(),
+      threatCount: await Threat.count(),
+      dailyActiveUsers: 5 // Örnek değer
+    };
     
-    // Son 5 taramayı getir
-    const recentScans = await ScanResult.findRecent(5);
+    // Son kayıt olan kullanıcılar
+    const recentUsers = await User.findRecent(5);
     
-    res.render('admin/dashboard', { 
-      title: 'Admin Panel',
-      activeLink: 'admin',
-      stats: {
-        userCount,
-        threatCount,
-        scanCount,
-        activeThreatsCount
+    // Son tespit edilen tehditler
+    const recentThreats = await Threat.findAll({ isCleaned: false });
+    
+    // Sistem uyarıları (örnek)
+    const systemAlerts = [
+      {
+        type: 'info',
+        title: 'Sistem Güncellemesi',
+        message: 'Yeni bir sistem güncellemesi kullanılabilir. Tehdit veritabanı güncellendi.',
+        date: new Date()
       },
-      recentScans
+      {
+        type: 'warning',
+        title: 'Disk Alanı Uyarısı',
+        message: 'Disk alanı %80 doluluk seviyesine ulaştı. Eski log dosyalarını temizlemeyi düşünün.',
+        date: new Date(Date.now() - 86400000) // 1 gün önce
+      }
+    ];
+    
+    // Grafik verileri
+    const lastWeek = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    // Grafik verileri (örnek)
+    const chartData = {
+      users: [3, 5, 2, 6, 4, 8, 7],
+      scans: [12, 15, 8, 20, 18, 25, 22],
+      threats: [2, 0, 1, 3, 2, 4, 1]
+    };
+    
+    res.render('admin/dashboard', {
+      title: 'Admin Panel',
+      stats,
+      recentUsers,
+      recentThreats,
+      systemAlerts,
+      chartData,
+      chartLabels: lastWeek
     });
   } catch (error) {
     console.error('Admin dashboard hatası:', error);
-    res.status(500).render('error', { 
-      title: 'Hata',
-      message: 'Admin dashboard yüklenirken bir hata oluştu.'
+    res.locals.addMessage('danger', 'Admin paneli yüklenirken bir hata oluştu');
+    res.render('admin/dashboard', {
+      title: 'Admin Panel',
+      stats: { userCount: 0, scanCount: 0, threatCount: 0, dailyActiveUsers: 0 },
+      recentUsers: [],
+      recentThreats: [],
+      systemAlerts: [],
+      chartData: { users: [], scans: [], threats: [] },
+      chartLabels: []
     });
   }
 });
 
-// Kullanıcı Listesi
-router.get('/users', async (req, res) => {
+// Kullanıcı yönetimi
+router.get('/users', isAdmin, async (req, res) => {
   try {
-    const users = await User.findAll();
+    // Sayfalama için parametreler
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     
-    res.render('admin/users', { 
+    // Filtreleme ve arama
+    const search = req.query.search || '';
+    
+    // MongoDB filtresini oluştur
+    let filter = {};
+    
+    if (search) {
+      // Tam metin araması
+      filter = {
+        $or: [
+          { email: { $regex: search, $options: 'i' } },
+          { displayName: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+    
+    // Veritabanı bağlantısı
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    
+    // Kullanıcıları getir
+    const users = await db.collection('users')
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    
+    // Toplam kullanıcı sayısı
+    const totalUsers = await db.collection('users').countDocuments(filter);
+    
+    // Toplam sayfa sayısı
+    const totalPages = Math.ceil(totalUsers / limit);
+    
+    res.render('admin/users', {
       title: 'Kullanıcı Yönetimi',
-      activeLink: 'admin',
-      users
+      users,
+      currentPage: page,
+      totalPages,
+      totalUsers,
+      limit,
+      search
     });
   } catch (error) {
-    console.error('Kullanıcı listesi hatası:', error);
-    res.status(500).render('error', { 
-      title: 'Hata',
-      message: 'Kullanıcı listesi yüklenirken bir hata oluştu.'
+    console.error('Kullanıcı yönetimi hatası:', error);
+    res.locals.addMessage('danger', 'Kullanıcı listesi yüklenirken bir hata oluştu');
+    res.render('admin/users', {
+      title: 'Kullanıcı Yönetimi',
+      users: [],
+      currentPage: 1,
+      totalPages: 0,
+      totalUsers: 0,
+      limit: 10,
+      search: ''
     });
   }
 });
 
-// Tehdit Listesi
-router.get('/threats', async (req, res) => {
-  try {
-    const threats = await Threat.findAll();
-    
-    res.render('admin/threats', { 
-      title: 'Tehdit Yönetimi',
-      activeLink: 'admin',
-      threats
-    });
-  } catch (error) {
-    console.error('Tehdit listesi hatası:', error);
-    res.status(500).render('error', { 
-      title: 'Hata',
-      message: 'Tehdit listesi yüklenirken bir hata oluştu.'
-    });
-  }
-});
-
-// Tarama Sonuçları Listesi
-router.get('/scans', async (req, res) => {
-  try {
-    const scans = await ScanResult.findRecent(20);
-    
-    res.render('admin/scans', { 
-      title: 'Tarama Sonuçları',
-      activeLink: 'admin',
-      scans
-    });
-  } catch (error) {
-    console.error('Tarama listesi hatası:', error);
-    res.status(500).render('error', { 
-      title: 'Hata',
-      message: 'Tarama listesi yüklenirken bir hata oluştu.'
-    });
-  }
-});
-
-// Kullanıcı Admin Yetkisi Değiştir (POST)
-router.post('/users/:id/toggle-admin', async (req, res) => {
+// Kullanıcı detayı
+router.get('/users/:id', isAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     
-    // Kendisinin admin yetkisini değiştirmesini engelle
-    if (userId === req.session.user.id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Kendi admin yetkinizi değiştiremezsiniz.'
-      });
-    }
-    
-    // Kullanıcıyı bul
+    // Kullanıcıyı getir
     const user = await User.findById(userId);
     
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Kullanıcı bulunamadı.'
-      });
+      res.locals.addMessage('warning', 'Kullanıcı bulunamadı');
+      return res.redirect('/admin/users');
     }
     
-    // Admin yetkisini tersine çevir
-    user.isAdmin = !user.isAdmin;
+    // Kullanıcının tarama geçmişi
+    const scans = await ScanResult.findByUserId(userId);
     
-    // Veritabanına kaydet
-    await User.saveUserToDb(user);
+    // Kullanıcının bulunan tehditleri
+    const threats = await Threat.findAll({ userId });
     
-    res.json({
-      success: true,
-      message: `${user.displayName} kullanıcısının admin yetkisi ${user.isAdmin ? 'verildi' : 'alındı'}.`,
-      isAdmin: user.isAdmin
+    res.render('admin/user-detail', {
+      title: `Kullanıcı: ${user.displayName || user.email}`,
+      user,
+      scans,
+      threats,
+      stats: {
+        scanCount: scans.length,
+        threatCount: threats.length,
+        cleanedCount: threats.filter(t => t.isCleaned).length
+      }
     });
   } catch (error) {
-    console.error('Admin yetkisi değiştirme hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Kullanıcı yetkisi değiştirilirken bir hata oluştu.'
+    console.error('Kullanıcı detayı hatası:', error);
+    res.locals.addMessage('danger', 'Kullanıcı detayları yüklenirken bir hata oluştu');
+    res.redirect('/admin/users');
+  }
+});
+
+// Kullanıcı düzenleme
+router.post('/users/:id', isAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { displayName, isAdmin } = req.body;
+    
+    // Kullanıcıyı getir
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      res.locals.addMessage('warning', 'Kullanıcı bulunamadı');
+      return res.redirect('/admin/users');
+    }
+    
+    // Kullanıcı bilgilerini güncelle
+    user.displayName = displayName;
+    user.isAdmin = isAdmin === 'on';
+    
+    // Kullanıcıyı kaydet
+    await user.save();
+    
+    res.locals.addMessage('success', 'Kullanıcı bilgileri başarıyla güncellendi');
+    res.redirect(`/admin/users/${userId}`);
+  } catch (error) {
+    console.error('Kullanıcı güncelleme hatası:', error);
+    res.locals.addMessage('danger', 'Kullanıcı güncellenirken bir hata oluştu');
+    res.redirect(`/admin/users/${req.params.id}`);
+  }
+});
+
+// Tehdit yönetimi
+router.get('/threats', isAdmin, async (req, res) => {
+  try {
+    // Sayfalama için parametreler
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Filtreleme ve arama
+    const search = req.query.search || '';
+    const type = req.query.type || '';
+    const severity = req.query.severity || '';
+    const status = req.query.status || '';
+    
+    // MongoDB filtresini oluştur
+    let filter = {};
+    
+    if (search) {
+      // Tam metin araması
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (type) {
+      filter.type = type;
+    }
+    
+    if (severity) {
+      filter.severity = severity;
+    }
+    
+    if (status === 'cleaned') {
+      filter.isCleaned = true;
+    } else if (status === 'active') {
+      filter.isCleaned = false;
+    }
+    
+    // Veritabanı bağlantısı
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    
+    // Tehditleri getir
+    const threats = await db.collection('threats')
+      .find(filter)
+      .sort({ detectionDate: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    
+    // Toplam tehdit sayısı
+    const totalThreats = await db.collection('threats').countDocuments(filter);
+    
+    // Toplam sayfa sayısı
+    const totalPages = Math.ceil(totalThreats / limit);
+    
+    // Tehdit tipleri (filtreleme için)
+    const threatTypes = await db.collection('threats').distinct('type');
+    
+    res.render('admin/threats', {
+      title: 'Tehdit Yönetimi',
+      threats,
+      currentPage: page,
+      totalPages,
+      totalThreats,
+      limit,
+      search,
+      type,
+      severity,
+      status,
+      threatTypes
+    });
+  } catch (error) {
+    console.error('Tehdit yönetimi hatası:', error);
+    res.locals.addMessage('danger', 'Tehdit listesi yüklenirken bir hata oluştu');
+    res.render('admin/threats', {
+      title: 'Tehdit Yönetimi',
+      threats: [],
+      currentPage: 1,
+      totalPages: 0,
+      totalThreats: 0,
+      limit: 10,
+      search: '',
+      type: '',
+      severity: '',
+      status: '',
+      threatTypes: []
     });
   }
 });
 
-// Tehdit Temizle (POST)
-router.post('/threats/:id/clean', async (req, res) => {
+// Tehdit detayı
+router.get('/threats/:id', isAdmin, async (req, res) => {
   try {
     const threatId = req.params.id;
     
-    // Tehdidi bul
+    // Tehdidi getir
     const threat = await Threat.findById(threatId);
     
     if (!threat) {
-      return res.status(404).json({
-        success: false,
-        message: 'Tehdit bulunamadı.'
-      });
+      res.locals.addMessage('warning', 'Tehdit bulunamadı');
+      return res.redirect('/admin/threats');
     }
     
-    // Zaten temizlenmiş mi kontrolü
-    if (threat.isCleaned) {
-      return res.status(400).json({
-        success: false,
-        message: 'Bu tehdit zaten temizlenmiş.'
-      });
+    // Tehdidin sahibi kullanıcı
+    let user = null;
+    if (threat.userId) {
+      user = await User.findById(threat.userId);
     }
     
-    // Tehdidi temizle
-    threat.clean();
+    res.render('admin/threat-detail', {
+      title: `Tehdit: ${threat.name}`,
+      threat,
+      user
+    });
+  } catch (error) {
+    console.error('Tehdit detayı hatası:', error);
+    res.locals.addMessage('danger', 'Tehdit detayları yüklenirken bir hata oluştu');
+    res.redirect('/admin/threats');
+  }
+});
+
+// Tehdit düzenleme
+router.post('/threats/:id', isAdmin, async (req, res) => {
+  try {
+    const threatId = req.params.id;
+    const { name, description, severity, isCleaned } = req.body;
     
-    // Veritabanına kaydet
+    // Tehdidi getir
+    const threat = await Threat.findById(threatId);
+    
+    if (!threat) {
+      res.locals.addMessage('warning', 'Tehdit bulunamadı');
+      return res.redirect('/admin/threats');
+    }
+    
+    // Tehdit bilgilerini güncelle
+    threat.name = name;
+    threat.description = description;
+    threat.severity = severity;
+    threat.isCleaned = isCleaned === 'on';
+    
+    // Tehdidi kaydet
     await threat.save();
     
-    res.json({
-      success: true,
-      message: `"${threat.name}" tehdidi başarıyla temizlendi.`
+    res.locals.addMessage('success', 'Tehdit bilgileri başarıyla güncellendi');
+    res.redirect(`/admin/threats/${threatId}`);
+  } catch (error) {
+    console.error('Tehdit güncelleme hatası:', error);
+    res.locals.addMessage('danger', 'Tehdit güncellenirken bir hata oluştu');
+    res.redirect(`/admin/threats/${req.params.id}`);
+  }
+});
+
+// Sistem taraması
+router.get('/system/scan', isAdmin, async (req, res) => {
+  try {
+    // Sistem taraması oluştur (simüle edilmiş)
+    const scan = ScanResult.createSimulatedScan('SYSTEM');
+    
+    // Taramayı kaydet
+    await scan.save();
+    
+    res.locals.addMessage('success', 'Sistem taraması başlatıldı');
+    res.redirect(`/scan/${scan.id}`);
+  } catch (error) {
+    console.error('Sistem taraması hatası:', error);
+    res.locals.addMessage('danger', 'Sistem taraması başlatılırken bir hata oluştu');
+    res.redirect('/admin');
+  }
+});
+
+// Log yönetimi
+router.get('/logs', isAdmin, async (req, res) => {
+  // Log dosyalarını getir
+  // (Bu örnek uygulamada log dosyalarını göstermeyi simüle ediyoruz)
+  
+  const logs = [
+    {
+      type: 'ERROR',
+      message: 'Firebase bağlantı hatası: Invalid API key',
+      timestamp: new Date(Date.now() - 3600000)
+    },
+    {
+      type: 'INFO',
+      message: 'Kullanıcı giriş yaptı: user@example.com',
+      timestamp: new Date(Date.now() - 7200000)
+    },
+    {
+      type: 'WARNING',
+      message: 'Tehdit veritabanı güncellemesi gecikti',
+      timestamp: new Date(Date.now() - 86400000)
+    }
+  ];
+  
+  res.render('admin/logs', {
+    title: 'Sistem Logları',
+    logs
+  });
+});
+
+// Ayarlar
+router.get('/settings', isAdmin, async (req, res) => {
+  try {
+    // Sistem ayarlarını getir
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    
+    const settingsCollection = db.collection('settings');
+    const settings = await settingsCollection.findOne({ key: 'system_settings' });
+    
+    res.render('admin/settings', {
+      title: 'Sistem Ayarları',
+      settings
     });
   } catch (error) {
-    console.error('Tehdit temizleme hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Tehdit temizlenirken bir hata oluştu.'
+    console.error('Ayarlar hatası:', error);
+    res.locals.addMessage('danger', 'Sistem ayarları yüklenirken bir hata oluştu');
+    res.render('admin/settings', {
+      title: 'Sistem Ayarları',
+      settings: {}
     });
   }
 });
 
-// Test Verileri Oluştur (POST) - Sadece geliştirme amaçlı
-router.post('/generate-test-data', async (req, res) => {
+// Ayarları kaydet
+router.post('/settings', isAdmin, async (req, res) => {
   try {
-    // Test kullanıcıları
-    const testUsers = [
-      new User(null, 'user1@example.com', 'Test User 1', 'https://ui-avatars.com/api/?name=Test+User+1&background=0D8ABC&color=fff', false),
-      new User(null, 'user2@example.com', 'Test User 2', 'https://ui-avatars.com/api/?name=Test+User+2&background=0D8ABC&color=fff', false),
-      new User(null, 'user3@example.com', 'Test User 3', 'https://ui-avatars.com/api/?name=Test+User+3&background=0D8ABC&color=fff', false)
-    ];
+    const { 
+      quickScanPaths, 
+      fullScanExcludePaths,
+      wifiScanEnabled,
+      realTimeProtection,
+      threatDetected,
+      scanComplete,
+      wifiWarning,
+      updateAvailable
+    } = req.body;
     
-    // Kullanıcıları kaydet
-    for (const user of testUsers) {
-      await User.saveUserToDb(user);
-    }
+    // Sistem ayarlarını güncelle
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
     
-    // Test tehditleri
-    const testThreats = Threat.getRandomThreats(10);
+    const settingsCollection = db.collection('settings');
+    await settingsCollection.updateOne(
+      { key: 'system_settings' },
+      { 
+        $set: {
+          scanSettings: {
+            quickScanPaths: quickScanPaths ? quickScanPaths.split(',') : [],
+            fullScanExcludePaths: fullScanExcludePaths ? fullScanExcludePaths.split(',') : [],
+            wifiScanEnabled: wifiScanEnabled === 'on',
+            realTimeProtection: realTimeProtection === 'on'
+          },
+          notificationSettings: {
+            threatDetected: threatDetected === 'on',
+            scanComplete: scanComplete === 'on',
+            wifiWarning: wifiWarning === 'on',
+            updateAvailable: updateAvailable === 'on'
+          },
+          updatedAt: new Date()
+        } 
+      },
+      { upsert: true }
+    );
     
-    // Tehditleri kaydet
-    for (const threat of testThreats) {
-      await threat.save();
-    }
-    
-    // Test taramaları
-    const scanTypes = ['QUICK', 'FULL', 'WIFI', 'QR', 'APP'];
-    const testScans = [];
-    
-    // Her kullanıcı için 2 tarama oluştur
-    for (const user of testUsers) {
-      for (let i = 0; i < 2; i++) {
-        const scanType = scanTypes[Math.floor(Math.random() * scanTypes.length)];
-        const scan = ScanResult.createSimulatedScan(scanType, user.id);
-        testScans.push(scan);
-      }
-    }
-    
-    // Sistem taramaları
-    for (let i = 0; i < 3; i++) {
-      const scanType = scanTypes[Math.floor(Math.random() * scanTypes.length)];
-      const scan = ScanResult.createSimulatedScan(scanType, null);
-      testScans.push(scan);
-    }
-    
-    // Taramaları kaydet
-    for (const scan of testScans) {
-      await scan.save();
-    }
-    
-    res.json({
-      success: true,
-      message: 'Test verileri başarıyla oluşturuldu.',
-      counts: {
-        users: testUsers.length,
-        threats: testThreats.length,
-        scans: testScans.length
-      }
-    });
+    res.locals.addMessage('success', 'Sistem ayarları başarıyla güncellendi');
+    res.redirect('/admin/settings');
   } catch (error) {
-    console.error('Test veri oluşturma hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Test verileri oluşturulurken bir hata oluştu.'
-    });
-  }
-});
-
-// Test Verilerini Temizle (POST) - Sadece geliştirme amaçlı
-router.post('/clear-test-data', async (req, res) => {
-  try {
-    const db = require('../config/database').getDb();
-    
-    // Test e-posta adresine sahip kullanıcıları sil
-    await db.collection('users').deleteMany({
-      email: { $in: ['user1@example.com', 'user2@example.com', 'user3@example.com'] }
-    });
-    
-    res.json({
-      success: true,
-      message: 'Test verileri başarıyla temizlendi.'
-    });
-  } catch (error) {
-    console.error('Test veri temizleme hatası:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Test verileri temizlenirken bir hata oluştu.'
-    });
+    console.error('Ayarlar kaydetme hatası:', error);
+    res.locals.addMessage('danger', 'Sistem ayarları kaydedilirken bir hata oluştu');
+    res.redirect('/admin/settings');
   }
 });
 

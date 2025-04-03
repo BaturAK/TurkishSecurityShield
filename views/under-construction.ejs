@@ -1,0 +1,62 @@
+<div class="container py-5 text-center">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="under-construction-container my-5">
+        <img src="/img/logo.svg" alt="AntiVirüs Logo" class="mb-4" height="80">
+        
+        <h1 class="display-4 fw-bold mb-3">Çalışma Devam Ediyor</h1>
+        <h2 class="text-muted mb-4"><%= pageName || 'Bu Sayfa' %> yapım aşamasında</h2>
+        
+        <div class="construction-icon my-5">
+          <i class="fas fa-hard-hat fa-5x text-warning"></i>
+          <div class="gear-animation">
+            <i class="fas fa-cog fa-4x text-primary"></i>
+          </div>
+        </div>
+        
+        <p class="lead text-muted mb-5">
+          Bu bölüm üzerinde çalışmalarımız devam ediyor. 
+          En kısa sürede bu sayfayı tamamlayacağız.
+        </p>
+        
+        <div class="d-flex justify-content-center gap-3">
+          <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Geri Dön
+          </a>
+          <a href="/" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i> Ana Sayfa
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .under-construction-container {
+    padding: 2rem;
+  }
+  
+  .construction-icon {
+    position: relative;
+    display: inline-block;
+    height: 120px;
+    width: 200px;
+  }
+  
+  .gear-animation {
+    position: absolute;
+    bottom: 0;
+    right: 40px;
+    animation: rotate 8s linear infinite;
+  }
+  
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>

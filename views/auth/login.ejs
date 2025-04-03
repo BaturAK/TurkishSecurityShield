@@ -1,69 +1,88 @@
-<section class="py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-4 p-md-5">
-            <div class="text-center mb-4">
-              <i class="fas fa-shield-virus fa-3x text-primary mb-3"></i>
-              <h2 class="fw-bold">Giriş Yap</h2>
-              <p class="text-muted">Hesabınıza erişin ve cihazlarınızı korumaya devam edin</p>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card auth-form border-0 shadow">
+        <div class="card-body p-4 p-md-5">
+          <div class="text-center mb-4">
+            <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+            <h2 class="fw-bold">Hesabınıza Giriş Yapın</h2>
+            <p class="text-muted">Cihazınızı korumak için giriş yapın</p>
+          </div>
+          
+          <form action="/auth/login" method="POST">
+            <div class="mb-3">
+              <label for="email" class="form-label">E-posta Adresi</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                <input type="email" class="form-control" id="email" name="email" 
+                  placeholder="ornek@mail.com" required autofocus 
+                  value="<%= locals.formData ? formData.email : '' %>">
+              </div>
             </div>
             
-            <% if (locals.error) { %>
-              <div class="alert alert-danger mb-4">
-                <%= error %>
-              </div>
-            <% } %>
-            
-            <form action="/auth/login" method="POST">
-              <div class="mb-3">
-                <label for="email" class="form-label">E-posta Adresi</label>
-                <input type="email" class="form-control" id="email" name="email" value="<%= locals.email || '' %>" required>
-              </div>
-              
-              <div class="mb-3">
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
                 <label for="password" class="form-label">Şifre</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <a href="/auth/forgot-password" class="small text-primary">Şifremi Unuttum</a>
               </div>
-              
-              <div class="d-flex justify-content-between mb-3">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
-                  <label class="form-check-label" for="rememberMe">
-                    Beni hatırla
-                  </label>
-                </div>
-                <a href="#" class="text-decoration-none">Şifrenizi mi unuttunuz?</a>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" class="form-control" id="password" name="password" 
+                  placeholder="Şifreniz" required minlength="6">
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                  <i class="fas fa-eye"></i>
+                </button>
               </div>
-              
-              <div class="d-grid mb-4">
-                <button type="submit" class="btn btn-primary btn-lg">Giriş Yap</button>
-              </div>
-            </form>
+            </div>
+            
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe" 
+                <%= locals.formData && formData.rememberMe ? 'checked' : '' %>>
+              <label class="form-check-label" for="rememberMe">
+                Beni hatırla
+              </label>
+            </div>
+            
+            <div class="d-grid mb-4">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
+              </button>
+            </div>
             
             <div class="text-center">
-              <p class="text-muted">Veya şununla giriş yapın</p>
-              <div class="d-flex justify-content-center gap-3 mb-4">
-                <a href="/auth/google" class="btn btn-outline-danger">
-                  <i class="fab fa-google me-2"></i> Google
-                </a>
-              </div>
-              <p class="mb-0">
-                Hesabınız yok mu? <a href="/auth/register" class="text-decoration-none">Kayıt Ol</a>
-              </p>
+              <p class="mb-0">Hesabınız yok mu? <a href="/auth/register" class="text-primary fw-bold">Kaydolun</a></p>
             </div>
-          </div>
+          </form>
         </div>
-        
-        <div class="text-center mt-4">
-          <p class="text-muted small">
-            Demo hesapları:<br>
-            Normal kullanıcı: test@example.com / password123<br>
-            Admin: admin@example.com / admin123
-          </p>
-        </div>
+      </div>
+      
+      <div class="text-center mt-4">
+        <p class="text-muted">
+          <small>
+            Giriş yaparak, <a href="/terms" class="text-primary">Kullanım Şartları</a> ve 
+            <a href="/privacy" class="text-primary">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
+          </small>
+        </p>
       </div>
     </div>
   </div>
-</section>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener('click', function () {
+        // Şifre görünürlüğünü değiştir
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        // İkon değiştir
+        this.querySelector('i').classList.toggle('fa-eye');
+        this.querySelector('i').classList.toggle('fa-eye-slash');
+      });
+    }
+  });
+</script>

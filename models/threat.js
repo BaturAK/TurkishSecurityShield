@@ -30,7 +30,8 @@ class Threat {
     this.severity = severity;
     this.filePath = filePath;
     this.isCleaned = isCleaned;
-    this.detectionDate = detectionDate;
+    this.detectionDate = detectionDate instanceof Date ? detectionDate : new Date(detectionDate);
+    this.userId = null; // Bu tehdidin hangi kullanıcıya ait olduğu (null ise sistem genel)
   }
 
   /**
@@ -46,7 +47,8 @@ class Threat {
       severity: this.severity,
       filePath: this.filePath,
       isCleaned: this.isCleaned,
-      detectionDate: this.detectionDate
+      detectionDate: this.detectionDate,
+      userId: this.userId
     };
   }
 
@@ -55,7 +57,6 @@ class Threat {
    * @returns {boolean} - Temizleme işlemi başarılı ise true döner
    */
   clean() {
-    // Gerçek bir uygulamada burada tehdidi temizleyecek kod olacak
     this.isCleaned = true;
     return true;
   }
@@ -67,19 +68,22 @@ class Threat {
   async save() {
     try {
       const db = getDb();
-      const threatsCollection = db.collection('threats');
+      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+
+      const collection = db.collection('threats');
       
-      const existingThreat = await threatsCollection.findOne({ id: this.id });
+      // Tehdidin daha önce kaydedilip kaydedilmediğini kontrol et
+      const existingThreat = await collection.findOne({ id: this.id });
       
       if (existingThreat) {
-        // Tehdit zaten varsa güncelle
-        await threatsCollection.updateOne(
+        // Tehdit güncelleme
+        await collection.updateOne(
           { id: this.id },
           { $set: this.toJSON() }
         );
       } else {
-        // Tehdit yoksa yeni kayıt oluştur
-        await threatsCollection.insertOne(this.toJSON());
+        // Yeni tehdit ekleme
+        await collection.insertOne(this.toJSON());
       }
       
       return true;
@@ -97,13 +101,14 @@ class Threat {
   static async findById(id) {
     try {
       const db = getDb();
-      const threatsCollection = db.collection('threats');
-      
-      const threatData = await threatsCollection.findOne({ id });
+      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+
+      const collection = db.collection('threats');
+      const threatData = await collection.findOne({ id });
       
       if (!threatData) return null;
       
-      return new Threat(
+      const threat = new Threat(
         threatData.id,
         threatData.name,
         threatData.type,
@@ -111,8 +116,12 @@ class Threat {
         threatData.severity,
         threatData.filePath,
         threatData.isCleaned,
-        threatData.detectionDate
+        new Date(threatData.detectionDate)
       );
+      
+      threat.userId = threatData.userId;
+      
+      return threat;
     } catch (error) {
       console.error('Tehdit bulma hatası:', error);
       return null;
@@ -127,20 +136,29 @@ class Threat {
   static async findAll(filter = {}) {
     try {
       const db = getDb();
-      const threatsCollection = db.collection('threats');
+      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+
+      const collection = db.collection('threats');
+      const threatsData = await collection.find(filter)
+        .sort({ detectionDate: -1 })
+        .toArray();
       
-      const threatsData = await threatsCollection.find(filter).toArray();
-      
-      return threatsData.map(threatData => new Threat(
-        threatData.id,
-        threatData.name,
-        threatData.type,
-        threatData.description,
-        threatData.severity,
-        threatData.filePath,
-        threatData.isCleaned,
-        threatData.detectionDate
-      ));
+      return threatsData.map(threatData => {
+        const threat = new Threat(
+          threatData.id,
+          threatData.name,
+          threatData.type,
+          threatData.description,
+          threatData.severity,
+          threatData.filePath,
+          threatData.isCleaned,
+          new Date(threatData.detectionDate)
+        );
+        
+        threat.userId = threatData.userId;
+        
+        return threat;
+      });
     } catch (error) {
       console.error('Tehditleri getirme hatası:', error);
       return [];
@@ -155,11 +173,12 @@ class Threat {
   static async count(filter = {}) {
     try {
       const db = getDb();
-      const threatsCollection = db.collection('threats');
-      
-      return await threatsCollection.countDocuments(filter);
+      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+
+      const collection = db.collection('threats');
+      return await collection.countDocuments(filter);
     } catch (error) {
-      console.error('Tehdit sayma hatası:', error);
+      console.error('Tehdit sayısı getirme hatası:', error);
       return 0;
     }
   }
@@ -170,61 +189,110 @@ class Threat {
    * @returns {Threat[]} - Üretilen tehdit nesneleri dizisi
    */
   static getRandomThreats(count = 3) {
-    const threatTypes = ['Trojan', 'Virus', 'Spyware', 'Adware', 'Malware', 'Ransomware', 'Worm'];
-    const severityLevels = ['LOW', 'MEDIUM', 'HIGH'];
+    // Olası tehdit tipleri
+    const threatTypes = [
+      'Trojan', 'Virus', 'Spyware', 'Adware', 'Ransomware', 
+      'Worm', 'Rootkit', 'Keylogger', 'Backdoor', 'Botnet'
+    ];
+    
+    // Tehdit veritabanı (örnek)
+    const threatDatabase = [
+      {
+        name: 'AndroidOS.Malware.123',
+        type: 'Trojan',
+        description: 'Kullanıcı bilgilerini çalan ve arka planda çalışan bir truva atı.',
+        severity: 'HIGH'
+      },
+      {
+        name: 'AndroidOS.Adware.456',
+        type: 'Adware',
+        description: 'İstenmeyen reklamlar gösteren ve kullanıcı davranışlarını izleyen bir reklam yazılımı.',
+        severity: 'MEDIUM'
+      },
+      {
+        name: 'AndroidOS.Spyware.789',
+        type: 'Spyware',
+        description: 'Kullanıcı konumunu ve kişisel bilgilerini izleyen ve dışarı sızdıran bir casus yazılım.',
+        severity: 'HIGH'
+      },
+      {
+        name: 'AndroidOS.Virus.ABC',
+        type: 'Virus',
+        description: 'Sistemde istenmeyen değişiklikler yapan ve yavaşlamaya neden olan bir virüs.',
+        severity: 'MEDIUM'
+      },
+      {
+        name: 'AndroidOS.Ransomware.XYZ',
+        type: 'Ransomware',
+        description: 'Kullanıcı dosyalarını şifreleyen ve fidye talep eden zararlı yazılım.',
+        severity: 'HIGH'
+      },
+      {
+        name: 'AndroidOS.Worm.123',
+        type: 'Worm',
+        description: 'Kendi kendini çoğaltabilen ve ağ üzerinden yayılan zararlı yazılım.',
+        severity: 'MEDIUM'
+      },
+      {
+        name: 'AndroidOS.Rootkit.456',
+        type: 'Rootkit',
+        description: 'Sistem düzeyinde gizlenen ve tespit edilmesi zor olan zararlı yazılım.',
+        severity: 'HIGH'
+      },
+      {
+        name: 'AndroidOS.PUP.789',
+        type: 'PUP',
+        description: 'Potansiyel olarak istenmeyen program. Sistem performansını düşürebilir.',
+        severity: 'LOW'
+      },
+      {
+        name: 'AndroidOS.Keylogger.ABC',
+        type: 'Keylogger',
+        description: 'Kullanıcı tuş vuruşlarını kaydeden ve dışarı sızdıran zararlı yazılım.',
+        severity: 'HIGH'
+      },
+      {
+        name: 'AndroidOS.Backdoor.XYZ',
+        type: 'Backdoor',
+        description: 'Uzaktan erişim sağlayan ve sistem güvenliğini tehdit eden bir arka kapı.',
+        severity: 'HIGH'
+      }
+    ];
+    
+    // Olası dosya yolları
     const filePaths = [
-      '/data/app/com.example.malicious/base.apk',
-      '/storage/emulated/0/Download/suspicious_file.zip',
-      '/storage/emulated/0/DCIM/hidden_script.js',
-      '/data/data/com.unknown.app/shared_prefs/tracker.xml',
-      '/system/app/modified_system_app.apk'
+      '/storage/emulated/0/Download/suspicious_file.apk',
+      '/storage/emulated/0/WhatsApp/Media/suspicious_image.jpg',
+      '/storage/emulated/0/DCIM/Camera/suspicious_video.mp4',
+      '/data/app/com.suspicious.app-1/base.apk',
+      '/data/data/com.suspicious.app/shared_prefs/config.xml',
+      null // Bazen dosya yolu olmayabilir
     ];
     
-    const threatNames = [
-      'Android.Trojan.BankBot',
-      'Andr.Malware.GrifthHorse',
-      'AndroidOS.FakeApp.123',
-      'Trojan.AndroidOS.Agent',
-      'Android.Backdoor.Spy',
-      'Android.Downloader.234',
-      'Android.Spyware.Pegasus',
-      'Andr.Adware.Necro',
-      'Android.Virus.Joker',
-      'Android.Exploit.CVE202X'
-    ];
-    
-    const threatDescriptions = [
-      'Bu kötü amaçlı yazılım banka bilgilerinizi çalabilir ve finansal dolandırıcılık yapabilir.',
-      'Kullanıcının bilgisi olmadan premium SMS servislere abone yapan kötü amaçlı yazılım.',
-      'Kullanıcı verilerini toplayan ve uzak sunuculara gönderen casus yazılım.',
-      'Cihazda arka kapı oluşturan ve uzaktan kontrol imkanı veren kötü amaçlı yazılım.',
-      'Kişisel bilgileri çalmak için tasarlanmış keylogger yazılımı.',
-      'Reklam göstererek gelir elde etmeyi amaçlayan adware.',
-      'Cihazın kamerasına ve mikrofonuna izinsiz erişim sağlayan gizli yazılım.',
-      'Dosyaları şifreleyerek fidye isteyen ransomware.',
-      'Kendini çoğaltarak yayılan ve sistem performansını düşüren virüs.',
-      'Cihazdaki diğer uygulamaların verilerine erişim sağlayan kötü amaçlı yazılım.'
-    ];
-    
+    // Rastgele tehditler oluştur
     const threats = [];
     
     for (let i = 0; i < count; i++) {
-      const threatTypeIndex = Math.floor(Math.random() * threatTypes.length);
-      const severityIndex = Math.floor(Math.random() * severityLevels.length);
-      const filePathIndex = Math.floor(Math.random() * filePaths.length);
-      const nameIndex = Math.floor(Math.random() * threatNames.length);
-      const descIndex = Math.floor(Math.random() * threatDescriptions.length);
+      // Rastgele bir tehdit seç
+      const randomThreatIndex = Math.floor(Math.random() * threatDatabase.length);
+      const threatTemplate = threatDatabase[randomThreatIndex];
       
-      threats.push(new Threat(
-        uuidv4(),
-        threatNames[nameIndex],
-        threatTypes[threatTypeIndex],
-        threatDescriptions[descIndex],
-        severityLevels[severityIndex],
-        filePaths[filePathIndex],
-        false,
-        new Date(Date.now() - Math.floor(Math.random() * 86400000)) // Son 24 saat içinde rastgele bir zaman
-      ));
+      // Rastgele bir dosya yolu seç
+      const randomFilePath = filePaths[Math.floor(Math.random() * filePaths.length)];
+      
+      // Yeni bir tehdit oluştur
+      const threat = new Threat(
+        null, // ID otomatik oluşturulacak
+        threatTemplate.name,
+        threatTemplate.type,
+        threatTemplate.description,
+        threatTemplate.severity,
+        randomFilePath,
+        false, // isCleaned
+        new Date(Date.now() - Math.floor(Math.random() * 86400000)) // Son 24 saat içinde
+      );
+      
+      threats.push(threat);
     }
     
     return threats;

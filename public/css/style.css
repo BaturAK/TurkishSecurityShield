@@ -1,218 +1,197 @@
 /**
- * AntiVirüs Uygulaması Ana CSS Dosyası
+ * Ana CSS dosyası
  */
 
-/* Genel Stiller */
+:root {
+  --primary-color: #3a8eba;
+  --primary-dark: #2c3e50;
+  --secondary-color: #63b3ed;
+  --success-color: #48bb78;
+  --danger-color: #e53e3e;
+  --warning-color: #ecc94b;
+  --light-color: #f7fafc;
+  --dark-color: #1a202c;
+}
+
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
-  color: #333;
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--dark-color);
+  line-height: 1.6;
 }
 
-a {
-  text-decoration: none;
-}
-
-/* Header Stiller */
+/* Header & Navigation */
 .navbar {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.navbar-brand {
-  font-weight: bold;
-  color: #0066cc !important;
-}
-
-/* Ana Sayfa Hero Section */
-.hero-section {
-  background: linear-gradient(135deg, #0066cc 0%, #004999 100%);
-  color: white;
-  padding: 80px 0;
-}
-
-/* Kartlar */
-.card {
+/* Login & Register Forms */
+.auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  border: none;
-  transition: transform 0.3s ease-in-out;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
-.card:hover {
+.auth-form .form-control {
+  border-radius: 5px;
+  padding: 0.75rem 1rem;
+}
+
+.auth-form .btn {
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+/* Dashboard */
+.stat-card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
   transform: translateY(-5px);
 }
 
-.card-header {
-  background-color: #fff;
-  border-bottom: 1px solid #eee;
-  font-weight: 600;
-  padding: 15px 20px;
+.scan-card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
 }
 
-/* Butonlar */
-.btn-primary {
-  background-color: #0066cc;
-  border-color: #0066cc;
+.scan-card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
 }
 
-.btn-primary:hover {
-  background-color: #0055aa;
-  border-color: #0055aa;
-}
-
-.btn-outline-primary {
-  color: #0066cc;
-  border-color: #0066cc;
-}
-
-.btn-outline-primary:hover {
-  background-color: #0066cc;
-  color: white;
-}
-
-/* Tehdit Kartları */
 .threat-card {
   border-left: 4px solid;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.threat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .threat-card.high {
-  border-color: #dc3545;
+  border-left-color: var(--danger-color);
 }
 
 .threat-card.medium {
-  border-color: #fd7e14;
+  border-left-color: var(--warning-color);
 }
 
 .threat-card.low {
-  border-color: #0dcaf0;
+  border-left-color: var(--success-color);
 }
 
-/* Tarama Özeti */
-.scan-summary {
-  padding: 20px;
-  border-radius: 10px;
+/* Scan Progress */
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
   background-color: #fff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* İstatistik Kartları */
-.stat-card {
-  text-align: center;
-  padding: 20px;
+.progress-circle {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary-color) 0%, var(--light-color) 0%);
 }
 
-.stat-card .icon {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-  color: #0066cc;
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  top: 20px;
+  left: 20px;
+  border-radius: 50%;
+  background: white;
 }
 
-.stat-card .count {
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 2rem;
   font-weight: bold;
-  margin-bottom: 5px;
+  color: var(--primary-color);
 }
 
-.stat-card .label {
-  color: #6c757d;
+/* Admin Dashboard */
+.admin-sidebar {
+  min-height: calc(100vh - 56px);
+  background-color: var(--light-color);
+  box-shadow: 1px 0 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Tarama Seçenek Kartları */
-.scan-option {
-  cursor: pointer;
-  transition: all 0.3s ease;
+.admin-card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
 }
 
-.scan-option:hover {
-  background-color: #f8f9fa;
+.admin-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
-.scan-option.selected {
-  border: 2px solid #0066cc;
-  background-color: #e6f2ff;
+/* Alert Types */
+.alert-system {
+  border-left: 4px solid var(--primary-color);
 }
 
-/* Animasyonlar */
-.animate-spin {
-  animation: spin 1s linear infinite;
+.alert-security {
+  border-left: 4px solid var(--danger-color);
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.alert-update {
+  border-left: 4px solid var(--secondary-color);
 }
 
 /* Footer */
-footer {
-  background-color: #343a40;
-  color: white;
-  padding: 40px 0 20px;
-}
-
 footer a {
-  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.2s;
 }
 
 footer a:hover {
-  color: white;
+  text-decoration: underline;
 }
 
-/* Kullanıcı Profil Dropdown */
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-/* Dashboard Kartları */
-.feature-icon {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.feature-icon i {
-  font-size: 1.5rem;
-  color: white;
-}
-
-.feature-icon.bg-primary {
-  background-color: #0066cc !important;
-}
-
-.feature-icon.bg-success {
-  background-color: #198754 !important;
-}
-
-.feature-icon.bg-danger {
-  background-color: #dc3545 !important;
-}
-
-.feature-icon.bg-warning {
-  background-color: #fd7e14 !important;
-}
-
-/* Mobil Uyumlu Düzenlemeler */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .hero-section {
-    padding: 40px 0;
+  .auth-form {
+    padding: 1.5rem;
   }
   
-  .hero-section h1 {
-    font-size: 2rem;
+  .progress-circle {
+    width: 150px;
+    height: 150px;
   }
   
-  .stat-card .count {
+  .progress-circle::before {
+    width: 120px;
+    height: 120px;
+    top: 15px;
+    left: 15px;
+  }
+  
+  .progress-text {
     font-size: 1.5rem;
   }
 }

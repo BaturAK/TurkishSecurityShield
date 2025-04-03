@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Arka Plan Şekilleri -->
+  <circle cx="300" cy="200" r="150" fill="#E6F0FF" />
+  <circle cx="100" cy="300" r="40" fill="#E6F0FF" />
+  <circle cx="500" cy="100" r="50" fill="#E6F0FF" />
+  
+  <!-- Telefonun Arka Planı -->
+  <rect x="230" y="60" width="140" height="280" rx="20" fill="#1E40AF" />
+  
+  <!-- Telefonun Ekranı -->
+  <rect x="240" y="80" width="120" height="220" rx="5" fill="#F8FAFC" />
+  
+  <!-- Telefonda Buton -->
+  <circle cx="300" cy="320" r="10" fill="#F8FAFC" />
+  
+  <!-- Kalkan -->
+  <path d="M300 120C285 120 272.5 125 262.5 130C262.5 160 262 190 300 220C338 190 337.5 160 337.5 130C327.5 125 315 120 300 120Z" fill="#2563EB"/>
+  <path d="M300 130C287.5 130 277.5 134 270 138C270 163 269.6 188 300 212C330.4 188 330 163 330 138C322.5 134 312.5 130 300 130Z" fill="#3B82F6"/>
+  
+  <!-- Kilit Simgesi -->
+  <path d="M300 150C294.477 150 290 154.477 290 160V170H310V160C310 154.477 305.523 150 300 150Z" fill="white"/>
+  <rect x="285" y="170" width="30" height="25" rx="4" fill="white"/>
+  <path d="M300 180C298.343 180 297 181.343 297 183C297 184.307 297.835 185.41 299.004 185.828L298 190H302L300.996 185.828C302.165 185.41 303 184.307 303 183C303 181.343 301.657 180 300 180Z" fill="#1E40AF"/>
+  
+  <!-- Tarama Animasyonu -->
+  <path d="M240 120H360" stroke="#10B981" stroke-width="2">
+    <animate attributeName="y" values="120;180;120" dur="4s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Tehditleri Simgeleyen Elementler -->
+  <!-- Tehdit 1 -->
+  <g transform="translate(290, 250)">
+    <circle cx="0" cy="0" r="8" fill="#EF4444" />
+    <path d="M-5 0L5 0M0 -5L0 5" stroke="white" stroke-width="2" />
+    <animate attributeName="opacity" values="1;0;1" dur="3s" repeatCount="indefinite" />
+  </g>
+  
+  <!-- Tehdit 2 -->
+  <g transform="translate(320, 200)">
+    <circle cx="0" cy="0" r="8" fill="#F59E0B" />
+    <path d="M-5 0L5 0M0 -5L0 5" stroke="white" stroke-width="2" />
+    <animate attributeName="opacity" values="0;1;0" dur="4s" repeatCount="indefinite" />
+  </g>
+  
+  <!-- Tehdit 3 -->
+  <g transform="translate(270, 170)">
+    <circle cx="0" cy="0" r="8" fill="#EF4444" />
+    <path d="M-5 0L5 0M0 -5L0 5" stroke="white" stroke-width="2" />
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="5s" repeatCount="indefinite" />
+  </g>
+  
+  <!-- Koruma Animasyonu -->
+  <circle cx="300" cy="180" r="60" stroke="#2563EB" stroke-width="2" fill="none" opacity="0.3">
+    <animate attributeName="r" values="60;70;60" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.3;0.1;0.3" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <circle cx="300" cy="180" r="50" stroke="#2563EB" stroke-width="2" fill="none" opacity="0.5">
+    <animate attributeName="r" values="50;60;50" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Ana Koruma Dalgası -->
+  <circle cx="300" cy="180" r="40" stroke="#10B981" stroke-width="3" fill="none" stroke-dasharray="5,5">
+    <animate attributeName="r" values="40;50;40" dur="3s" repeatCount="indefinite" />
+    <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 300 180" to="360 300 180" dur="10s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Wi-Fi Dalga Simgesi -->
+  <path d="M400 160C400 160 430 160 430 190" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M400 170C400 170 420 170 420 190" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M400 180C400 180 410 180 410 190" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round" />
+  <circle cx="400" cy="195" r="3" fill="#10B981" />
+  
+  <!-- QR Kod Simgesi -->
+  <rect x="170" y="170" width="30" height="30" rx="2" fill="#6366F1" />
+  <rect x="175" y="175" width="8" height="8" fill="white" />
+  <rect x="187" y="175" width="8" height="8" fill="white" />
+  <rect x="175" y="187" width="8" height="8" fill="white" />
+  <rect x="183" y="187" width="6" height="2" fill="white" />
+  <rect x="183" y="191" width="2" height="4" fill="white" />
+  <rect x="187" y="189" width="4" height="2" fill="white" />
+  <rect x="193" y="187" width="2" height="8" fill="white" />
+  
+  <!-- Bulut Güvenliği Simgesi -->
+  <path d="M480 230C480 217.85 470.15 208 458 208C453.95 208 450.157 209.076 446.887 210.963C443.55 200.312 433.762 192.5 422.25 192.5C408.521 192.5 397.5 203.521 397.5 217.25C397.5 217.835 397.521 218.416 397.562 218.991C389.51 221.342 383.75 228.832 383.75 237.75C383.75 248.632 392.618 257.5 403.5 257.5H475C483.784 257.5 491 250.284 491 241.5C491 235.37 486.466 230.162 480 230Z" fill="#F3F4F6" />
+  <path d="M458 208C470.15 208 480 217.85 480 230C486.466 230.162 491 235.37 491 241.5C491 250.284 483.784 257.5 475 257.5H403.5C392.618 257.5 383.75 248.632 383.75 237.75C383.75 228.832 389.51 221.342 397.562 218.991C397.521 218.416 397.5 217.835 397.5 217.25C397.5 203.521 408.521 192.5 422.25 192.5C433.762 192.5 443.55 200.312 446.887 210.963C450.157 209.076 453.95 208 458 208Z" stroke="#6B7280" stroke-width="2" />
+  
+  <!-- Kalkan Simgesi Bulutta -->
+  <path d="M437.5 222.5C430 222.5 425 225 420 227.5C420 240 419.8 252.5 437.5 265C455.2 252.5 455 240 455 227.5C450 225 445 222.5 437.5 222.5Z" fill="#3B82F6" />
+  <path d="M437.5 227.5C432 227.5 428.333 229 426 230C426 238.333 425.9 246.667 437.5 255C449.1 246.667 449 238.333 449 230C446.667 229 443 227.5 437.5 227.5Z" fill="#60A5FA" />
+  <path d="M437.5 235C435.567 235 434 236.567 434 238.5V241.5H441V238.5C441 236.567 439.433 235 437.5 235Z" fill="white" />
+  <rect x="433" y="241.5" width="9" height="7" rx="1" fill="white" />
+  <path d="M437.5 244C436.672 244 436 244.672 436 245.5C436 246.105 436.448 246.599 437.031 246.732L436.75 248H438.25L437.969 246.732C438.552 246.599 439 246.105 439 245.5C439 244.672 438.328 244 437.5 244Z" fill="#3B82F6" />
+</svg>
