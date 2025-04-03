@@ -110,15 +110,23 @@ router.get('/scans', async (req, res) => {
     
     // Tehditleri say
     let totalThreats = 0;
+    let cleanedThreats = 0;
+    
     scans.forEach(scan => {
-      totalThreats += scan.threatsFound.length;
+      scan.threatsFound.forEach(threat => {
+        totalThreats++;
+        if (threat.isCleaned) {
+          cleanedThreats++;
+        }
+      });
     });
     
     res.render('dashboard/scans', {
       title: 'Taramalar',
       scans,
       totalScans,
-      totalThreats
+      totalThreats,
+      cleanedThreats
     });
   } catch (error) {
     console.error('Taramalar sayfası yüklenirken hata:', error);
