@@ -1,19 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Ana Kalkan Şekli -->
-  <path d="M60 10C42.5 10 28.3333 15 17.5 20C17.5 52.5 17 85 60 110C103 85 102.5 52.5 102.5 20C91.6667 15 77.5 10 60 10Z" fill="#2563EB"/>
-  
-  <!-- İç Koruma Kalkanı -->
-  <path d="M60 20C45.5 20 33.8333 24 25 28C25 54 24.6 79 60 100C95.4 79 95 54 95 28C86.1667 24 74.5 20 60 20Z" fill="#1E40AF"/>
-  
-  <!-- Ön Kısım -->
-  <path d="M60 30C48.5 30 39.3333 33 32.5 36C32.5 56 32.2 76 60 92C87.8 76 87.5 56 87.5 36C80.6667 33 71.5 30 60 30Z" fill="#3B82F6"/>
-  
-  <!-- Kilit/Güvenlik Simgesi -->
-  <path d="M60 45C53.3726 45 48 50.3726 48 57V65H72V57C72 50.3726 66.6274 45 60 45Z" fill="white"/>
-  <rect x="43" y="65" width="34" height="25" rx="4" fill="white"/>
-  <path d="M60 75C57.7909 75 56 76.7909 56 79C56 80.7954 57.2126 82.338 58.9075 82.833L58 88H62L61.0925 82.833C62.7874 82.338 64 80.7954 64 79C64 76.7909 62.2091 75 60 75Z" fill="#1E40AF"/>
-  
-  <!-- Kalkanda Parlama Efekti -->
-  <path d="M30 30C30 30 40 25 60 25C80 25 90 30 90 30C90 30 85 15 60 15C35 15 30 30 30 30Z" fill="white" fill-opacity="0.3"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Shield Background -->
+        <path d="M100,20 C100,20 40,40 20,50 C20,100 20,150 100,180 C180,150 180,100 180,50 C160,40 100,20 100,20 Z" fill="#2563EB" />
+        
+        <!-- Inner Shield -->
+        <path d="M100,35 C100,35 50,50 35,60 C35,100 35,140 100,165 C165,140 165,100 165,60 C150,50 100,35 100,35 Z" fill="#FFFFFF" />
+        
+        <!-- Lock Symbol -->
+        <rect x="80" y="80" width="40" height="40" rx="5" fill="#2563EB" />
+        <rect x="85" y="60" width="30" height="25" rx="5" fill="#2563EB" />
+        <circle cx="100" cy="100" r="10" fill="#FFFFFF" />
+        <rect x="98" y="93" width="4" height="14" rx="2" fill="#2563EB" />
+        
+        <!-- Text at the bottom -->
+        <text x="100" y="190" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2563EB" text-anchor="middle">ANTİVİRÜS</text>
+    </g>
 </svg>

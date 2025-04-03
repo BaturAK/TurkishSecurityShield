@@ -1,342 +1,304 @@
-<!-- Dashboard Header -->
-<div class="dashboard-header bg-light py-4 border-bottom">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <h1 class="mb-0 fw-bold">Kontrol Paneli</h1>
-        <p class="text-muted mb-0">Cihaz güvenlik durumunuz ve son taramalar</p>
+<!-- Kullanıcı Dashboard Sayfası -->
+<div class="container py-5">
+  <div class="row">
+    <!-- Sol Kenar Çubuğu - Kullanıcı Profili ve Menü -->
+    <div class="col-md-3 mb-4">
+      <div class="card border-0 shadow mb-4">
+        <div class="card-body text-center py-4">
+          <div class="avatar mb-3">
+            <% if (user && user.photoURL) { %>
+              <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle" width="100" height="100">
+            <% } else { %>
+              <div class="avatar-placeholder">
+                <i class="fas fa-user fa-3x"></i>
+              </div>
+            <% } %>
+          </div>
+          <h5 class="fw-bold"><%= user.displayName || 'Kullanıcı' %></h5>
+          <p class="text-muted small mb-3"><%= user.email %></p>
+          <div class="d-grid">
+            <a href="/profile" class="btn btn-sm btn-outline-primary">Profili Düzenle</a>
+          </div>
+        </div>
       </div>
-      <div class="col-md-6 text-md-end mt-3 mt-md-0">
-        <button class="btn btn-primary me-2" onclick="location.href='/scan/start?type=QUICK'">
-          <i class="fas fa-bolt me-2"></i> Hızlı Tarama
-        </button>
-        <button class="btn btn-outline-primary" onclick="location.href='/scan/start?type=FULL'">
-          <i class="fas fa-shield-alt me-2"></i> Tam Tarama
-        </button>
+      
+      <!-- Dashboard Menü -->
+      <div class="list-group border-0 shadow">
+        <a href="/dashboard" class="list-group-item list-group-item-action active">
+          <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+        </a>
+        <a href="/dashboard/scans" class="list-group-item list-group-item-action">
+          <i class="fas fa-shield-virus me-2"></i> Taramalarım
+        </a>
+        <a href="/dashboard/threats" class="list-group-item list-group-item-action">
+          <i class="fas fa-bug me-2"></i> Tehdit Koruması
+        </a>
+        <a href="/dashboard/settings" class="list-group-item list-group-item-action">
+          <i class="fas fa-cog me-2"></i> Ayarlar
+        </a>
+        <a href="/dashboard/help" class="list-group-item list-group-item-action">
+          <i class="fas fa-question-circle me-2"></i> Yardım
+        </a>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Dashboard Content -->
-<div class="dashboard-content py-4">
-  <div class="container">
-    <!-- Güvenlik Durumu -->
-    <div class="row mb-4">
-      <div class="col-md-12">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body">
-            <div class="row align-items-center">
-              <div class="col-md-3 text-center">
-                <div class="security-status-indicator mx-auto mb-3 <%= status === 'SECURE' ? 'bg-success' : (status === 'WARNING' ? 'bg-warning' : 'bg-danger') %>">
-                  <i class="fas <%= status === 'SECURE' ? 'fa-check' : (status === 'WARNING' ? 'fa-exclamation' : 'fa-times') %> fa-2x"></i>
-                </div>
-                <h4 class="fw-bold <%= status === 'SECURE' ? 'text-success' : (status === 'WARNING' ? 'text-warning' : 'text-danger') %>">
-                  <%= status === 'SECURE' ? 'Güvende' : (status === 'WARNING' ? 'Uyarı' : 'Risk') %>
-                </h4>
+    
+    <!-- Ana İçerik Alanı -->
+    <div class="col-md-9">
+      <!-- Güvenlik Durumu Kartı -->
+      <% 
+        // Güvenlik durumu değişkeni
+        const securityStatus = 'SECURE'; // Dinamik olacak: SECURE, WARNING, DANGER
+      %>
+      
+      <div class="card border-0 shadow mb-4">
+        <div class="card-body p-4">
+          <h4 class="card-title fw-bold mb-4">Güvenlik Durumu</h4>
+          
+          <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+              <div class="security-status-indicator mx-auto mb-3 <%= securityStatus === 'SECURE' ? 'bg-success' : (securityStatus === 'WARNING' ? 'bg-warning' : 'bg-danger') %>">
+                <i class="fas <%= securityStatus === 'SECURE' ? 'fa-check' : (securityStatus === 'WARNING' ? 'fa-exclamation' : 'fa-times') %> fa-2x"></i>
               </div>
-              <div class="col-md-9">
-                <div class="security-details">
-                  <h5 class="fw-bold mb-3">Güvenlik Durumu</h5>
-                  <div class="d-flex flex-wrap">
-                    <div class="security-item me-4 mb-3">
-                      <div class="d-flex align-items-center">
-                        <i class="fas fa-virus <%= threatCount > 0 ? 'text-danger' : 'text-success' %> me-2"></i>
-                        <div>
-                          <p class="mb-0"><strong>Tehditler</strong></p>
-                          <p class="mb-0 <%= threatCount > 0 ? 'text-danger' : 'text-success' %>">
-                            <%= threatCount %> tehdit tespit edildi
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="security-item me-4 mb-3">
-                      <div class="d-flex align-items-center">
-                        <i class="fas fa-clock <%= lastScan && (new Date() - new Date(lastScan.endTime)) / (1000 * 60 * 60 * 24) > 7 ? 'text-warning' : 'text-success' %> me-2"></i>
-                        <div>
-                          <p class="mb-0"><strong>Son Tarama</strong></p>
-                          <p class="mb-0 <%= lastScan && (new Date() - new Date(lastScan.endTime)) / (1000 * 60 * 60 * 24) > 7 ? 'text-warning' : 'text-success' %>">
-                            <%= lastScan ? new Date(lastScan.endTime).toLocaleString('tr-TR') : 'Henüz tarama yapılmadı' %>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="security-item me-4 mb-3">
-                      <div class="d-flex align-items-center">
-                        <i class="fas fa-wifi <%= wifiStatus === 'SECURE' ? 'text-success' : 'text-warning' %> me-2"></i>
-                        <div>
-                          <p class="mb-0"><strong>Wi-Fi Güvenliği</strong></p>
-                          <p class="mb-0 <%= wifiStatus === 'SECURE' ? 'text-success' : 'text-warning' %>">
-                            <%= wifiStatus === 'SECURE' ? 'Güvenli' : 'Kontrol Edin' %>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="security-item mb-3">
-                      <div class="d-flex align-items-center">
-                        <i class="fas fa-shield-alt <%= vpnActive ? 'text-success' : 'text-muted' %> me-2"></i>
-                        <div>
-                          <p class="mb-0"><strong>VPN Durumu</strong></p>
-                          <p class="mb-0 <%= vpnActive ? 'text-success' : 'text-muted' %>">
-                            <%= vpnActive ? 'Aktif' : 'Kapalı' %>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <h4 class="fw-bold <%= securityStatus === 'SECURE' ? 'text-success' : (securityStatus === 'WARNING' ? 'text-warning' : 'text-danger') %>">
+                <%= securityStatus === 'SECURE' ? 'Güvenli' : (securityStatus === 'WARNING' ? 'Dikkat' : 'Risk') %>
+              </h4>
+            </div>
+            
+            <div class="col-md-9">
+              <div class="security-status-details">
+                <h5 class="mb-3">Sistem Güvenlik Durumu</h5>
+                <div class="progress mb-4" style="height: 10px;">
+                  <div class="progress-bar <%= securityStatus === 'SECURE' ? 'bg-success' : (securityStatus === 'WARNING' ? 'bg-warning' : 'bg-danger') %>" 
+                      role="progressbar" 
+                      style="width: <%= securityStatus === 'SECURE' ? '100%' : (securityStatus === 'WARNING' ? '60%' : '30%') %>" 
+                      aria-valuenow="<%= securityStatus === 'SECURE' ? '100' : (securityStatus === 'WARNING' ? '60' : '30') %>" 
+                      aria-valuemin="0" 
+                      aria-valuemax="100"></div>
                 </div>
+                <p class="mb-0">
+                  <% if (securityStatus === 'SECURE') { %>
+                    <i class="fas fa-check-circle text-success me-2"></i> Cihazınız güvenli durumda. Tüm koruma mekanizmaları aktif.
+                  <% } else if (securityStatus === 'WARNING') { %>
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i> Uyarı! Bazı güvenlik önlemleri pasif durumda.
+                  <% } else { %>
+                    <i class="fas fa-exclamation-circle text-danger me-2"></i> Tehlike! Cihazınızda güvenlik riskleri tespit edildi.
+                  <% } %>
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <!-- İstatistikler Kartları -->
-    <div class="row mb-4">
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center">
-            <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-shield-alt fa-2x"></i>
+      
+      <!-- Hızlı Erişim Kartları -->
+      <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+          <div class="card border-0 shadow h-100">
+            <div class="card-body p-4 text-center">
+              <div class="quick-scan-icon mb-3">
+                <i class="fas fa-bolt fa-3x text-primary"></i>
+              </div>
+              <h5 class="fw-bold mb-3">Hızlı Tarama</h5>
+              <p class="small mb-3">Kritik sistem alanlarında kısa bir tarama yapın</p>
+              <a href="/scan/quick" class="btn btn-primary">Hızlı Tara</a>
             </div>
-            <h3 class="fw-bold"><%= stats.scanCount || 0 %></h3>
-            <p class="text-muted mb-0">Toplam Tarama</p>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+          <div class="card border-0 shadow h-100">
+            <div class="card-body p-4 text-center">
+              <div class="full-scan-icon mb-3">
+                <i class="fas fa-shield-alt fa-3x text-success"></i>
+              </div>
+              <h5 class="fw-bold mb-3">Tam Tarama</h5>
+              <p class="small mb-3">Tüm sistemi derinlemesine analiz edin</p>
+              <a href="/scan/full" class="btn btn-success">Tam Tara</a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+          <div class="card border-0 shadow h-100">
+            <div class="card-body p-4 text-center">
+              <div class="custom-scan-icon mb-3">
+                <i class="fas fa-sliders-h fa-3x text-warning"></i>
+              </div>
+              <h5 class="fw-bold mb-3">Özel Tarama</h5>
+              <p class="small mb-3">Belirli dosya ve klasörleri seçerek tarayın</p>
+              <a href="/scan/custom" class="btn btn-warning">Özel Tara</a>
+            </div>
           </div>
         </div>
       </div>
       
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center">
-            <div class="stat-icon bg-danger bg-opacity-10 text-danger rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-virus fa-2x"></i>
-            </div>
-            <h3 class="fw-bold"><%= stats.threatCount || 0 %></h3>
-            <p class="text-muted mb-0">Tespit Edilen Tehdit</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center">
-            <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-check-circle fa-2x"></i>
-            </div>
-            <h3 class="fw-bold"><%= stats.cleanedCount || 0 %></h3>
-            <p class="text-muted mb-0">Temizlenen Tehdit</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center">
-            <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-wifi fa-2x"></i>
-            </div>
-            <h3 class="fw-bold"><%= stats.wifiCount || 0 %></h3>
-            <p class="text-muted mb-0">Wi-Fi Kontrolü</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Son Taramalar ve Aktif Tehditler -->
-    <div class="row">
       <!-- Son Taramalar -->
-      <div class="col-md-6 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0 fw-bold">Son Taramalar</h5>
-              <a href="/scans" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
-            </div>
+      <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="m-0 fw-bold">Son Taramalar</h5>
+            <a href="/dashboard/scans" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
           </div>
-          <div class="card-body p-0">
-            <% if (scans && scans.length > 0) { %>
-              <div class="list-group list-group-flush">
-                <% scans.forEach(scan => { %>
-                  <a href="/scan/<%= scan.id %>" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                      <div>
-                        <h6 class="mb-1 fw-bold">
-                          <i class="fas <%= scan.type === 'QUICK' ? 'fa-bolt' : (scan.type === 'WIFI' ? 'fa-wifi' : 'fa-shield-alt') %> me-2"></i>
-                          <%= scan.type === 'QUICK' ? 'Hızlı Tarama' : (scan.type === 'WIFI' ? 'Wi-Fi Taraması' : 'Tam Tarama') %>
-                        </h6>
-                        <p class="mb-1 small text-muted">
-                          <%= scan.totalScanned %> öğe tarandı | <%= scan.threatsFound.length %> tehdit bulundu
-                        </p>
-                      </div>
-                      <div class="text-end">
-                        <span class="badge <%= scan.threatsFound.length > 0 ? 'bg-danger' : 'bg-success' %>">
-                          <%= scan.threatsFound.length > 0 ? scan.threatsFound.length + ' Tehdit' : 'Temiz' %>
-                        </span>
-                        <p class="mb-0 small text-muted"><%= new Date(scan.endTime).toLocaleString('tr-TR') %></p>
-                      </div>
-                    </div>
-                  </a>
-                <% }); %>
-              </div>
-            <% } else { %>
-              <div class="text-center p-4">
-                <div class="empty-icon mb-3">
-                  <i class="fas fa-search text-muted fa-3x"></i>
-                </div>
-                <h6 class="fw-bold">Henüz Tarama Yapılmadı</h6>
-                <p class="text-muted">Cihazınızı kontrol etmek için bir tarama başlatın</p>
-                <button class="btn btn-primary" onclick="location.href='/scan/start?type=QUICK'">
-                  <i class="fas fa-bolt me-2"></i> Tarama Başlat
-                </button>
-              </div>
-            <% } %>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover m-0">
+              <thead>
+                <tr>
+                  <th scope="col">Tarih</th>
+                  <th scope="col">Tarama Tipi</th>
+                  <th scope="col">Süre</th>
+                  <th scope="col">Bulunan</th>
+                  <th scope="col">Durum</th>
+                  <th scope="col">İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>03.04.2025</td>
+                  <td>Hızlı Tarama</td>
+                  <td>2dk 15sn</td>
+                  <td>0</td>
+                  <td><span class="badge bg-success">Temiz</span></td>
+                  <td>
+                    <a href="/scan/detail/1" class="btn btn-sm btn-outline-secondary">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>02.04.2025</td>
+                  <td>Tam Tarama</td>
+                  <td>15dk 30sn</td>
+                  <td>3</td>
+                  <td><span class="badge bg-danger">Tehdit</span></td>
+                  <td>
+                    <a href="/scan/detail/2" class="btn btn-sm btn-outline-secondary">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>01.04.2025</td>
+                  <td>Özel Tarama</td>
+                  <td>5dk 40sn</td>
+                  <td>1</td>
+                  <td><span class="badge bg-warning">Şüpheli</span></td>
+                  <td>
+                    <a href="/scan/detail/3" class="btn btn-sm btn-outline-secondary">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
       
-      <!-- Aktif Tehditler -->
-      <div class="col-md-6 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0 fw-bold">Aktif Tehditler</h5>
-              <a href="/threats" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
+      <!-- İstatistikler ve Öneriler -->
+      <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+          <div class="card border-0 shadow h-100">
+            <div class="card-header bg-white py-3">
+              <h5 class="m-0 fw-bold">Güvenlik İstatistikleri</h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Gerçek Zamanlı Koruma</span>
+                  <span class="text-success">Aktif</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Güvenlik Güncellemeleri</span>
+                  <span class="text-success">Güncel</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Son Tam Tarama</span>
+                  <span class="text-warning">2 gün önce</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-warning" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Wi-Fi Güvenliği</span>
+                  <span class="text-success">Güvenli</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="card-body p-0">
-            <% if (threats && threats.length > 0) { %>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+          <div class="card border-0 shadow h-100">
+            <div class="card-header bg-white py-3">
+              <h5 class="m-0 fw-bold">Güvenlik Önerileri</h5>
+            </div>
+            <div class="card-body p-0">
               <div class="list-group list-group-flush">
-                <% threats.forEach(threat => { %>
-                  <div class="list-group-item">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                      <div>
-                        <h6 class="mb-1 fw-bold text-danger">
-                          <i class="fas <%= threat.type === 'Trojan' ? 'fa-horse' : (threat.type === 'Virus' ? 'fa-virus' : (threat.type === 'Spyware' ? 'fa-eye' : 'fa-bug')) %> me-2"></i>
-                          <%= threat.name %>
-                        </h6>
-                        <p class="mb-1 small text-muted">
-                          <%= threat.type %> | Tehlike: 
-                          <span class="text-<%= threat.severity === 'HIGH' ? 'danger' : (threat.severity === 'MEDIUM' ? 'warning' : 'info') %>">
-                            <%= threat.severity === 'HIGH' ? 'Yüksek' : (threat.severity === 'MEDIUM' ? 'Orta' : 'Düşük') %>
-                          </span>
-                        </p>
-                        <% if (threat.filePath) { %>
-                          <p class="mb-1 small text-muted text-truncate" style="max-width: 300px;">
-                            <i class="fas fa-file-alt me-1"></i> <%= threat.filePath %>
-                          </p>
-                        <% } %>
-                      </div>
-                      <div>
-                        <button class="btn btn-sm btn-danger clean-threat-btn" data-threat-id="<%= threat.id %>">
-                          <i class="fas fa-trash-alt me-1"></i> Temizle
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                <% }); %>
-              </div>
-            <% } else { %>
-              <div class="text-center p-4">
-                <div class="empty-icon mb-3">
-                  <i class="fas fa-check-circle text-success fa-3x"></i>
-                </div>
-                <h6 class="fw-bold">Tehdit Bulunamadı</h6>
-                <p class="text-muted">Cihazınız şu anda güvende görünüyor</p>
-              </div>
-            <% } %>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Aktivite Grafiği ve Öneriler -->
-    <div class="row">
-      <!-- Aktivite Grafiği -->
-      <div class="col-md-8 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">Güvenlik Aktivitesi</h5>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="height: 300px; position: relative;">
-              <canvas id="activityChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Öneriler -->
-      <div class="col-md-4 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">Güvenlik Önerileri</h5>
-          </div>
-          <div class="card-body p-0">
-            <div class="list-group list-group-flush">
-              <% if (!lastScan || (new Date() - new Date(lastScan.endTime)) / (1000 * 60 * 60 * 24) > 7) { %>
                 <div class="list-group-item">
                   <div class="d-flex">
-                    <div class="flex-shrink-0 text-warning me-3">
-                      <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    <div class="me-3">
+                      <i class="fas fa-check-circle text-success fa-lg mt-1"></i>
                     </div>
                     <div>
-                      <h6 class="fw-bold">Düzenli Tarama Yapın</h6>
-                      <p class="mb-2 text-muted small">Cihazınızı en az haftada bir kez tarayın</p>
-                      <button class="btn btn-sm btn-warning" onclick="location.href='/scan/start?type=QUICK'">
-                        <i class="fas fa-bolt me-1"></i> Şimdi Tara
-                      </button>
+                      <h6 class="mb-1">Gerçek Zamanlı Koruma</h6>
+                      <p class="text-muted small mb-0">Sürekli koruma aktif durumda.</p>
                     </div>
                   </div>
                 </div>
-              <% } %>
-              
-              <% if (!vpnActive) { %>
+                
                 <div class="list-group-item">
                   <div class="d-flex">
-                    <div class="flex-shrink-0 text-info me-3">
-                      <i class="fas fa-shield-alt fa-2x"></i>
+                    <div class="me-3">
+                      <i class="fas fa-exclamation-triangle text-warning fa-lg mt-1"></i>
                     </div>
                     <div>
-                      <h6 class="fw-bold">VPN Koruması</h6>
-                      <p class="mb-2 text-muted small">Güvenli olmayan ağlarda VPN kullanın</p>
-                      <button class="btn btn-sm btn-info text-white">
-                        <i class="fas fa-power-off me-1"></i> VPN'i Etkinleştir
-                      </button>
+                      <h6 class="mb-1">Tam Tarama Yapın</h6>
+                      <p class="text-muted small mb-0">Son tam taramadan bu yana 2 gün geçti. Yeni bir tarama yapmanızı öneririz.</p>
                     </div>
                   </div>
                 </div>
-              <% } %>
-              
-              <div class="list-group-item">
-                <div class="d-flex">
-                  <div class="flex-shrink-0 text-success me-3">
-                    <i class="fas fa-cog fa-2x"></i>
-                  </div>
-                  <div>
-                    <h6 class="fw-bold">Otomatik Taramayı Etkinleştirin</h6>
-                    <p class="mb-2 text-muted small">Cihazınızın düzenli olarak taranmasını sağlayın</p>
-                    <button class="btn btn-sm btn-success">
-                      <i class="fas fa-check me-1"></i> Etkinleştir
-                    </button>
+                
+                <div class="list-group-item">
+                  <div class="d-flex">
+                    <div class="me-3">
+                      <i class="fas fa-lock text-info fa-lg mt-1"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1">Uygulama Kilidi Aktifleştirin</h6>
+                      <p class="text-muted small mb-0">Hassas uygulamalarınızı korumak için uygulama kilidi özelliğini kullanın.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div class="list-group-item">
-                <div class="d-flex">
-                  <div class="flex-shrink-0 text-primary me-3">
-                    <i class="fas fa-bell fa-2x"></i>
-                  </div>
-                  <div>
-                    <h6 class="fw-bold">Bildirimleri Açın</h6>
-                    <p class="mb-2 text-muted small">Önemli güvenlik uyarılarını alın</p>
-                    <button class="btn btn-sm btn-primary">
-                      <i class="fas fa-bell me-1"></i> Bildirimleri Aç
-                    </button>
+                
+                <div class="list-group-item">
+                  <div class="d-flex">
+                    <div class="me-3">
+                      <i class="fas fa-shield-alt text-primary fa-lg mt-1"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1">VPN Hizmetini Etkinleştirin</h6>
+                      <p class="text-muted small mb-0">Güvenli internet bağlantısı için VPN hizmetini kullanabilirsiniz.</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -348,68 +310,19 @@
   </div>
 </div>
 
-<!-- Aktivite Grafiği için Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Aktivite Grafiği
-    const ctx = document.getElementById('activityChart').getContext('2d');
-    
-    // Son 7 günün tarihleri
-    const dates = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      dates.push(date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }));
-    }
-    
-    // Örnek veri
-    const scanData = [<%= chartData.scans %>];
-    const threatData = [<%= chartData.threats %>];
-    
-    const activityChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          {
-            label: 'Taramalar',
-            data: scanData,
-            borderColor: '#3B82F6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.3
-          },
-          {
-            label: 'Tespit Edilen Tehditler',
-            data: threatData,
-            borderColor: '#EF4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.3
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              precision: 0
-            }
-          }
-        }
-      }
-    });
-  });
-</script>
-
-<!-- CSS -->
 <style>
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    margin: 0 auto;
+  }
+  
   .security-status-indicator {
     width: 80px;
     height: 80px;
@@ -420,30 +333,28 @@
     color: white;
   }
   
-  .stat-icon, .feature-icon, .step-circle {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .empty-icon {
-    width: 70px;
-    height: 70px;
+  .quick-scan-icon, .full-scan-icon, .custom-scan-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    opacity: 0.5;
   }
   
-  .avatar-placeholder {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+  .quick-scan-icon {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+  }
+  
+  .full-scan-icon {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+  }
+  
+  .custom-scan-icon {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
   }
 </style>
