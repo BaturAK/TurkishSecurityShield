@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'screens/home_screen.dart';
+import 'screens/premium_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/scan_results_screen.dart';
 
 class AntivirusApp extends StatelessWidget {
   const AntivirusApp({Key? key}) : super(key: key);
@@ -33,7 +36,13 @@ class AntivirusApp extends StatelessWidget {
         Locale('en', 'US'),
       ],
       locale: const Locale('tr', 'TR'),
-      home: const HomeScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/premium': (context) => const PremiumScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/scan_results': (context) => const ScanResultsScreen(),
+      },
     );
   }
 }

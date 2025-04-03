@@ -1,271 +1,285 @@
-import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
 
 enum ScanType {
-  full,
   quick,
+  full,
   custom,
   app,
   wifi,
   qrCode,
 }
 
-enum ThreatLevel {
-  critical,
-  high,
-  medium,
-  low,
-}
-
 class Threat {
   final String id;
   final String name;
+  final String type;
   final String description;
-  final ThreatLevel level;
-  final String location;
-  final DateTime detectedAt;
+  final String severity;
   bool isFixed;
 
   Threat({
-    String? id,
+    required this.id,
     required this.name,
+    required this.type,
     required this.description,
-    required this.level,
-    required this.location,
-    DateTime? detectedAt,
+    required this.severity,
     this.isFixed = false,
-  }) : 
-    this.id = id ?? const Uuid().v4(),
-    this.detectedAt = detectedAt ?? DateTime.now();
-    
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'level': level.toString(),
-      'location': location,
-      'detectedAt': detectedAt.toIso8601String(),
-      'isFixed': isFixed,
-    };
-  }
+  });
 }
 
-class ScanResult {
+class Scan {
   final String id;
   final ScanType type;
   final DateTime startTime;
-  final DateTime? endTime;
-  final int scannedItems;
-  final List<Threat> threats;
-  final bool isCompleted;
+  DateTime? endTime;
+  int totalScanned;
+  int threatsFound;
+  List<Threat> threats;
 
-  ScanResult({
-    String? id,
+  Scan({
+    required this.id,
     required this.type,
     required this.startTime,
     this.endTime,
-    this.scannedItems = 0,
+    this.totalScanned = 0,
+    this.threatsFound = 0,
     this.threats = const [],
-    this.isCompleted = false,
-  }) : this.id = id ?? const Uuid().v4();
+  });
 
-  ScanResult copyWith({
-    String? id,
-    ScanType? type,
-    DateTime? startTime,
-    DateTime? endTime,
-    int? scannedItems,
-    List<Threat>? threats,
-    bool? isCompleted,
-  }) {
-    return ScanResult(
-      id: id ?? this.id,
-      type: type ?? this.type,
-      startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
-      scannedItems: scannedItems ?? this.scannedItems,
-      threats: threats ?? this.threats,
-      isCompleted: isCompleted ?? this.isCompleted,
-    );
+  Duration get duration {
+    final end = endTime ?? DateTime.now();
+    return end.difference(startTime);
   }
 }
 
 class ScanProvider with ChangeNotifier {
-  ScanResult? _currentScan;
-  List<ScanResult> _scanHistory = [];
+  List<Scan> _scanHistory = [];
   List<Threat> _detectedThreats = [];
+  Scan? _currentScan;
+  Timer? _scanTimer;
   bool _isScanning = false;
 
-  ScanResult? get currentScan => _currentScan;
-  List<ScanResult> get scanHistory => _scanHistory;
+  List<Scan> get scanHistory => _scanHistory;
   List<Threat> get detectedThreats => _detectedThreats;
+  Scan? get currentScan => _currentScan;
   bool get isScanning => _isScanning;
 
-  void startScan(ScanType type) {
-    if (_isScanning) return;
+  ScanProvider() {
+    _loadSavedScans();
+  }
+
+  void _loadSavedScans() {
+    // Normalde SharedPreferences veya yerel veritabanından yüklenecek
+    // Şimdilik örnek veriler oluşturalım
+    _generateSampleData();
+  }
+
+  void _generateSampleData() {
+    // Örnek tarama geçmişi
+    final now = DateTime.now();
     
+    final scan1 = Scan(
+      id: 'scan1',
+      type: ScanType.quick,
+      startTime: now.subtract(const Duration(days: 2)),
+      endTime: now.subtract(const Duration(days: 2, minutes: 2)),
+      totalScanned: 124,
+      threatsFound: 0,
+    );
+    
+    final threatAdware = Threat(
+      id: 'threat1',
+      name: 'AdClickBait',
+      type: 'Adware',
+      description: 'Reklam görüntüleyen ve tıklama toplayan zararlı yazılım',
+      severity: 'MEDIUM',
+    );
+    
+    final threatSpyware = Threat(
+      id: 'threat2',
+      name: 'DataStealer',
+      type: 'Spyware',
+      description: 'Kişisel verileri toplayan ve dışarı sızdıran casus yazılım',
+      severity: 'HIGH',
+    );
+    
+    final scan2 = Scan(
+      id: 'scan2',
+      type: ScanType.full,
+      startTime: now.subtract(const Duration(days: 1)),
+      endTime: now.subtract(const Duration(days: 1, minutes: 8)),
+      totalScanned: 452,
+      threatsFound: 2,
+      threats: [threatAdware, threatSpyware],
+    );
+    
+    _scanHistory = [scan1, scan2];
+    
+    // Tehditler
+    _detectedThreats = [
+      threatAdware,
+      threatSpyware,
+      Threat(
+        id: 'threat3',
+        name: 'FakeUpdater',
+        type: 'Trojan',
+        description: 'Sahte güncellemelerle cihazınızı enfekte eden truva atı',
+        severity: 'HIGH',
+      ),
+    ];
+  }
+
+  Future<void> startScan(ScanType type) async {
+    if (_isScanning) {
+      return;
+    }
+
     _isScanning = true;
-    _currentScan = ScanResult(
+    final scanId = 'scan_${DateTime.now().millisecondsSinceEpoch}';
+    
+    _currentScan = Scan(
+      id: scanId,
       type: type,
       startTime: DateTime.now(),
     );
+
     notifyListeners();
+
+    // Tarama simülasyonu
+    int duration;
+    switch (type) {
+      case ScanType.quick:
+        duration = 5; // 5 saniye
+        break;
+      case ScanType.full:
+        duration = 15; // 15 saniye
+        break;
+      case ScanType.wifi:
+      case ScanType.qrCode:
+        duration = 3; // 3 saniye
+        break;
+      default:
+        duration = 10; // 10 saniye
+    }
+
+    // Belirli aralıklarla ilerleme bildirimlerini tetiklemek için bir zamanlayıcı başlat
+    int progress = 0;
+    int totalItems = duration * 10; // Tarama türüne göre toplam öğe sayısı
     
-    // Simulate scanning process
-    Future.delayed(Duration(seconds: type == ScanType.quick ? 3 : 5), () {
-      _completeScan();
-    });
-  }
-  
-  void _completeScan() {
-    if (_currentScan == null) return;
-    
-    // Generate mock threats for demo
-    final mockThreats = _generateMockThreats(_currentScan!.type);
-    
-    _currentScan = _currentScan!.copyWith(
-      endTime: DateTime.now(),
-      scannedItems: _currentScan!.type == ScanType.quick ? 100 : 250,
-      threats: mockThreats,
-      isCompleted: true,
-    );
-    
-    _scanHistory.add(_currentScan!);
-    _detectedThreats.addAll(mockThreats);
-    _isScanning = false;
-    notifyListeners();
-  }
-  
-  void cancelScan() {
-    if (!_isScanning) return;
-    
-    _isScanning = false;
-    _currentScan = null;
-    notifyListeners();
-  }
-  
-  void fixThreat(String threatId) {
-    // Find threat in detected threats list
-    final index = _detectedThreats.indexWhere((threat) => threat.id == threatId);
-    if (index != -1) {
-      final updatedThreat = Threat(
-        id: _detectedThreats[index].id,
-        name: _detectedThreats[index].name,
-        description: _detectedThreats[index].description,
-        level: _detectedThreats[index].level,
-        location: _detectedThreats[index].location,
-        detectedAt: _detectedThreats[index].detectedAt,
-        isFixed: true,
-      );
+    _scanTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      progress++;
       
-      _detectedThreats[index] = updatedThreat;
-      
-      // Also update in scan history
-      for (int i = 0; i < _scanHistory.length; i++) {
-        final scan = _scanHistory[i];
-        final threatIndex = scan.threats.indexWhere((t) => t.id == threatId);
-        if (threatIndex != -1) {
-          final updatedThreats = List<Threat>.from(scan.threats);
-          updatedThreats[threatIndex] = updatedThreat;
-          _scanHistory[i] = scan.copyWith(threats: updatedThreats);
-          break;
-        }
+      if (_currentScan != null) {
+        _currentScan!.totalScanned = ((progress / (duration * 10)) * totalItems).floor();
       }
       
       notifyListeners();
-    }
+      
+      if (progress >= duration * 10) {
+        timer.cancel();
+        _completeScan(scanId, type, totalItems);
+      }
+    });
   }
-  
-  void fixAllThreats() {
-    // Mark all threats as fixed
-    for (int i = 0; i < _detectedThreats.length; i++) {
-      final threat = _detectedThreats[i];
-      if (!threat.isFixed) {
-        _detectedThreats[i] = Threat(
-          id: threat.id,
-          name: threat.name,
-          description: threat.description,
-          level: threat.level,
-          location: threat.location,
-          detectedAt: threat.detectedAt,
-          isFixed: true,
+
+  void _completeScan(String scanId, ScanType type, int totalItems) {
+    // Rastgele tehdit oluştur (simülasyon)
+    final hasThreats = Random().nextBool();
+    final threatCount = hasThreats ? Random().nextInt(3) + 1 : 0;
+    
+    final threats = <Threat>[];
+    
+    if (threatCount > 0) {
+      final threatTypes = ['Adware', 'Spyware', 'Trojan', 'Malware', 'Worm', 'Ransomware'];
+      final severities = ['LOW', 'MEDIUM', 'HIGH'];
+      
+      for (var i = 0; i < threatCount; i++) {
+        final threatType = threatTypes[Random().nextInt(threatTypes.length)];
+        final threat = Threat(
+          id: 'threat_${DateTime.now().millisecondsSinceEpoch}_$i',
+          name: _generateThreatName(threatType),
+          type: threatType,
+          description: _generateThreatDescription(threatType),
+          severity: severities[Random().nextInt(severities.length)],
         );
+        
+        threats.add(threat);
+        _detectedThreats.add(threat);
       }
     }
     
-    // Update threats in scan history
-    for (int i = 0; i < _scanHistory.length; i++) {
-      final scan = _scanHistory[i];
-      final updatedThreats = scan.threats.map((threat) {
-        return Threat(
-          id: threat.id,
-          name: threat.name,
-          description: threat.description,
-          level: threat.level,
-          location: threat.location,
-          detectedAt: threat.detectedAt,
-          isFixed: true,
-        );
-      }).toList();
-      _scanHistory[i] = scan.copyWith(threats: updatedThreats);
+    // Taramayı güncelle ve geçmişe ekle
+    final scan = Scan(
+      id: scanId,
+      type: type,
+      startTime: _currentScan!.startTime,
+      endTime: DateTime.now(),
+      totalScanned: totalItems,
+      threatsFound: threatCount,
+      threats: threats,
+    );
+    
+    _scanHistory.add(scan);
+    _currentScan = null;
+    _isScanning = false;
+    
+    notifyListeners();
+  }
+
+  void cancelScan() {
+    if (_scanTimer != null && _scanTimer!.isActive) {
+      _scanTimer!.cancel();
+    }
+    
+    _currentScan = null;
+    _isScanning = false;
+    
+    notifyListeners();
+  }
+
+  void fixThreat(String threatId) {
+    final threatIndex = _detectedThreats.indexWhere((t) => t.id == threatId);
+    
+    if (threatIndex != -1) {
+      _detectedThreats[threatIndex].isFixed = true;
+      notifyListeners();
+    }
+  }
+
+  void fixAllThreats() {
+    for (var threat in _detectedThreats) {
+      threat.isFixed = true;
     }
     
     notifyListeners();
   }
-  
-  List<Threat> _generateMockThreats(ScanType type) {
-    // Sadece demo amaçlı örnek tehditler
-    if (type == ScanType.quick) {
-      return [
-        Threat(
-          name: 'Adware.AndroidOS.Agent',
-          description: 'Reklam gösterimi yapan potansiyel istenmeyen uygulama',
-          level: ThreatLevel.medium,
-          location: '/data/app/com.example.adware',
-        ),
-      ];
-    } else if (type == ScanType.full) {
-      return [
-        Threat(
-          name: 'Trojan.AndroidOS.Boogr',
-          description: 'Sistem izinlerini kötüye kullanan Truva atı',
-          level: ThreatLevel.critical,
-          location: '/data/app/com.malware.example',
-        ),
-        Threat(
-          name: 'Spyware.AndroidOS.Agent',
-          description: 'Kullanıcı verilerini toplayan casus yazılım',
-          level: ThreatLevel.high,
-          location: '/data/app/com.spy.tracker',
-        ),
-        Threat(
-          name: 'Adware.AndroidOS.Youmi',
-          description: 'Agresif reklam gösterimi yapan yazılım',
-          level: ThreatLevel.low,
-          location: '/data/app/com.ad.display',
-        ),
-      ];
-    } else if (type == ScanType.wifi) {
-      return [
-        Threat(
-          name: 'UnsecureWiFi',
-          description: 'Şifrelemesi zayıf WiFi ağı tespit edildi',
-          level: ThreatLevel.high,
-          location: 'WiFi: HomeNetwork',
-        ),
-      ];
-    } else if (type == ScanType.qrCode) {
-      return [
-        Threat(
-          name: 'MaliciousURL',
-          description: 'QR kodda zararlı URL adresi tespit edildi',
-          level: ThreatLevel.medium,
-          location: 'QR Code: https://malicious-site.example',
-        ),
-      ];
-    }
-    
-    return [];
+
+  String _generateThreatName(String type) {
+    final names = {
+      'Adware': ['AdPopUp', 'ClickBait', 'AdSpammer', 'BannerFraud'],
+      'Spyware': ['DataSniffer', 'KeyLogger', 'InfoStealer', 'ScreenSpy'],
+      'Trojan': ['FakeApp', 'BackdoorKit', 'RemoteAccess', 'FakeUpdater'],
+      'Malware': ['FileCorruptor', 'SystemHijacker', 'BootKit', 'RootKit'],
+      'Worm': ['AutoSpread', 'NetworkWorm', 'USBInfector', 'MailWorm'],
+      'Ransomware': ['FileLock', 'CryptoMiner', 'Encryptor', 'PaymentDemand'],
+    };
+
+    final options = names[type] ?? ['UnknownThreat'];
+    return options[Random().nextInt(options.length)];
+  }
+
+  String _generateThreatDescription(String type) {
+    final descriptions = {
+      'Adware': 'İstenmeyen reklamlar gösteren ve gelir elde etmeye çalışan zararlı yazılım.',
+      'Spyware': 'Kullanıcı verilerini gizlice toplayan ve üçüncü taraflara ileten casus yazılım.',
+      'Trojan': 'Faydalı bir yazılım gibi görünen ancak zararlı işlevleri olan truva atı.',
+      'Malware': 'Sisteme zarar vermek veya yetkisiz erişim sağlamak için tasarlanmış kötü amaçlı yazılım.',
+      'Worm': 'Kendi kendini çoğaltabilen ve ağ üzerinde yayılabilen zararlı yazılım.',
+      'Ransomware': 'Dosyaları şifreleyen ve erişimi engelleyerek fidye isteyen zararlı yazılım.',
+    };
+
+    return descriptions[type] ?? 'Bilinmeyen bir tehdit tespit edildi.';
   }
 }

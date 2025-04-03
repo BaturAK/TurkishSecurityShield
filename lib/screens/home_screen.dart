@@ -4,6 +4,7 @@ import '../providers/scan_provider.dart';
 import '../widgets/scan_button.dart';
 import '../widgets/status_card.dart';
 import '../widgets/threat_list_item.dart';
+import '../widgets/app_drawer.dart';
 import 'scan_results_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -17,7 +18,16 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Güvenlik Kontrolü'),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.workspace_premium),
+            onPressed: () {
+              Navigator.pushNamed(context, '/premium');
+            },
+          ),
+        ],
       ),
+      drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: () async {
           // Herhangi bir yenileme işlemi gerekirse

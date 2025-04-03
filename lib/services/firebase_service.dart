@@ -1,86 +1,133 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
-import '../models/threat.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  // Singleton pattern
+  static final FirebaseService _instance = FirebaseService._internal();
+  factory FirebaseService() => _instance;
+  FirebaseService._internal();
+
+  // Giriş yapmış kullanıcıyı al
+  User? get currentUser => _auth.currentUser;
   
-  // Koleksiyon referansları
-  CollectionReference get _threatsCollection => _firestore.collection('threats');
-  CollectionReference get _knownMalwareCollection => _firestore.collection('known_malware');
+  // Giriş durumunu dinle
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
   
-  // Bilinen zararlı yazılımları al
-  Future<List<Threat>> getKnownThreats() async {
+  // E-posta/şifre ile kayıt ol
+  Future<UserCredential> signUpWithEmailAndPassword(String email, String password) async {
     try {
-      final snapshot = await _knownMalwareCollection.get();
-      return snapshot.docs
-          .map((doc) => Threat.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      return await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } catch (e) {
-      debugPrint('Zararlı yazılım veritabanı alınırken hata: $e');
-      return [];
+      throw Exception('Kayıt olma başarısız: $e');
     }
   }
   
-  // Tespit edilen tehdidi kaydet
-  Future<void> saveThreat(Threat threat) async {
+  // E-posta/şifre ile giriş yap
+  Future<UserCredential> signInWithEmailAndPassword(String email, String password) async {
     try {
-      await _threatsCollection.doc(threat.id).set(threat.toJson());
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } catch (e) {
-      debugPrint('Tehdit kaydedilirken hata: $e');
-      rethrow;
+      throw Exception('Giriş yapma başarısız: $e');
     }
   }
   
-  // Tehdit durumunu güncelle
-  Future<void> updateThreatStatus(Threat threat) async {
+  // Google ile giriş yap
+  Future<UserCredential> signInWithGoogle() async {
     try {
-      await _threatsCollection.doc(threat.id).update({
-        'status': threat.status.toString().split('.').last,
-      });
-    } catch (e) {
-      debugPrint('Tehdit durumu güncellenirken hata: $e');
-      rethrow;
-    }
-  }
-  
-  // Kullanıcının tehdit geçmişini al
-  Future<List<Threat>> getUserThreats() async {
-    try {
-      final snapshot = await _threatsCollection
-          .orderBy('detectionTime', descending: true)
-          .get();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
-      return snapshot.docs
-          .map((doc) => Threat.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      if (googleUser == null) {
+        throw Exception('Google girişi iptal edildi');
+      }
+      
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      
+      return await _auth.signInWithCredential(credential);
     } catch (e) {
-      debugPrint('Kullanıcı tehdit geçmişi alınırken hata: $e');
-      return [];
+      throw Exception('Google ile giriş yapma başarısız: $e');
     }
   }
   
-  // Tehditleri izle (gerçek zamanlı)
-  Stream<List<Threat>> watchThreats() {
-    return _threatsCollection
-        .orderBy('detectionTime', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => Threat.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
-    });
-  }
-  
-  // Zararlı yazılım veritabanını güncelle
-  Future<void> updateMalwareDatabase() async {
+  // Şifremi unuttum
+  Future<void> sendPasswordResetEmail(String email) async {
     try {
-      // Burada sunucudan en güncel zararlı yazılım veritabanını alabilir
-      // veya uzak yapılandırma değerlerini güncelleyebilirsiniz
-      await _firestore.collection('app_config').doc('malware_database').get();
+      await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      debugPrint('Zararlı yazılım veritabanı güncellenirken hata: $e');
-      rethrow;
+      throw Exception('Şifre sıfırlama e-postası gönderme başarısız: $e');
     }
+  }
+  
+  // Çıkış yap
+  Future<void> signOut() async {
+    try {
+      // Tercihlerden premium durumunu silme
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('isPremium');
+      
+      // Google oturumunu kapat
+      await _googleSignIn.signOut();
+      
+      // Firebase oturumunu kapat
+      await _auth.signOut();
+    } catch (e) {
+      throw Exception('Çıkış yapma başarısız: $e');
+    }
+  }
+  
+  // Kullanıcı profilini güncelle
+  Future<void> updateUserProfile({String? displayName, String? photoURL}) async {
+    try {
+      await _auth.currentUser?.updateDisplayName(displayName);
+      await _auth.currentUser?.updatePhotoURL(photoURL);
+    } catch (e) {
+      throw Exception('Profil güncelleme başarısız: $e');
+    }
+  }
+  
+  // Kullanıcı e-postasını güncelle
+  Future<void> updateEmail(String newEmail) async {
+    try {
+      await _auth.currentUser?.updateEmail(newEmail);
+    } catch (e) {
+      throw Exception('E-posta güncelleme başarısız: $e');
+    }
+  }
+  
+  // Kullanıcı şifresini güncelle
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _auth.currentUser?.updatePassword(newPassword);
+    } catch (e) {
+      throw Exception('Şifre güncelleme başarısız: $e');
+    }
+  }
+  
+  // E-posta doğrulama gönder
+  Future<void> sendEmailVerification() async {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } catch (e) {
+      throw Exception('E-posta doğrulama gönderme başarısız: $e');
+    }
+  }
+  
+  // E-posta doğrulanmış mı kontrol et
+  bool isEmailVerified() {
+    return _auth.currentUser?.emailVerified ?? false;
   }
 }
