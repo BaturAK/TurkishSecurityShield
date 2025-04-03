@@ -1,430 +1,210 @@
-<!-- Admin Dashboard Ana Sayfa -->
-<div class="container-fluid py-4">
-  <!-- Özet Kartları -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-3">
-      <div class="card border-0 shadow h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between mb-3">
-            <div>
-              <h6 class="text-muted mb-1">Kullanıcılar</h6>
-              <h3 class="fw-bold mb-0"><%= totalUsers || 0 %></h3>
-            </div>
-            <div class="bg-primary bg-opacity-10 p-3 rounded">
-              <i class="fas fa-users text-primary"></i>
-            </div>
-          </div>
-          <div class="progress mb-2" style="height: 4px;">
-            <div class="progress-bar bg-primary" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="d-flex justify-content-between">
-            <span class="text-muted">Bu ay: +<%= monthlyUsers || 0 %></span>
-            <span class="text-success">
-              <i class="fas fa-arrow-up me-1"></i><%= userGrowthRate || 0 %>%
-            </span>
-          </small>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-3">
-      <div class="card border-0 shadow h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between mb-3">
-            <div>
-              <h6 class="text-muted mb-1">Taramalar</h6>
-              <h3 class="fw-bold mb-0"><%= totalScans || 0 %></h3>
-            </div>
-            <div class="bg-success bg-opacity-10 p-3 rounded">
-              <i class="fas fa-shield-virus text-success"></i>
-            </div>
-          </div>
-          <div class="progress mb-2" style="height: 4px;">
-            <div class="progress-bar bg-success" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="d-flex justify-content-between">
-            <span class="text-muted">Bu ay: +<%= monthlyScans || 0 %></span>
-            <span class="text-success">
-              <i class="fas fa-arrow-up me-1"></i><%= scanGrowthRate || 0 %>%
-            </span>
-          </small>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-3">
-      <div class="card border-0 shadow h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between mb-3">
-            <div>
-              <h6 class="text-muted mb-1">Tehditler</h6>
-              <h3 class="fw-bold mb-0"><%= totalThreats || 0 %></h3>
-            </div>
-            <div class="bg-danger bg-opacity-10 p-3 rounded">
-              <i class="fas fa-bug text-danger"></i>
-            </div>
-          </div>
-          <div class="progress mb-2" style="height: 4px;">
-            <div class="progress-bar bg-danger" role="progressbar" style="width: 40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="d-flex justify-content-between">
-            <span class="text-muted">Temizlenen: <%= cleanedThreats || 0 %></span>
-            <span class="text-danger">
-              <i class="fas fa-arrow-down me-1"></i><%= threatGrowthRate ? Math.abs(threatGrowthRate) : 0 %>%
-            </span>
-          </small>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-3">
-      <div class="card border-0 shadow h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between mb-3">
-            <div>
-              <h6 class="text-muted mb-1">Premium Üyeler</h6>
-              <h3 class="fw-bold mb-0"><%= premiumUsers || 0 %></h3>
-            </div>
-            <div class="bg-warning bg-opacity-10 p-3 rounded">
-              <i class="fas fa-crown text-warning"></i>
-            </div>
-          </div>
-          <div class="progress mb-2" style="height: 4px;">
-            <div class="progress-bar bg-warning" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-          <small class="d-flex justify-content-between">
-            <span class="text-muted">Oran: <%= premiumUsers && totalUsers ? Math.round((premiumUsers / totalUsers) * 100) : 0 %>%</span>
-            <span class="text-success">
-              <i class="fas fa-arrow-up me-1"></i><%= premiumGrowthRate || 0 %>%
-            </span>
-          </small>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Ana İçerik -->
-  <div class="row">
-    <!-- Son Kullanıcılar -->
-    <div class="col-md-6 mb-4">
-      <div class="card border-0 shadow">
-        <div class="card-header bg-white py-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">Son Kayıt Olan Kullanıcılar</h5>
-            <a href="/admin/users" class="btn btn-sm btn-link text-decoration-none">Tümünü Görüntüle</a>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light">
-                <tr>
-                  <th scope="col">Kullanıcı</th>
-                  <th scope="col">E-posta</th>
-                  <th scope="col">Durum</th>
-                  <th scope="col">Kayıt Tarihi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (recentUsers && recentUsers.length > 0) { %>
-                  <% recentUsers.forEach(function(user) { %>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <% if (user.photoURL) { %>
-                            <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle me-2" width="40" height="40">
-                          <% } else { %>
-                            <div class="rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                              <i class="fas fa-user"></i>
-                            </div>
-                          <% } %>
-                          <div>
-                            <h6 class="mb-0"><%= user.displayName || 'İsimsiz Kullanıcı' %></h6>
-                            <% if (user.isAdmin) { %>
-                              <span class="badge bg-primary">Admin</span>
-                            <% } %>
-                          </div>
-                        </div>
-                      </td>
-                      <td><%= user.email %></td>
-                      <td>
-                        <% if (user.isActive) { %>
-                          <span class="badge bg-success">Aktif</span>
-                        <% } else { %>
-                          <span class="badge bg-danger">Pasif</span>
-                        <% } %>
-                        <% if (user.isPremium) { %>
-                          <span class="badge bg-warning">Premium</span>
-                        <% } %>
-                      </td>
-                      <td>
-                        <% if (user.createdAt) { %>
-                          <small><%= new Date(user.createdAt).toLocaleDateString('tr-TR') %></small>
-                        <% } else { %>
-                          <small>-</small>
-                        <% } %>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="4" class="text-center py-3">Henüz kullanıcı bulunmuyor.</td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Son Taramalar -->
-    <div class="col-md-6 mb-4">
-      <div class="card border-0 shadow">
-        <div class="card-header bg-white py-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">Son Taramalar</h5>
-            <a href="/admin/scans" class="btn btn-sm btn-link text-decoration-none">Tümünü Görüntüle</a>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light">
-                <tr>
-                  <th scope="col">Tarama</th>
-                  <th scope="col">Kullanıcı</th>
-                  <th scope="col">Tehditler</th>
-                  <th scope="col">Tarih</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (recentScans && recentScans.length > 0) { %>
-                  <% recentScans.forEach(function(scan) { %>
-                    <tr>
-                      <td>
-                        <div>
-                          <% if (scan.type === 'QUICK') { %>
-                            <span class="badge bg-primary me-1">Hızlı</span>
-                          <% } else if (scan.type === 'FULL') { %>
-                            <span class="badge bg-success me-1">Tam</span>
-                          <% } else if (scan.type === 'CUSTOM') { %>
-                            <span class="badge bg-warning me-1">Özel</span>
-                          <% } else if (scan.type === 'WIFI') { %>
-                            <span class="badge bg-info me-1">Wi-Fi</span>
-                          <% } else if (scan.type === 'QR') { %>
-                            <span class="badge bg-secondary me-1">QR</span>
-                          <% } else { %>
-                            <span class="badge bg-light text-dark me-1"><%= scan.type %></span>
-                          <% } %>
-                          <small class="text-muted"><%= scan.id.substring(0, 8) %>...</small>
-                        </div>
-                        <% if (scan.getStatus) { %>
-                          <% if (scan.getStatus() === 'COMPLETED') { %>
-                            <span class="badge bg-success">Tamamlandı</span>
-                          <% } else if (scan.getStatus() === 'RUNNING') { %>
-                            <span class="badge bg-warning">Devam Ediyor</span>
-                          <% } else { %>
-                            <span class="badge bg-danger">Başarısız</span>
-                          <% } %>
-                        <% } %>
-                      </td>
-                      <td>
-                        <% if (scan.userId) { %>
-                          <small><%= scan.userId.substring(0, 8) %>...</small>
-                        <% } else { %>
-                          <span class="text-muted">Sistem</span>
-                        <% } %>
-                      </td>
-                      <td>
-                        <% if (scan.threatsFound && scan.threatsFound.length > 0) { %>
-                          <span class="badge bg-danger"><%= scan.threatsFound.length %></span>
-                        <% } else { %>
-                          <span class="badge bg-success">0</span>
-                        <% } %>
-                      </td>
-                      <td>
-                        <% if (scan.startTime) { %>
-                          <small><%= new Date(scan.startTime).toLocaleDateString('tr-TR') %></small>
-                        <% } else { %>
-                          <small>-</small>
-                        <% } %>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="4" class="text-center py-3">Henüz tarama bulunmuyor.</td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+<!-- Admin Dashboard Sayfası -->
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Admin Dashboard</h1>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dashboardActions" data-bs-toggle="dropdown">
+        <i class="fas fa-cog me-1"></i> İşlemler
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dashboardActions">
+        <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users me-2"></i> Kullanıcı Yönetimi</a></li>
+        <li><a class="dropdown-item" href="/admin/scans"><i class="fas fa-shield-virus me-2"></i> Tarama Yönetimi</a></li>
+        <li><a class="dropdown-item" href="/admin/stats"><i class="fas fa-chart-bar me-2"></i> İstatistikler</a></li>
+      </ul>
     </div>
   </div>
   
   <!-- İstatistik Kartları -->
-  <div class="row">
-    <div class="col-md-4 mb-4">
-      <div class="card border-0 shadow">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold">Tarama Aktivitesi</h5>
-        </div>
-        <div class="card-body">
-          <div class="text-center py-4">
-            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
-            <p class="text-muted">Grafik yükleniyor...</p>
-            <small class="text-muted d-block">Gerçek uygulamada burada günlük tarama sayılarını gösteren bir grafik olacaktır.</small>
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-primary bg-opacity-10 p-3 me-3 rounded">
+            <i class="fas fa-users text-primary"></i>
           </div>
-          <div class="row mt-3">
-            <div class="col-4 text-center">
-              <h5 class="fw-bold mb-0"><%= dailyScans || 0 %></h5>
-              <small class="text-muted">Bugün</small>
-            </div>
-            <div class="col-4 text-center">
-              <h5 class="fw-bold mb-0"><%= weeklyScans || 0 %></h5>
-              <small class="text-muted">Bu Hafta</small>
-            </div>
-            <div class="col-4 text-center">
-              <h5 class="fw-bold mb-0"><%= monthlyScans || 0 %></h5>
-              <small class="text-muted">Bu Ay</small>
-            </div>
+          <div>
+            <h6 class="text-muted mb-1">Kullanıcılar</h6>
+            <h3 class="fw-bold mb-0"><%= totalUsers || 0 %></h3>
           </div>
         </div>
       </div>
     </div>
     
-    <div class="col-md-4 mb-4">
-      <div class="card border-0 shadow">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold">Tehdit Dağılımı</h5>
-        </div>
-        <div class="card-body">
-          <div class="text-center py-4">
-            <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
-            <p class="text-muted">Grafik yükleniyor...</p>
-            <small class="text-muted d-block">Gerçek uygulamada burada tehdit türlerinin dağılımını gösteren bir pasta grafik olacaktır.</small>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-success bg-opacity-10 p-3 me-3 rounded">
+            <i class="fas fa-shield-virus text-success"></i>
           </div>
-          <div class="mt-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span>Temizlenen</span>
-              <span class="fw-bold"><%= cleanedThreats || 0 %></span>
-            </div>
-            <div class="progress mb-3" style="height: 6px;">
-              <div class="progress-bar bg-success" role="progressbar" style="width: <%= cleanedThreats && totalThreats ? (cleanedThreats / totalThreats * 100) : 0 %>%" aria-valuenow="<%= cleanedThreats || 0 %>" aria-valuemin="0" aria-valuemax="<%= totalThreats || 1 %>"></div>
-            </div>
-            
-            <div class="d-flex justify-content-between mb-1">
-              <span>Temizlenmeyen</span>
-              <span class="fw-bold"><%= uncleanedThreats || 0 %></span>
-            </div>
-            <div class="progress" style="height: 6px;">
-              <div class="progress-bar bg-danger" role="progressbar" style="width: <%= uncleanedThreats && totalThreats ? (uncleanedThreats / totalThreats * 100) : 0 %>%" aria-valuenow="<%= uncleanedThreats || 0 %>" aria-valuemin="0" aria-valuemax="<%= totalThreats || 1 %>"></div>
-            </div>
+          <div>
+            <h6 class="text-muted mb-1">Taramalar</h6>
+            <h3 class="fw-bold mb-0"><%= totalScans || 0 %></h3>
           </div>
         </div>
       </div>
     </div>
     
-    <div class="col-md-4 mb-4">
-      <div class="card border-0 shadow">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold">Kullanıcı Durumu</h5>
-        </div>
-        <div class="card-body">
-          <div class="text-center py-4">
-            <i class="fas fa-users fa-4x text-muted mb-3"></i>
-            <p class="text-muted">Grafik yükleniyor...</p>
-            <small class="text-muted d-block">Gerçek uygulamada burada kullanıcı büyüme grafiği olacaktır.</small>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-danger bg-opacity-10 p-3 me-3 rounded">
+            <i class="fas fa-bug text-danger"></i>
           </div>
-          <div class="mt-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span>Aktif Kullanıcılar</span>
-              <span class="fw-bold"><%= activeUsers || 0 %></span>
-            </div>
-            <div class="progress mb-3" style="height: 6px;">
-              <div class="progress-bar bg-success" role="progressbar" style="width: <%= activeUsers && totalUsers ? (activeUsers / totalUsers * 100) : 0 %>%" aria-valuenow="<%= activeUsers || 0 %>" aria-valuemin="0" aria-valuemax="<%= totalUsers || 1 %>"></div>
-            </div>
-            
-            <div class="d-flex justify-content-between mb-1">
-              <span>Risk Altındaki Kullanıcılar</span>
-              <span class="fw-bold"><%= usersAtRisk || 0 %></span>
-            </div>
-            <div class="progress" style="height: 6px;">
-              <div class="progress-bar bg-danger" role="progressbar" style="width: <%= usersAtRisk && totalUsers ? (usersAtRisk / totalUsers * 100) : 0 %>%" aria-valuenow="<%= usersAtRisk || 0 %>" aria-valuemin="0" aria-valuemax="<%= totalUsers || 1 %>"></div>
-            </div>
+          <div>
+            <h6 class="text-muted mb-1">Tehditler</h6>
+            <h3 class="fw-bold mb-0"><%= totalThreats || 0 %></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-warning bg-opacity-10 p-3 me-3 rounded">
+            <i class="fas fa-exclamation-triangle text-warning"></i>
+          </div>
+          <div>
+            <h6 class="text-muted mb-1">Aktif Tehditler</h6>
+            <h3 class="fw-bold mb-0"><%= activeThreats || 0 %></h3>
           </div>
         </div>
       </div>
     </div>
   </div>
   
-  <!-- Hızlı Erişim Kartları -->
-  <div class="row">
-    <div class="col-md-3 mb-4">
-      <div class="card border-0 shadow text-center h-100">
-        <div class="card-body p-4">
-          <div class="icon-circle bg-primary bg-opacity-10 mb-3 mx-auto">
-            <i class="fas fa-user-plus text-primary"></i>
+  <!-- Son Kullanıcılar ve Taramalar -->
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Son Kayıt Olan Kullanıcılar</h5>
+            <a href="/admin/users" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
           </div>
-          <h5 class="fw-bold mb-3">Kullanıcı Ekle</h5>
-          <p class="text-muted mb-3">Sisteme yeni kullanıcılar ekleyin ve yönetin.</p>
-          <a href="/admin/users" class="btn btn-sm btn-primary">Kullanıcı Yönetimi</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Kullanıcı</th>
+                  <th scope="col">E-posta</th>
+                  <th scope="col">Kayıt Tarihi</th>
+                  <th scope="col">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (typeof recentUsers !== 'undefined' && recentUsers.length > 0) { %>
+                  <% recentUsers.forEach(user => { %>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <% if (user.photoURL) { %>
+                            <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle me-2" width="32" height="32">
+                          <% } else { %>
+                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                              <span class="text-primary fw-bold"><%= (user.displayName || user.email).charAt(0).toUpperCase() %></span>
+                            </div>
+                          <% } %>
+                          <span><%= user.displayName || user.email %></span>
+                        </div>
+                      </td>
+                      <td><%= user.email %></td>
+                      <td><%= new Date(user.createdAt || Date.now()).toLocaleDateString('tr-TR') %></td>
+                      <td>
+                        <a href="/admin/users/<%= user.id %>" class="btn btn-sm btn-outline-secondary">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center py-3">Henüz kullanıcı bulunmamaktadır.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
     
-    <div class="col-md-3 mb-4">
-      <div class="card border-0 shadow text-center h-100">
-        <div class="card-body p-4">
-          <div class="icon-circle bg-success bg-opacity-10 mb-3 mx-auto">
-            <i class="fas fa-shield-virus text-success"></i>
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Son Taramalar</h5>
+            <a href="/admin/scans" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
           </div>
-          <h5 class="fw-bold mb-3">Taramaları Yönet</h5>
-          <p class="text-muted mb-3">Tüm tarama kayıtlarını görüntüleyin ve yönetin.</p>
-          <a href="/admin/scans" class="btn btn-sm btn-success">Tarama Yönetimi</a>
         </div>
-      </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-      <div class="card border-0 shadow text-center h-100">
-        <div class="card-body p-4">
-          <div class="icon-circle bg-danger bg-opacity-10 mb-3 mx-auto">
-            <i class="fas fa-bug text-danger"></i>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Tip</th>
+                  <th scope="col">Kullanıcı</th>
+                  <th scope="col">Tarih</th>
+                  <th scope="col">Durum</th>
+                  <th scope="col">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (typeof recentScans !== 'undefined' && recentScans.length > 0) { %>
+                  <% recentScans.forEach(scan => { %>
+                    <tr>
+                      <td><small class="text-muted"><%= scan.id.substring(0, 8) %>...</small></td>
+                      <td>
+                        <% if (scan.type === 'QUICK') { %>
+                          <span class="badge bg-primary">Hızlı Tarama</span>
+                        <% } else if (scan.type === 'FULL') { %>
+                          <span class="badge bg-success">Tam Tarama</span>
+                        <% } else if (scan.type === 'WIFI') { %>
+                          <span class="badge bg-info">WiFi Tarama</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary"><%= scan.type %></span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (scan.userId) { %>
+                          <a href="/admin/users/<%= scan.userId %>"><%= scan.userEmail || scan.userId.substring(0, 8) + '...' %></a>
+                        <% } else { %>
+                          <span class="text-muted">Sistem</span>
+                        <% } %>
+                      </td>
+                      <td><%= new Date(scan.startTime).toLocaleDateString('tr-TR') %></td>
+                      <td>
+                        <% if (scan.status === 'COMPLETED') { %>
+                          <span class="badge bg-success">Tamamlandı</span>
+                        <% } else if (scan.status === 'RUNNING') { %>
+                          <span class="badge bg-warning">Devam Ediyor</span>
+                        <% } else if (scan.status === 'FAILED') { %>
+                          <span class="badge bg-danger">Başarısız</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary"><%= scan.status %></span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <a href="/admin/scans/<%= scan.id %>" class="btn btn-sm btn-outline-secondary">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center py-3">Henüz tarama bulunmamaktadır.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
           </div>
-          <h5 class="fw-bold mb-3">Tehditleri İncele</h5>
-          <p class="text-muted mb-3">Tespit edilen tüm tehditleri görüntüleyin ve analiz edin.</p>
-          <a href="/admin/threats" class="btn btn-sm btn-danger">Tehdit Analizi</a>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-      <div class="card border-0 shadow text-center h-100">
-        <div class="card-body p-4">
-          <div class="icon-circle bg-info bg-opacity-10 mb-3 mx-auto">
-            <i class="fas fa-chart-bar text-info"></i>
-          </div>
-          <h5 class="fw-bold mb-3">İstatistikler</h5>
-          <p class="text-muted mb-3">Detaylı sistem istatistiklerini ve analizleri görüntüleyin.</p>
-          <a href="/admin/stats" class="btn btn-sm btn-info">İstatistikleri Görüntüle</a>
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<style>
-  .icon-circle {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-  }
-</style>

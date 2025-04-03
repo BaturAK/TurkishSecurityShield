@@ -37,15 +37,50 @@ router.get('/', async (req, res) => {
     const totalThreats = threats.length;
     const cleanedThreats = await Threat.count({ isCleaned: true });
     
+    // Son tarama tarihini bul
+    let lastScanDate = null;
+    if (recentScans.length > 0) {
+      lastScanDate = recentScans[0].startTime;
+    }
+
+    // Son aktiviteleri simüle et
+    const recentActivities = [
+      {
+        type: 'SCAN_COMPLETE',
+        title: 'Tarama Tamamlandı',
+        description: 'Hızlı tarama tamamlandı, 2 tehdit tespit edildi.',
+        timestamp: new Date(Date.now() - 3600000) // 1 saat önce
+      },
+      {
+        type: 'THREAT_FOUND',
+        title: 'Tehdit Tespit Edildi',
+        description: 'Adware.Mindspark tehdidi tespit edildi.',
+        timestamp: new Date(Date.now() - 7200000) // 2 saat önce
+      },
+      {
+        type: 'WIFI_SCAN',
+        title: 'WiFi Taraması',
+        description: 'WiFi ağı güvenli olarak tespit edildi.',
+        timestamp: new Date(Date.now() - 86400000) // 1 gün önce
+      },
+      {
+        type: 'LOGIN',
+        title: 'Giriş Yapıldı',
+        description: 'Yeni bir cihazdan giriş yapıldı.',
+        timestamp: new Date(Date.now() - 172800000) // 2 gün önce
+      }
+    ];
+
     res.render('dashboard/index', {
       title: 'Dashboard',
+      systemStatus: threats.length > 0 ? (threats.some(t => t.severity === 'HIGH') ? 'DANGER' : 'WARNING') : 'SECURE',
+      lastScanDate,
       recentScans,
+      recentActivities,
       threats,
-      stats: {
-        totalScans,
-        totalThreats,
-        cleanedThreats
-      }
+      totalScans,
+      totalThreats,
+      cleanedThreats
     });
   } catch (error) {
     console.error('Dashboard sayfası yüklenirken hata:', error);
@@ -95,9 +130,28 @@ router.get('/threats', async (req, res) => {
     // Tüm tehditleri getir
     const threats = await Threat.findAll();
     
+    // Son taramayı getir
+    const userId = req.session.user.id;
+    const recentScans = await ScanResult.findByUserId(userId, 1);
+    let lastScan = null;
+    let lastScanDate = null;
+    
+    if (recentScans.length > 0) {
+      lastScan = recentScans[0];
+      lastScanDate = lastScan.startTime;
+    }
+    
+    // Tehdit istatistikleri
+    const activeThreats = threats.filter(t => !t.isCleaned).length;
+    const cleanedThreats = threats.filter(t => t.isCleaned).length;
+    
     res.render('dashboard/threats', {
       title: 'Tehditler',
-      threats
+      threats: threats.filter(t => !t.isCleaned),
+      lastScan,
+      lastScanDate,
+      activeThreats,
+      cleanedThreats
     });
   } catch (error) {
     console.error('Tehditler sayfası yüklenirken hata:', error);

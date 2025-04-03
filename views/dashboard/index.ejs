@@ -1,374 +1,296 @@
-<!-- Kullanıcı Dashboard - Ana Sayfa -->
-<div class="container py-5">
-  <div class="row">
-    <!-- Sol Kenar Çubuğu - Kullanıcı Profili ve Menü -->
-    <div class="col-md-3 mb-4">
-      <div class="card border-0 shadow mb-4">
-        <div class="card-body text-center py-4">
-          <div class="avatar mb-3">
-            <% if (user && user.photoURL) { %>
-              <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle" width="100" height="100">
-            <% } else { %>
-              <div class="avatar-placeholder">
-                <i class="fas fa-user fa-3x"></i>
-              </div>
-            <% } %>
-          </div>
-          <h5 class="fw-bold"><%= user.displayName || 'Kullanıcı' %></h5>
-          <p class="text-muted small mb-3"><%= user.email %></p>
-          <div class="d-grid">
-            <a href="/profile" class="btn btn-sm btn-outline-primary">Profili Düzenle</a>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Dashboard Menü -->
-      <div class="list-group border-0 shadow">
-        <a href="/dashboard" class="list-group-item list-group-item-action active">
-          <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-        </a>
-        <a href="/dashboard/scans" class="list-group-item list-group-item-action">
-          <i class="fas fa-shield-virus me-2"></i> Taramalarım
-        </a>
-        <a href="/dashboard/threats" class="list-group-item list-group-item-action">
-          <i class="fas fa-bug me-2"></i> Tehdit Koruması
-        </a>
-        <a href="/dashboard/settings" class="list-group-item list-group-item-action">
-          <i class="fas fa-cog me-2"></i> Ayarlar
-        </a>
-        <a href="/dashboard/help" class="list-group-item list-group-item-action">
-          <i class="fas fa-question-circle me-2"></i> Yardım
-        </a>
-      </div>
+<!-- Dashboard Ana Sayfası -->
+
+<div class="container py-4">
+  <!-- Başlık ve Tarama Başlat Butonu -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Dashboard</h1>
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="scanDropdown" data-bs-toggle="dropdown">
+        <i class="fas fa-shield-virus me-2"></i> Tarama Başlat
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="scanDropdown">
+        <li><a class="dropdown-item" href="#" onclick="startNewScan('QUICK')"><i class="fas fa-bolt me-2"></i> Hızlı Tarama</a></li>
+        <li><a class="dropdown-item" href="#" onclick="startNewScan('FULL')"><i class="fas fa-search me-2"></i> Tam Tarama</a></li>
+        <li><a class="dropdown-item" href="#" onclick="startNewScan('WIFI')"><i class="fas fa-wifi me-2"></i> Wi-Fi Tarama</a></li>
+        <li><a class="dropdown-item" href="#" onclick="startNewScan('QR')"><i class="fas fa-qrcode me-2"></i> QR Kod Tarama</a></li>
+      </ul>
     </div>
-    
-    <!-- Ana İçerik Alanı -->
-    <div class="col-md-9">
-      <!-- Hoşgeldin Kartı -->
-      <div class="card border-0 shadow mb-4">
-        <div class="card-body p-4">
-          <div class="row align-items-center">
-            <div class="col-md-8">
-              <h4 class="fw-bold mb-2">Hoş Geldiniz, <%= user.displayName || 'Değerli Kullanıcı' %></h4>
-              <p class="text-muted mb-0">Cihazınızın güvenlik durumunu kontrol edin ve tehditlere karşı koruma sağlayın.</p>
-            </div>
-            <div class="col-md-4 text-end">
-              <a href="/scan/quick" class="btn btn-primary">
-                <i class="fas fa-shield-alt me-2"></i> Hızlı Tarama Başlat
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Genel Bakış -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <div class="card border-0 shadow h-100">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                  <i class="fas fa-tachometer-alt text-primary"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Sistem Durumu</h6>
-                  <% if (systemStatus === 'SECURE') { %>
-                    <h5 class="fw-bold mb-0 text-success">Güvende</h5>
-                  <% } else if (systemStatus === 'WARNING') { %>
-                    <h5 class="fw-bold mb-0 text-warning">Dikkat</h5>
-                  <% } else if (systemStatus === 'CRITICAL') { %>
-                    <h5 class="fw-bold mb-0 text-danger">Kritik</h5>
-                  <% } else { %>
-                    <h5 class="fw-bold mb-0 text-success">Güvende</h5>
-                  <% } %>
-                </div>
+  </div>
+  
+  <!-- Sistem Durumu Kartı -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="row align-items-center">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <div class="d-flex align-items-center">
+            <div class="position-relative me-4">
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center pulse-animation" style="width: 80px; height: 80px;">
+                <i class="fas fa-shield-alt text-primary fa-2x"></i>
               </div>
-              <div class="progress mb-3" style="height: 8px;">
-                <% if (systemStatus === 'SECURE') { %>
-                  <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                <% } else if (systemStatus === 'WARNING') { %>
-                  <div class="progress-bar bg-warning" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
-                <% } else if (systemStatus === 'CRITICAL') { %>
-                  <div class="progress-bar bg-danger" role="progressbar" style="width: 35%" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
-                <% } else { %>
-                  <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                <% } %>
-              </div>
-              <p class="small text-muted mb-0">Son tarama: <%= lastScanDate ? new Date(lastScanDate).toLocaleString('tr-TR') : 'Henüz tarama yapılmadı' %></p>
             </div>
-          </div>
-        </div>
-        
-        <div class="col-md-4">
-          <div class="card border-0 shadow h-100">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded-circle me-3">
-                  <i class="fas fa-bug text-danger"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Aktif Tehditler</h6>
-                  <h5 class="fw-bold mb-0"><%= activeThreats || 0 %></h5>
-                </div>
-              </div>
-              <% if (activeThreats && activeThreats > 0) { %>
-                <a href="/dashboard/threats" class="btn btn-danger btn-sm w-100 mb-2">Tehditleri Görüntüle</a>
-                <p class="small text-muted mb-0">Güvenliğiniz risk altında! Lütfen tespit edilen tehditleri temizleyin.</p>
+            <div>
+              <h6 class="text-muted mb-1">Sistem Durumu</h6>
+              <% if (typeof systemStatus === 'undefined' || systemStatus === 'SECURE') { %>
+                <h5 class="fw-bold mb-0 text-success">Güvende</h5>
+              <% } else if (systemStatus === 'WARNING') { %>
+                <h5 class="fw-bold mb-0 text-warning">Dikkat</h5>
+              <% } else if (systemStatus === 'DANGER') { %>
+                <h5 class="fw-bold mb-0 text-danger">Risk Altında</h5>
               <% } else { %>
-                <a href="/dashboard/threats" class="btn btn-outline-secondary btn-sm w-100 mb-2">Tehdit Geçmişi</a>
-                <p class="small text-muted mb-0">Cihazınızda şu anda aktif tehdit bulunmuyor.</p>
+                <h5 class="fw-bold mb-0 text-secondary">Bilinmiyor</h5>
               <% } %>
             </div>
           </div>
         </div>
-        
-        <div class="col-md-4">
-          <div class="card border-0 shadow h-100">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle me-3">
-                  <i class="fas fa-shield-alt text-success"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Koruma Durumu</h6>
-                  <% if (protectionStatus === 'ACTIVE') { %>
-                    <h5 class="fw-bold mb-0 text-success">Aktif</h5>
-                  <% } else if (protectionStatus === 'PARTIAL') { %>
-                    <h5 class="fw-bold mb-0 text-warning">Kısmi</h5>
-                  <% } else if (protectionStatus === 'DISABLED') { %>
-                    <h5 class="fw-bold mb-0 text-danger">Devre Dışı</h5>
-                  <% } else { %>
-                    <h5 class="fw-bold mb-0 text-success">Aktif</h5>
-                  <% } %>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="small">Gerçek Zamanlı Koruma</span>
-                  <% if (realTimeProtection) { %>
-                    <span class="badge bg-success">Açık</span>
-                  <% } else { %>
-                    <span class="badge bg-danger">Kapalı</span>
-                  <% } %>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="small">Wi-Fi Güvenliği</span>
-                  <% if (wifiProtection) { %>
-                    <span class="badge bg-success">Açık</span>
-                  <% } else { %>
-                    <span class="badge bg-danger">Kapalı</span>
-                  <% } %>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="small">VPN Koruması</span>
-                  <% if (vpnProtection) { %>
-                    <span class="badge bg-success">Açık</span>
-                  <% } else { %>
-                    <span class="badge bg-danger">Kapalı</span>
-                  <% } %>
-                </div>
-              </div>
-              <a href="/dashboard/settings" class="btn btn-outline-primary btn-sm w-100">Ayarları Yapılandır</a>
+        <div class="col-md-6">
+          <div class="d-flex flex-column align-items-md-end">
+            <p class="mb-2">
+              <% if (typeof systemStatus === 'undefined' || systemStatus === 'SECURE') { %>
+                <i class="fas fa-check-circle text-success me-2"></i> Cihazınız tam korumalı ve güvende.
+              <% } else if (systemStatus === 'WARNING') { %>
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i> Dikkat edilmesi gereken tehditler var.
+              <% } else if (systemStatus === 'DANGER') { %>
+                <i class="fas fa-exclamation-circle text-danger me-2"></i> Cihazınız risk altında. Acil eylem gerekli!
+              <% } else { %>
+                <i class="fas fa-question-circle text-secondary me-2"></i> Sistem durumu bilinmiyor.
+              <% } %>
+            </p>
+            <div class="mt-2">
+              <button class="btn btn-outline-primary" onclick="startNewScan('QUICK')">
+                <i class="fas fa-shield-virus me-2"></i> Hızlı Tarama Yap
+              </button>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Tarama Seçenekleri -->
-      <div class="card border-0 shadow mb-4">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold">Tarama Seçenekleri</h5>
-        </div>
+    </div>
+  </div>
+  
+  <!-- İstatistik Kartları -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+      <div class="card dashboard-card h-100 border-0 shadow-sm">
         <div class="card-body">
-          <div class="row g-4">
-            <div class="col-md-4">
-              <div class="card border text-center h-100">
-                <div class="card-body p-4">
-                  <div class="scan-icon mb-3 mx-auto">
-                    <i class="fas fa-bolt fa-3x text-primary"></i>
-                  </div>
-                  <h5 class="fw-bold">Hızlı Tarama</h5>
-                  <p class="small text-muted mb-3">Kritik sistem alanlarını hızlıca tarayarak tehditleri tespit edin. Sadece 2-3 dakika sürer.</p>
-                  <div class="d-grid">
-                    <a href="/scan/quick" class="btn btn-primary">Hızlı Tara</a>
-                  </div>
-                </div>
-              </div>
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-primary bg-opacity-10 rounded-3">
+              <i class="fas fa-calendar-check text-primary"></i>
             </div>
-            
-            <div class="col-md-4">
-              <div class="card border text-center h-100">
-                <div class="card-body p-4">
-                  <div class="scan-icon mb-3 mx-auto">
-                    <i class="fas fa-shield-alt fa-3x text-success"></i>
-                  </div>
-                  <h5 class="fw-bold">Tam Tarama</h5>
-                  <p class="small text-muted mb-3">Tüm sistemi derinlemesine analiz ederek gizli tehditleri ortaya çıkarın. 15-20 dakika sürebilir.</p>
-                  <div class="d-grid">
-                    <a href="/scan/full" class="btn btn-success">Tam Tara</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-4">
-              <div class="card border text-center h-100">
-                <div class="card-body p-4">
-                  <div class="scan-icon mb-3 mx-auto">
-                    <i class="fas fa-sliders-h fa-3x text-warning"></i>
-                  </div>
-                  <h5 class="fw-bold">Özel Tarama</h5>
-                  <p class="small text-muted mb-3">Belirli dosya ve klasörleri seçerek hedefli tarama yapın. Süre seçiminize bağlıdır.</p>
-                  <div class="d-grid">
-                    <a href="/scan/custom" class="btn btn-warning">Özel Tara</a>
-                  </div>
-                </div>
-              </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-0">Son Tarama</h6>
+              <h5 class="fw-bold">
+                <% if (typeof lastScanDate !== 'undefined' && lastScanDate) { %>
+                  <%= new Date(lastScanDate).toLocaleDateString('tr-TR') %>
+                <% } else { %>
+                  -
+                <% } %>
+              </h5>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Son Tehditler -->
-      <div class="card border-0 shadow mb-4">
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+      <div class="card dashboard-card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-success bg-opacity-10 rounded-3">
+              <i class="fas fa-shield-virus text-success"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-0">Toplam Tarama</h6>
+              <h5 class="fw-bold"><%= typeof totalScans !== 'undefined' ? totalScans : 0 %></h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+      <div class="card dashboard-card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-danger bg-opacity-10 rounded-3">
+              <i class="fas fa-bug text-danger"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-0">Tehditler</h6>
+              <h5 class="fw-bold"><%= typeof totalThreats !== 'undefined' ? totalThreats : 0 %></h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+      <div class="card dashboard-card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-warning bg-opacity-10 rounded-3">
+              <i class="fas fa-wifi text-warning"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="text-muted mb-0">Wi-Fi Durumu</h6>
+              <h5 class="fw-bold text-success">Güvenli</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Hızlı Tarama Butonları -->
+  <h5 class="mb-3">Hızlı Taramalar</h5>
+  <div class="scan-buttons mb-4">
+    <div class="scan-button" onclick="startNewScan('QUICK')">
+      <i class="fas fa-bolt text-primary"></i>
+      <h6 class="mt-2 mb-1">Hızlı Tarama</h6>
+      <p class="text-muted small mb-0">1-2 dakika</p>
+    </div>
+    
+    <div class="scan-button" onclick="startNewScan('FULL')">
+      <i class="fas fa-search text-success"></i>
+      <h6 class="mt-2 mb-1">Tam Tarama</h6>
+      <p class="text-muted small mb-0">5-10 dakika</p>
+    </div>
+    
+    <div class="scan-button" onclick="startNewScan('WIFI')">
+      <i class="fas fa-wifi text-warning"></i>
+      <h6 class="mt-2 mb-1">Wi-Fi Tarama</h6>
+      <p class="text-muted small mb-0">30 saniye</p>
+    </div>
+    
+    <div class="scan-button" onclick="startNewScan('QR')">
+      <i class="fas fa-qrcode text-info"></i>
+      <h6 class="mt-2 mb-1">QR Kod Tarama</h6>
+      <p class="text-muted small mb-0">Anlık</p>
+    </div>
+    
+    <div class="scan-button" onclick="window.location.href='/dashboard/threats'">
+      <i class="fas fa-bug text-danger"></i>
+      <h6 class="mt-2 mb-1">Tehdit Koruması</h6>
+      <p class="text-muted small mb-0">Tehditler</p>
+    </div>
+    
+    <div class="scan-button" onclick="window.location.href='/dashboard/settings'">
+      <i class="fas fa-cog text-secondary"></i>
+      <h6 class="mt-2 mb-1">Ayarlar</h6>
+      <p class="text-muted small mb-0">Tercihleri Değiştir</p>
+    </div>
+  </div>
+  
+  <!-- Son Taramalar ve Etkinlikler -->
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
         <div class="card-header bg-white py-3">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">Son Tespit Edilen Tehditler</h5>
-            <a href="/dashboard/threats" class="btn btn-sm btn-link text-decoration-none">Tümünü Görüntüle</a>
+            <h5 class="mb-0">Son Taramalar</h5>
+            <a href="/dashboard/scans" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
           </div>
         </div>
         <div class="card-body p-0">
-          <% if (recentThreats && recentThreats.length > 0) { %>
-            <div class="list-group list-group-flush">
-              <% recentThreats.forEach(function(threat) { %>
-                <div class="list-group-item p-3">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="mb-1 fw-bold"><%= threat.name %></h6>
-                      <p class="mb-1 small text-muted">
-                        <% if (threat.type === 'Trojan') { %>
-                          <i class="fas fa-virus text-danger me-1"></i>
-                        <% } else if (threat.type === 'Spyware') { %>
-                          <i class="fas fa-user-secret text-warning me-1"></i>
-                        <% } else if (threat.type === 'Adware') { %>
-                          <i class="fas fa-ad text-info me-1"></i>
-                        <% } else if (threat.type === 'Ransomware') { %>
-                          <i class="fas fa-lock text-danger me-1"></i>
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Tip</th>
+                  <th scope="col">Tarih</th>
+                  <th scope="col">Tehdit</th>
+                  <th scope="col">Durum</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (typeof recentScans !== 'undefined' && recentScans && recentScans.length > 0) { %>
+                  <% recentScans.forEach(scan => { %>
+                    <tr>
+                      <td>
+                        <% if (scan.type === 'QUICK') { %>
+                          <i class="fas fa-bolt text-primary me-2"></i> Hızlı
+                        <% } else if (scan.type === 'FULL') { %>
+                          <i class="fas fa-search text-success me-2"></i> Tam
+                        <% } else if (scan.type === 'WIFI') { %>
+                          <i class="fas fa-wifi text-warning me-2"></i> Wi-Fi
+                        <% } else if (scan.type === 'QR') { %>
+                          <i class="fas fa-qrcode text-info me-2"></i> QR
                         <% } else { %>
-                          <i class="fas fa-bug text-secondary me-1"></i>
+                          <i class="fas fa-shield-virus me-2"></i> <%= scan.type %>
                         <% } %>
-                        <%= threat.type %> | 
-                        <% if (threat.severity === 'HIGH') { %>
-                          <span class="text-danger">Yüksek Risk</span>
-                        <% } else if (threat.severity === 'MEDIUM') { %>
-                          <span class="text-warning">Orta Risk</span>
+                      </td>
+                      <td><%= new Date(scan.startTime).toLocaleDateString('tr-TR') %></td>
+                      <td>
+                        <% if (scan.threatsFound && scan.threatsFound.length > 0) { %>
+                          <span class="badge rounded-pill bg-danger"><%= scan.threatsFound.length %></span>
                         <% } else { %>
-                          <span class="text-success">Düşük Risk</span>
+                          <span class="badge rounded-pill bg-success">0</span>
                         <% } %>
-                      </p>
-                      <small class="text-muted">
-                        Tespit: <%= new Date(threat.detectionDate).toLocaleString('tr-TR') %>
-                        <% if (threat.filePath) { %>
-                          | Konum: <%= threat.filePath %>
+                      </td>
+                      <td>
+                        <% if (scan.status === 'COMPLETED') { %>
+                          <span class="badge bg-success">Tamamlandı</span>
+                        <% } else if (scan.status === 'RUNNING') { %>
+                          <span class="badge bg-warning">Devam Ediyor</span>
+                        <% } else if (scan.status === 'FAILED') { %>
+                          <span class="badge bg-danger">Başarısız</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary"><%= scan.status %></span>
                         <% } %>
-                      </small>
-                    </div>
-                    <div>
-                      <% if (threat.isCleaned) { %>
-                        <span class="badge bg-success">Temizlendi</span>
-                      <% } else { %>
-                        <button class="btn btn-sm btn-outline-danger clean-threat-btn" data-threat-id="<%= threat.id %>">
-                          Temizle
-                        </button>
-                      <% } %>
-                    </div>
-                  </div>
-                </div>
-              <% }); %>
-            </div>
-          <% } else { %>
-            <div class="text-center py-5">
-              <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
-              <h5>Tehdit Tespit Edilmedi</h5>
-              <p class="text-muted">Cihazınızda henüz tehdit tespit edilmedi. Düzenli taramalar yaparak güvende kalın.</p>
-            </div>
-          <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center py-3">Henüz tarama yapılmamış.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      
-      <!-- Premium Özellikler -->
-      <div class="card border-0 shadow">
+    </div>
+    
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
         <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold">Premium Özellikler</h5>
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Son Etkinlikler</h5>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="row g-4">
-            <div class="col-md-6">
-              <div class="d-flex">
-                <div class="flex-shrink-0 me-3">
-                  <div class="feature-icon bg-warning bg-opacity-10 p-2 rounded">
-                    <i class="fas fa-lock text-warning"></i>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <% if (typeof recentActivities !== 'undefined' && recentActivities && recentActivities.length > 0) { %>
+              <% recentActivities.forEach(activity => { %>
+                <div class="list-group-item px-3 py-3">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">
+                      <% if (activity.type === 'SCAN_COMPLETE') { %>
+                        <i class="fas fa-shield-virus text-success me-2"></i> Tarama Tamamlandı
+                      <% } else if (activity.type === 'THREAT_FOUND') { %>
+                        <i class="fas fa-bug text-danger me-2"></i> Tehdit Bulundu
+                      <% } else if (activity.type === 'THREAT_CLEANED') { %>
+                        <i class="fas fa-broom text-success me-2"></i> Tehdit Temizlendi
+                      <% } else if (activity.type === 'WIFI_SCAN') { %>
+                        <i class="fas fa-wifi text-warning me-2"></i> Wi-Fi Taraması
+                      <% } else if (activity.type === 'QR_SCAN') { %>
+                        <i class="fas fa-qrcode text-info me-2"></i> QR Kod Taraması
+                      <% } else if (activity.type === 'LOGIN') { %>
+                        <i class="fas fa-sign-in-alt text-primary me-2"></i> Giriş Yapıldı
+                      <% } else { %>
+                        <i class="fas fa-info-circle me-2"></i> <%= activity.title %>
+                      <% } %>
+                    </h6>
+                    <small><%= new Date(activity.timestamp).toLocaleDateString('tr-TR') %></small>
                   </div>
+                  <p class="mb-1 text-muted"><%= activity.description %></p>
                 </div>
-                <div>
-                  <h6 class="fw-bold mb-1">Uygulama Kilidi</h6>
-                  <p class="small text-muted mb-0">Önemli uygulamalarınızı yetkisiz erişimlere karşı koruyun.</p>
-                </div>
+              <% }); %>
+            <% } else { %>
+              <div class="list-group-item px-3 py-4 text-center">
+                <i class="fas fa-history text-muted d-block mb-2" style="font-size: 1.5rem;"></i>
+                <p class="mb-0 text-muted">Henüz etkinlik bulunmamaktadır.</p>
               </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="d-flex">
-                <div class="flex-shrink-0 me-3">
-                  <div class="feature-icon bg-info bg-opacity-10 p-2 rounded">
-                    <i class="fas fa-wifi text-info"></i>
-                  </div>
-                </div>
-                <div>
-                  <h6 class="fw-bold mb-1">VPN Koruması</h6>
-                  <p class="small text-muted mb-0">Güvenli bağlantı ile çevrimiçi gizliliğinizi sağlayın.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="d-flex">
-                <div class="flex-shrink-0 me-3">
-                  <div class="feature-icon bg-primary bg-opacity-10 p-2 rounded">
-                    <i class="fas fa-qrcode text-primary"></i>
-                  </div>
-                </div>
-                <div>
-                  <h6 class="fw-bold mb-1">QR Güvenlik Taraması</h6>
-                  <p class="small text-muted mb-0">QR kodları tarayarak güvenli olduklarından emin olun.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="d-flex">
-                <div class="flex-shrink-0 me-3">
-                  <div class="feature-icon bg-success bg-opacity-10 p-2 rounded">
-                    <i class="fas fa-headset text-success"></i>
-                  </div>
-                </div>
-                <div>
-                  <h6 class="fw-bold mb-1">7/24 Teknik Destek</h6>
-                  <p class="small text-muted mb-0">Uzman ekibimizden anında destek alın.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-12 mt-3">
-              <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="/pricing" class="btn btn-warning">
-                  <i class="fas fa-crown me-2"></i> Premium'a Yükselt
-                </a>
-                <a href="/premium/features" class="btn btn-outline-secondary">
-                  Tüm Özellikleri Keşfet
-                </a>
-              </div>
-            </div>
+            <% } %>
           </div>
         </div>
       </div>
@@ -376,64 +298,30 @@
   </div>
 </div>
 
-<style>
-  .avatar-placeholder {
-    width: 100px;
-    height: 100px;
-    background-color: #e9ecef;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #adb5bd;
-    margin: 0 auto;
-  }
-  
-  .scan-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .feature-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-</style>
-
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Tehdit temizleme butonları
-    const cleanThreatButtons = document.querySelectorAll('.clean-threat-btn');
-    cleanThreatButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const threatId = this.getAttribute('data-threat-id');
-        cleanThreat(threatId, this);
-      });
-    });
-    
-    // Tehdit temizleme fonksiyonu
-    function cleanThreat(threatId, button) {
-      // Buton durumunu güncelle
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Temizleniyor...';
-      
-      // API isteğini simüle et
-      setTimeout(() => {
-        // Normalde burada fetch API kullanılarak tehdit temizleme isteği yapılır
-        // Başarılı cevap geldiğinde:
-        button.classList.remove('btn-outline-danger');
-        button.classList.add('btn-success');
-        button.innerHTML = 'Temizlendi';
-        button.disabled = true;
-      }, 1500);
+  function startNewScan(type) {
+    if (!confirm('Yeni bir ' + (type === 'QUICK' ? 'hızlı' : (type === 'FULL' ? 'tam' : (type === 'WIFI' ? 'Wi-Fi' : 'QR kod'))) + ' tarama başlatmak istediğinize emin misiniz?')) {
+      return;
     }
-  });
+    
+    fetch('/api/scans/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ type: type })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        window.location.href = '/scan-progress/' + data.data.scanId;
+      } else {
+        alert('Tarama başlatılırken bir hata oluştu: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Tarama başlatılırken hata:', error);
+      alert('Tarama başlatılırken bir hata oluştu.');
+    });
+  }
 </script>

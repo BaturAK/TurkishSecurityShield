@@ -42,12 +42,10 @@ router.get('/', async (req, res) => {
     
     res.render('admin/dashboard', {
       title: 'Admin Panel',
-      stats: {
-        userCount,
-        threatCount,
-        scanCount,
-        activeThreats
-      },
+      totalUsers: userCount,
+      totalThreats: threatCount,
+      totalScans: scanCount,
+      activeThreats: activeThreats,
       recentUsers,
       recentScans
     });
