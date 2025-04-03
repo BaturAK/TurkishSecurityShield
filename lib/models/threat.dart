@@ -1,20 +1,17 @@
-enum ThreatSeverity {
-  low,
-  medium,
-  high,
-  critical,
-}
-
 enum ThreatType {
   malware,
   adware,
-  spyware,
-  trojan,
-  ransomware,
-  riskware,
   suspiciousPermission,
-  suspiciousNetwork,
+  unsafeCommunication,
+  vulnerableApp,
+  riskware,
   other,
+}
+
+enum ThreatSeverity {
+  high,
+  medium,
+  low,
 }
 
 enum ThreatStatus {
@@ -28,48 +25,27 @@ class Threat {
   final String id;
   final String appName;
   final String packageName;
-  final String? hash;
+  final String hash;
   final ThreatType type;
   final ThreatSeverity severity;
   final ThreatStatus status;
   final DateTime detectionTime;
   final String description;
-  final Map<String, dynamic>? details;
-  
+  final Map<String, dynamic> details;
+
   Threat({
     required this.id,
     required this.appName,
     required this.packageName,
-    this.hash,
+    required this.hash,
     required this.type,
     required this.severity,
     required this.status,
     required this.detectionTime,
     required this.description,
-    this.details,
+    required this.details,
   });
-  
-  factory Threat.fromJson(Map<String, dynamic> json) {
-    return Threat(
-      id: json['id'] as String,
-      appName: json['appName'] as String,
-      packageName: json['packageName'] as String,
-      hash: json['hash'] as String?,
-      type: ThreatType.values.firstWhere(
-        (e) => e.toString() == 'ThreatType.${json['type']}',
-      ),
-      severity: ThreatSeverity.values.firstWhere(
-        (e) => e.toString() == 'ThreatSeverity.${json['severity']}',
-      ),
-      status: ThreatStatus.values.firstWhere(
-        (e) => e.toString() == 'ThreatStatus.${json['status']}',
-      ),
-      detectionTime: DateTime.parse(json['detectionTime'] as String),
-      description: json['description'] as String,
-      details: json['details'] as Map<String, dynamic>?,
-    );
-  }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -84,7 +60,31 @@ class Threat {
       'details': details,
     };
   }
-  
+
+  factory Threat.fromJson(Map<String, dynamic> json) {
+    return Threat(
+      id: json['id'] as String,
+      appName: json['appName'] as String,
+      packageName: json['packageName'] as String,
+      hash: json['hash'] as String,
+      type: ThreatType.values.firstWhere(
+        (e) => e.toString().split('.').last == json['type'],
+        orElse: () => ThreatType.other,
+      ),
+      severity: ThreatSeverity.values.firstWhere(
+        (e) => e.toString().split('.').last == json['severity'],
+        orElse: () => ThreatSeverity.medium,
+      ),
+      status: ThreatStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+        orElse: () => ThreatStatus.detected,
+      ),
+      detectionTime: DateTime.parse(json['detectionTime'] as String),
+      description: json['description'] as String,
+      details: Map<String, dynamic>.from(json['details'] as Map),
+    );
+  }
+
   Threat copyWith({
     String? id,
     String? appName,

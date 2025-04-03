@@ -1,48 +1,49 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 class SettingsProvider extends ChangeNotifier {
   final _settingsBox = Hive.box('settings');
   
   // Varsayılan ayarlar
-  static const _defaultAutomaticScanning = true;
-  static const _defaultScanInterval = 24; // saat
-  static const _defaultScanOnBootComplete = true;
-  static const _defaultScanNewApps = true;
+  static const _defaultDarkMode = false;
+  static const _defaultBackgroundScanEnabled = true;
+  static const _defaultBackgroundScanIntervalHours = 24;
+  static const _defaultRealTimeProtectionEnabled = true;
   static const _defaultNotificationsEnabled = true;
-  static const _defaultDarkMode = ThemeMode.system;
+  static const _defaultAutoUpdateEnabled = true;
+  static const _defaultAppLockEnabled = false;
+  static const _defaultAppLockPin = '';
+  static const _defaultVpnEnabled = false;
+  static const _defaultLanguage = 'tr';
   
-  // Getter metodları
-  bool get automaticScanning => _settingsBox.get('automaticScanning', defaultValue: _defaultAutomaticScanning);
-  int get scanInterval => _settingsBox.get('scanInterval', defaultValue: _defaultScanInterval);
-  bool get scanOnBootComplete => _settingsBox.get('scanOnBootComplete', defaultValue: _defaultScanOnBootComplete);
-  bool get scanNewApps => _settingsBox.get('scanNewApps', defaultValue: _defaultScanNewApps);
+  bool get darkMode => _settingsBox.get('darkMode', defaultValue: _defaultDarkMode);
+  bool get backgroundScanEnabled => _settingsBox.get('backgroundScanEnabled', defaultValue: _defaultBackgroundScanEnabled);
+  int get backgroundScanIntervalHours => _settingsBox.get('backgroundScanIntervalHours', defaultValue: _defaultBackgroundScanIntervalHours);
+  bool get realTimeProtectionEnabled => _settingsBox.get('realTimeProtectionEnabled', defaultValue: _defaultRealTimeProtectionEnabled);
   bool get notificationsEnabled => _settingsBox.get('notificationsEnabled', defaultValue: _defaultNotificationsEnabled);
-  ThemeMode get themeMode {
-    final themeModeIndex = _settingsBox.get('themeMode', defaultValue: _defaultDarkMode.index);
-    return ThemeMode.values[themeModeIndex];
-  }
+  bool get autoUpdateEnabled => _settingsBox.get('autoUpdateEnabled', defaultValue: _defaultAutoUpdateEnabled);
+  bool get appLockEnabled => _settingsBox.get('appLockEnabled', defaultValue: _defaultAppLockEnabled);
+  String get appLockPin => _settingsBox.get('appLockPin', defaultValue: _defaultAppLockPin);
+  bool get vpnEnabled => _settingsBox.get('vpnEnabled', defaultValue: _defaultVpnEnabled);
+  String get language => _settingsBox.get('language', defaultValue: _defaultLanguage);
   
-  Duration get scanIntervalDuration => Duration(hours: scanInterval);
-  
-  // Setter metodları
-  Future<void> setAutomaticScanning(bool value) async {
-    await _settingsBox.put('automaticScanning', value);
+  Future<void> setDarkMode(bool value) async {
+    await _settingsBox.put('darkMode', value);
     notifyListeners();
   }
   
-  Future<void> setScanInterval(int hours) async {
-    await _settingsBox.put('scanInterval', hours);
+  Future<void> setBackgroundScanEnabled(bool value) async {
+    await _settingsBox.put('backgroundScanEnabled', value);
     notifyListeners();
   }
   
-  Future<void> setScanOnBootComplete(bool value) async {
-    await _settingsBox.put('scanOnBootComplete', value);
+  Future<void> setBackgroundScanIntervalHours(int value) async {
+    await _settingsBox.put('backgroundScanIntervalHours', value);
     notifyListeners();
   }
   
-  Future<void> setScanNewApps(bool value) async {
-    await _settingsBox.put('scanNewApps', value);
+  Future<void> setRealTimeProtectionEnabled(bool value) async {
+    await _settingsBox.put('realTimeProtectionEnabled', value);
     notifyListeners();
   }
   
@@ -51,19 +52,42 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
   
-  Future<void> setThemeMode(ThemeMode mode) async {
-    await _settingsBox.put('themeMode', mode.index);
+  Future<void> setAutoUpdateEnabled(bool value) async {
+    await _settingsBox.put('autoUpdateEnabled', value);
     notifyListeners();
   }
   
-  // Ayarları sıfırlama
+  Future<void> setAppLockEnabled(bool value) async {
+    await _settingsBox.put('appLockEnabled', value);
+    notifyListeners();
+  }
+  
+  Future<void> setAppLockPin(String value) async {
+    await _settingsBox.put('appLockPin', value);
+    notifyListeners();
+  }
+  
+  Future<void> setVpnEnabled(bool value) async {
+    await _settingsBox.put('vpnEnabled', value);
+    notifyListeners();
+  }
+  
+  Future<void> setLanguage(String value) async {
+    await _settingsBox.put('language', value);
+    notifyListeners();
+  }
+  
   Future<void> resetSettings() async {
-    await _settingsBox.put('automaticScanning', _defaultAutomaticScanning);
-    await _settingsBox.put('scanInterval', _defaultScanInterval);
-    await _settingsBox.put('scanOnBootComplete', _defaultScanOnBootComplete);
-    await _settingsBox.put('scanNewApps', _defaultScanNewApps);
+    await _settingsBox.put('darkMode', _defaultDarkMode);
+    await _settingsBox.put('backgroundScanEnabled', _defaultBackgroundScanEnabled);
+    await _settingsBox.put('backgroundScanIntervalHours', _defaultBackgroundScanIntervalHours);
+    await _settingsBox.put('realTimeProtectionEnabled', _defaultRealTimeProtectionEnabled);
     await _settingsBox.put('notificationsEnabled', _defaultNotificationsEnabled);
-    await _settingsBox.put('themeMode', _defaultDarkMode.index);
+    await _settingsBox.put('autoUpdateEnabled', _defaultAutoUpdateEnabled);
+    await _settingsBox.put('appLockEnabled', _defaultAppLockEnabled);
+    await _settingsBox.put('appLockPin', _defaultAppLockPin);
+    await _settingsBox.put('vpnEnabled', _defaultVpnEnabled);
+    await _settingsBox.put('language', _defaultLanguage);
     notifyListeners();
   }
 }

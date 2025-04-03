@@ -1,17 +1,17 @@
 import 'threat.dart';
 
+enum ScanType {
+  quick,
+  full,
+  app,
+  background,
+}
+
 enum ScanStatus {
   notStarted,
   inProgress,
   completed,
   failed,
-}
-
-enum ScanType {
-  quick,
-  full,
-  background,
-  app,
 }
 
 class ScanResult {
@@ -23,7 +23,7 @@ class ScanResult {
   final int scannedItems;
   final Duration duration;
   final String? errorMessage;
-  
+
   ScanResult({
     required this.id,
     required this.scanTime,
@@ -34,41 +34,39 @@ class ScanResult {
     required this.duration,
     this.errorMessage,
   });
-  
-  bool get hasThreats => threats.isNotEmpty;
-  
-  factory ScanResult.fromJson(Map<String, dynamic> json) {
-    return ScanResult(
-      id: json['id'] as String,
-      scanTime: DateTime.parse(json['scanTime'] as String),
-      scanType: ScanType.values.firstWhere(
-        (e) => e.toString() == 'ScanType.${json['scanType']}',
-      ),
-      status: ScanStatus.values.firstWhere(
-        (e) => e.toString() == 'ScanStatus.${json['status']}',
-      ),
-      threats: (json['threats'] as List)
-          .map((e) => Threat.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      scannedItems: json['scannedItems'] as int,
-      duration: Duration(milliseconds: json['durationMs'] as int),
-      errorMessage: json['errorMessage'] as String?,
-    );
-  }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'scanTime': scanTime.toIso8601String(),
       'scanType': scanType.toString().split('.').last,
       'status': status.toString().split('.').last,
-      'threats': threats.map((e) => e.toJson()).toList(),
+      'threats': threats.map((threat) => threat.toJson()).toList(),
       'scannedItems': scannedItems,
-      'durationMs': duration.inMilliseconds,
+      'duration': duration.inMilliseconds,
       'errorMessage': errorMessage,
     };
   }
-  
+
+  factory ScanResult.fromJson(Map<String, dynamic> json) {
+    return ScanResult(
+      id: json['id'] as String,
+      scanTime: DateTime.parse(json['scanTime'] as String),
+      scanType: ScanType.values.firstWhere(
+        (e) => e.toString().split('.').last == json['scanType'],
+      ),
+      status: ScanStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+      ),
+      threats: (json['threats'] as List)
+          .map((e) => Threat.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      scannedItems: json['scannedItems'] as int,
+      duration: Duration(milliseconds: json['duration'] as int),
+      errorMessage: json['errorMessage'] as String?,
+    );
+  }
+
   ScanResult copyWith({
     String? id,
     DateTime? scanTime,

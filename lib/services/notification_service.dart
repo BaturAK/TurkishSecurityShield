@@ -1,131 +1,102 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _notificationsPlugin =
+  static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
   
-  static bool _initialized = false;
+  static const NotificationDetails _platformChannelSpecifics = NotificationDetails(
+    android: AndroidNotificationDetails(
+      'antivirus_channel',
+      'Antivirüs Bildirimleri',
+      channelDescription: 'Tehdit tespiti ve tarama sonuçları için bildirimler',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
   
+  /// Bildirim servisini başlat
   static Future<void> initialize() async {
-    if (_initialized) return;
-    
+    // Zaman dilimi verisini yükle
     tz_data.initializeTimeZones();
     
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    const InitializationSettings initializationSettings = InitializationSettings(
+    // Bildirim ayarlarını yap
+    const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsIOS = DarwinInitializationSettings();
+    const initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
     );
     
-    await _notificationsPlugin.initialize(
+    await _notifications.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) {
-        // Bildirime tıklanınca yapılacak işlemler
+        debugPrint('Bildirime tıklandı: ${notificationResponse.payload}');
+        // Burada bildirime tıklandığında yapılacak işlemleri tanımlayabilirsiniz
       },
     );
-    
-    _initialized = true;
   }
   
+  /// Tehdit tespit edildiğinde bildirim göster
   static Future<void> showThreatNotification(
     String id,
     String title,
     String body,
   ) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'threat_channel',
-      'Tehdit Bildirimleri',
-      channelDescription: 'Tespit edilen tehditler hakkında bildirimler',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-    );
-    
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    
-    await _notificationsPlugin.show(
+    await _notifications.show(
       id.hashCode,
       title,
       body,
-      platformChannelSpecifics,
+      _platformChannelSpecifics,
+      payload: 'threat_$id',
     );
   }
   
+  /// Tarama tamamlandığında bildirim göster
   static Future<void> showScanCompleteNotification(
     String title,
     String body,
   ) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'scan_channel',
-      'Tarama Bildirimleri',
-      channelDescription: 'Tarama sonuçları hakkında bildirimler',
-      importance: Importance.default_,
-      priority: Priority.default_,
-      showWhen: true,
-    );
-    
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    
-    await _notificationsPlugin.show(
+    await _notifications.show(
       0,
       title,
       body,
-      platformChannelSpecifics,
+      _platformChannelSpecifics,
+      payload: 'scan_complete',
     );
   }
   
-  static Future<void> scheduleDailyScan(int hour, int minute) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'daily_scan_channel',
-      'Günlük Tarama Bildirimleri',
-      channelDescription: 'Günlük tarama hatırlatmaları',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-    
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    
-    final tz.TZDateTime scheduledDate = _nextInstanceOfTime(hour, minute);
-    
-    await _notificationsPlugin.zonedSchedule(
-      1,
-      'Günlük Tarama Zamanı',
-      'Cihazınızı taramak için dokunun',
-      scheduledDate,
-      platformChannelSpecifics,
+  /// Programlanmış bir bildirim oluştur
+  static Future<void> scheduleNotification(
+    int id,
+    String title,
+    String body,
+    DateTime scheduledTime,
+  ) async {
+    await _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      _platformChannelSpecifics,
       androidAllowWhileIdle: true,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'scheduled_$id',
     );
   }
   
-  static tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-    
-    return scheduledDate;
-  }
-  
-  static Future<void> cancelNotification(int id) async {
-    await _notificationsPlugin.cancel(id);
-  }
-  
+  /// Tüm bildirimleri iptal et
   static Future<void> cancelAllNotifications() async {
-    await _notificationsPlugin.cancelAll();
+    await _notifications.cancelAll();
+  }
+  
+  /// Belirtilen ID'ye sahip bildirimi iptal et
+  static Future<void> cancelNotification(int id) async {
+    await _notifications.cancel(id);
   }
 }

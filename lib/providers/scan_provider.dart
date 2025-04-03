@@ -2,17 +2,18 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
 
 import '../models/app_info.dart';
 import '../models/scan_result.dart';
 import '../models/threat.dart';
-import '../services/firebase_service.dart';
+import '../services/mongodb_service.dart';
 import '../services/notification_service.dart';
 import '../services/scan_service.dart';
 
 class ScanProvider extends ChangeNotifier {
   final ScanService _scanService = ScanService();
-  final FirebaseService _firebaseService = FirebaseService();
+  MongoDBService? _mongoDBService;
   final _uuid = const Uuid();
   final _scanResultsBox = Hive.box('scan_results');
   
@@ -40,6 +41,11 @@ class ScanProvider extends ChangeNotifier {
   ScanProvider() {
     _loadScanHistory();
     _loadInstalledApps();
+  }
+  
+  // MongoDB servisi referansını ayarla
+  void setMongoDBService(MongoDBService service) {
+    _mongoDBService = service;
   }
   
   Future<void> _loadScanHistory() async {
@@ -109,8 +115,31 @@ class ScanProvider extends ChangeNotifier {
       
       _totalItemsToScan = appsToScan.length;
       
-      // Firebase'den tehdit veritabanını al
-      final knownThreats = await _firebaseService.getKnownThreats();
+      // MongoDB'den tehdit veritabanını al
+      List<Threat> knownThreats = [];
+      try {
+        if (_mongoDBService != null) {
+          knownThreats = await _mongoDBService!.getKnownThreats();
+        } else {
+          // Ofline modda çalışıyoruz, yerel hazır tehdit listesini kullan
+          final hashList = await _scanService.getKnownMalwareHashes();
+          knownThreats = hashList.map((hash) => Threat(
+            id: hash,
+            appName: 'Bilinmeyen Zararlı Yazılım',
+            packageName: 'unknown',
+            hash: hash,
+            type: ThreatType.malware,
+            severity: ThreatSeverity.high,
+            status: ThreatStatus.detected,
+            detectionTime: DateTime.now(),
+            description: 'Bu uygulama bilinen zararlı yazılım imzasına sahip.',
+            details: {},
+          )).toList();
+        }
+      } catch (e) {
+        debugPrint('Bilinen tehditler alınırken hata: $e');
+        // Uygulama çalışmaya devam etmeli
+      }
       
       for (int i = 0; i < appsToScan.length; i++) {
         final app = appsToScan[i];
@@ -144,8 +173,15 @@ class ScanProvider extends ChangeNotifier {
           
           _detectedThreats.add(threat);
           
-          // Firebase'e tehditi kaydet
-          await _firebaseService.saveThreat(threat);
+          // MongoDB'ye tehditi kaydet
+          try {
+            if (_mongoDBService != null) {
+              await _mongoDBService!.saveThreat(threat);
+            }
+          } catch (e) {
+            debugPrint('Tehdit kaydedilirken hata: $e');
+            // Uygulama çalışmaya devam etmeli
+          }
           
           // Bildirim gönder
           NotificationService.showThreatNotification(
@@ -252,8 +288,15 @@ class ScanProvider extends ChangeNotifier {
       // Tehdit durumunu güncelle
       final updatedThreat = threat.copyWith(status: ThreatStatus.removed);
       
-      // Firebase'i güncelle
-      await _firebaseService.updateThreatStatus(updatedThreat);
+      // MongoDB'yi güncelle
+      try {
+        if (_mongoDBService != null) {
+          await _mongoDBService!.updateThreatStatus(updatedThreat);
+        }
+      } catch (e) {
+        debugPrint('Tehdit durumu güncellenirken hata: $e');
+        // Uygulama çalışmaya devam etmeli
+      }
       
       // Yerel listeyi güncelle
       final index = _detectedThreats.indexWhere((t) => t.id == threat.id);
@@ -294,8 +337,15 @@ class ScanProvider extends ChangeNotifier {
       // Tehdit durumunu güncelle
       final updatedThreat = threat.copyWith(status: ThreatStatus.ignored);
       
-      // Firebase'i güncelle
-      await _firebaseService.updateThreatStatus(updatedThreat);
+      // MongoDB'yi güncelle
+      try {
+        if (_mongoDBService != null) {
+          await _mongoDBService!.updateThreatStatus(updatedThreat);
+        }
+      } catch (e) {
+        debugPrint('Tehdit durumu güncellenirken hata: $e');
+        // Uygulama çalışmaya devam etmeli
+      }
       
       // Yerel listeyi güncelle
       final index = _detectedThreats.indexWhere((t) => t.id == threat.id);
@@ -339,8 +389,15 @@ class ScanProvider extends ChangeNotifier {
       // Tehdit durumunu güncelle
       final updatedThreat = threat.copyWith(status: ThreatStatus.quarantined);
       
-      // Firebase'i güncelle
-      await _firebaseService.updateThreatStatus(updatedThreat);
+      // MongoDB'yi güncelle
+      try {
+        if (_mongoDBService != null) {
+          await _mongoDBService!.updateThreatStatus(updatedThreat);
+        }
+      } catch (e) {
+        debugPrint('Tehdit durumu güncellenirken hata: $e');
+        // Uygulama çalışmaya devam etmeli
+      }
       
       // Yerel listeyi güncelle
       final index = _detectedThreats.indexWhere((t) => t.id == threat.id);

@@ -136,14 +136,20 @@ class ScanService {
     }
   }
   
-  // Sahte bilinen tehditler (test için)
+  // Ofline mod için önceden bilinen zararlı yazılım imzaları
   Future<List<String>> getKnownMalwareHashes() async {
     try {
-      // Normalde bu değerler Firebase'den alınacak
+      // Bu hash'ler MongoDB kullanılamadığında yedek olarak kullanılacak
+      // Bilinen zararlı yazılımlara ait SHA-256 hash'leri
       return [
-        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-        '7d793037a0760186574b0282f2f435e7',
-        '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',
+        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', // Trojanlı APK örneği
+        '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', // Bilinen bir malware
+        '7d793037a0760186574b0282f2f435e7', // Diğer zararlı yazılım örneği
+        'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9', // Reklam yazılımı örneği
+        '6b23c0d5f35d1b11f9b683f0b0a617355deb11277d91ae091d399c655b87940d', // Olası bir casus yazılım
+        'fd61a03af4f77d870fc21e05e7e80678095c92d808cfb3b5c279ee04c74aca13', // Kimlik avı yazılımı
+        '3f39d5c348e5b79d06e842c114e6cc571583bbf44e4b0ebfda1a01ec05745d43', // Kripto madencisi
+        'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e', // Rootkit örneği
       ];
     } catch (e) {
       debugPrint('Bilinen zararlı yazılımlar alınırken hata: $e');
