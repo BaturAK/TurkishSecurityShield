@@ -104,6 +104,44 @@ router.get('/pricing', (req, res) => {
 });
 
 /**
+ * Premium Sayfası
+ */
+router.get('/pricing/premium', (req, res) => {
+  res.render('pricing-premium', {
+    title: 'Premium Özellikler',
+    success: req.query.success,
+    error: req.query.error
+  });
+});
+
+/**
+ * Premium Kod Doğrulama
+ */
+router.post('/pricing/premium/verify', (req, res) => {
+  const { premiumCode } = req.body;
+  
+  // Belirtilen kodu kontrol et
+  if (premiumCode === '7426270308') {
+    // Kullanıcı oturum açmışsa, hesabına premium özelliği ekle
+    if (req.session.user) {
+      // Kullanıcı nesnesine premium özelliği ekleyebilirsiniz
+      // Bu örnek için sadece session'a ekliyoruz
+      req.session.user.isPremium = true;
+      
+      // Başarılı mesajıyla yönlendir
+      return res.redirect('/pricing/premium?success=Premium+özellikler+başarıyla+aktifleştirildi');
+    }
+    
+    // Oturum açılmamışsa bile premium kodu geçerli olarak işaretle
+    req.session.validPremiumCode = true;
+    return res.redirect('/pricing/premium?success=Premium+kod+doğrulandı.+Lütfen+özelliklerden+yararlanmak+için+giriş+yapın');
+  }
+  
+  // Kod geçersizse hata mesajı göster
+  res.redirect('/pricing/premium?error=Geçersiz+premium+kod.+Lütfen+tekrar+deneyin');
+});
+
+/**
  * Profil Sayfası (Giriş yapılmış olmalı)
  */
 router.get('/profile', authMiddleware.isAuthenticated, async (req, res) => {

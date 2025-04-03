@@ -73,10 +73,16 @@ router.get('/users', async (req, res) => {
     // Toplam kullanıcı sayısını al
     const totalUsers = await User.count();
     
+    // Aylık ve haftalık kullanıcı sayılarını hesapla (örnek değerler)
+    const monthlyUsers = Math.floor(totalUsers * 0.7); // Toplam kullanıcıların %70'i
+    const weeklyUsers = Math.floor(totalUsers * 0.3); // Toplam kullanıcıların %30'u
+    
     res.render('admin/users', {
       title: 'Admin - Kullanıcı Yönetimi',
       users,
       totalUsers,
+      monthlyUsers,
+      weeklyUsers,
       success: req.query.success,
       error: req.query.error
     });
