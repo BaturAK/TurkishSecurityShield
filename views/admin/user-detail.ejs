@@ -1,0 +1,256 @@
+<!-- Admin Kullanıcı Detay Sayfası -->
+
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Kullanıcı Detayı</h1>
+    <a href="/admin/users" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i> Kullanıcı Listesine Dön
+    </a>
+  </div>
+
+  <% if (success) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <% } %>
+
+  <% if (error) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <% } %>
+
+  <div class="row">
+    <!-- Kullanıcı Bilgileri -->
+    <div class="col-md-5 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0">Kullanıcı Bilgileri</h5>
+        </div>
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <% if (user.photoURL) { %>
+              <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle img-fluid mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+            <% } else { %>
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
+                <span class="text-primary fw-bold" style="font-size: 2.5rem;"><%= (user.displayName || user.email).charAt(0).toUpperCase() %></span>
+              </div>
+            <% } %>
+            <h4 class="mb-1"><%= user.displayName || 'İsimsiz Kullanıcı' %></h4>
+            <p class="text-muted mb-0"><%= user.email %></p>
+            
+            <% if (user.isAdmin) { %>
+              <span class="badge bg-warning mt-2">Admin</span>
+            <% } %>
+          </div>
+          
+          <hr>
+          
+          <div class="row">
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Kullanıcı ID</p>
+              <p class="mb-0 fw-bold"><%= user.id %></p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Hesap Türü</p>
+              <p class="mb-0 fw-bold"><%= user.isAdmin ? 'Admin' : 'Standart Kullanıcı' %></p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Katılma Tarihi</p>
+              <p class="mb-0 fw-bold"><%= new Date(user.createdAt).toLocaleDateString('tr-TR') %></p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Son Giriş</p>
+              <p class="mb-0 fw-bold"><%= new Date(user.lastLogin || user.createdAt).toLocaleDateString('tr-TR') %></p>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="d-flex justify-content-between">
+            <!-- Düzenle butonu -->
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editUserModal">
+              <i class="fas fa-edit me-1"></i> Düzenle
+            </button>
+            
+            <!-- Silme butonu -->
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+              <i class="fas fa-trash-alt me-1"></i> Sil
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Kullanıcı İstatistikleri -->
+    <div class="col-md-7 mb-4">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Toplam Tarama</h5>
+                <div class="rounded bg-primary bg-opacity-10 p-2">
+                  <i class="fas fa-shield-alt text-primary"></i>
+                </div>
+              </div>
+              <h2 class="mb-0"><%= scans.length %></h2>
+              <p class="text-muted mb-0">Son tarama: 
+                <% if (scans.length > 0) { %>
+                  <%= new Date(scans[0].startTime).toLocaleDateString('tr-TR') %>
+                <% } else { %>
+                  Tarama yok
+                <% } %>
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Tehdit Tespiti</h5>
+                <div class="rounded bg-danger bg-opacity-10 p-2">
+                  <i class="fas fa-virus text-danger"></i>
+                </div>
+              </div>
+              <h2 class="mb-0">
+                <% 
+                  let totalThreats = 0;
+                  scans.forEach(scan => {
+                    totalThreats += scan.threatsFound.length;
+                  });
+                %>
+                <%= totalThreats %>
+              </h2>
+              <p class="text-muted mb-0">Son 10 taramada</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Son Taramalar</h5>
+              <% if (scans.length > 0) { %>
+                <a href="/admin/scans" class="btn btn-sm btn-outline-primary">Tüm Taramalar</a>
+              <% } %>
+            </div>
+            <div class="card-body p-0">
+              <% if (scans.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                      <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Tür</th>
+                        <th scope="col">Tarih</th>
+                        <th scope="col">Durum</th>
+                        <th scope="col">Tehditler</th>
+                        <th scope="col">İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% scans.forEach(scan => { %>
+                        <tr>
+                          <td><small class="text-muted"><%= scan.id.substring(0, 8) %>...</small></td>
+                          <td><%= scan.type %></td>
+                          <td><%= new Date(scan.startTime).toLocaleDateString('tr-TR') %></td>
+                          <td>
+                            <% if (scan.getStatus() === 'COMPLETED') { %>
+                              <span class="badge bg-success">Tamamlandı</span>
+                            <% } else if (scan.getStatus() === 'RUNNING') { %>
+                              <span class="badge bg-warning">Devam Ediyor</span>
+                            <% } else { %>
+                              <span class="badge bg-danger">Başarısız</span>
+                            <% } %>
+                          </td>
+                          <td><%= scan.threatsFound.length %></td>
+                          <td>
+                            <a href="/admin/scans/<%= scan.id %>" class="btn btn-sm btn-outline-primary">
+                              Detay
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="text-center py-5">
+                  <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                  <p class="mb-0 text-muted">Bu kullanıcı henüz bir tarama yapmamış.</p>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kullanıcı Düzenleme Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/admin/users/update" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUserModalLabel">Kullanıcı Düzenle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="userId" value="<%= user.id %>">
+          
+          <div class="mb-3">
+            <label for="displayName" class="form-label">Görünen İsim</label>
+            <input type="text" class="form-control" id="displayName" name="displayName" value="<%= user.displayName || '' %>">
+          </div>
+          
+          <div class="mb-3">
+            <label for="email" class="form-label">E-posta Adresi</label>
+            <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>" required>
+          </div>
+          
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="isAdmin" name="isAdmin" <%= user.isAdmin ? 'checked' : '' %>>
+            <label class="form-check-label" for="isAdmin">Admin Yetkisi</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Kullanıcı Silme Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/admin/users/delete" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteUserModalLabel">Kullanıcı Sil</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="userId" value="<%= user.id %>">
+          
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong><%= user.displayName || user.email %></strong> adlı kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="submit" class="btn btn-danger">Kullanıcıyı Sil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,343 @@
+<!-- Admin Tarama Detay Sayfası -->
+
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Tarama Detayı</h1>
+    <a href="/admin/scans" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i> Tarama Listesine Dön
+    </a>
+  </div>
+
+  <% if (success) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <% } %>
+
+  <% if (error) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  <% } %>
+
+  <div class="row">
+    <!-- Tarama Özeti -->
+    <div class="col-md-5 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0">Tarama Özeti</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-4 text-center">
+            <% if (scan.getStatus() === 'COMPLETED') { %>
+              <% if (scan.threatsFound.length > 0) { %>
+                <div class="scan-icon-wrapper bg-warning bg-opacity-10 rounded-circle mb-3 mx-auto" style="width:96px; height:96px;">
+                  <i class="fas fa-bug text-warning fa-3x d-flex h-100 justify-content-center align-items-center"></i>
+                </div>
+                <h4 class="text-warning">Tehdit Tespit Edildi!</h4>
+                <p class="text-muted">Toplam <%= scan.threatsFound.length %> tehdit bulundu.</p>
+              <% } else { %>
+                <div class="scan-icon-wrapper bg-success bg-opacity-10 rounded-circle mb-3 mx-auto" style="width:96px; height:96px;">
+                  <i class="fas fa-shield-alt text-success fa-3x d-flex h-100 justify-content-center align-items-center"></i>
+                </div>
+                <h4 class="text-success">Güvenli</h4>
+                <p class="text-muted">Herhangi bir tehdit tespit edilmedi.</p>
+              <% } %>
+            <% } else if (scan.getStatus() === 'RUNNING') { %>
+              <div class="scan-icon-wrapper bg-primary bg-opacity-10 rounded-circle mb-3 mx-auto" style="width:96px; height:96px;">
+                <i class="fas fa-sync-alt text-primary fa-spin fa-3x d-flex h-100 justify-content-center align-items-center"></i>
+              </div>
+              <h4 class="text-primary">Tarama Devam Ediyor</h4>
+              <p class="text-muted">Şu ana kadar <%= scan.totalScanned %> öğe tarandı.</p>
+            <% } else { %>
+              <div class="scan-icon-wrapper bg-danger bg-opacity-10 rounded-circle mb-3 mx-auto" style="width:96px; height:96px;">
+                <i class="fas fa-exclamation-triangle text-danger fa-3x d-flex h-100 justify-content-center align-items-center"></i>
+              </div>
+              <h4 class="text-danger">Tarama Başarısız</h4>
+              <p class="text-muted">Tarama işlemi tamamlanamadı.</p>
+            <% } %>
+          </div>
+          
+          <hr>
+          
+          <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Tarama ID</p>
+              <p class="mb-0 fw-bold"><%= scan.id %></p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Tarama Tipi</p>
+              <p class="mb-0 fw-bold"><%= scan.type %></p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Başlangıç Zamanı</p>
+              <p class="mb-0 fw-bold"><%= new Date(scan.startTime).toLocaleString('tr-TR') %></p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Bitiş Zamanı</p>
+              <p class="mb-0 fw-bold">
+                <% if (scan.endTime) { %>
+                  <%= new Date(scan.endTime).toLocaleString('tr-TR') %>
+                <% } else { %>
+                  <span class="text-muted">Devam ediyor...</span>
+                <% } %>
+              </p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Süre</p>
+              <p class="mb-0 fw-bold">
+                <% 
+                  const duration = scan.getDuration(); 
+                  const minutes = Math.floor(duration / 60000);
+                  const seconds = Math.floor((duration % 60000) / 1000);
+                %>
+                <%= minutes %> dk <%= seconds %> sn
+              </p>
+            </div>
+            <div class="col-lg-6 mb-3">
+              <p class="mb-1 text-muted">Taranan Öğe</p>
+              <p class="mb-0 fw-bold"><%= scan.totalScanned %></p>
+            </div>
+          </div>
+          
+          <% if (user) { %>
+            <hr>
+            
+            <div class="mb-3">
+              <p class="mb-2 text-muted">Taramayı Yapan Kullanıcı</p>
+              <div class="d-flex align-items-center">
+                <% if (user.photoURL) { %>
+                  <img src="<%= user.photoURL %>" alt="<%= user.displayName || user.email %>" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                <% } else { %>
+                  <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                    <span class="text-primary fw-bold"><%= (user.displayName || user.email).charAt(0).toUpperCase() %></span>
+                  </div>
+                <% } %>
+                <div>
+                  <p class="mb-0 fw-bold"><%= user.displayName || 'İsimsiz Kullanıcı' %></p>
+                  <p class="mb-0 small text-muted"><%= user.email %></p>
+                </div>
+                <a href="/admin/users/<%= user.id %>" class="btn btn-sm btn-outline-primary ms-auto">Kullanıcı Detayı</a>
+              </div>
+            </div>
+          <% } else { %>
+            <hr>
+            <p class="text-center text-muted mb-0">Bu tarama sistem tarafından otomatik olarak gerçekleştirilmiştir.</p>
+          <% } %>
+          
+          <% if (scan.getStatus() === 'COMPLETED') { %>
+            <hr>
+            
+            <div class="d-grid">
+              <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteScanModal">
+                <i class="fas fa-trash-alt me-1"></i> Taramayı Sil
+              </button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tehdit Listesi -->
+    <div class="col-md-7 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0">Tehdit Listesi</h5>
+        </div>
+        <div class="card-body p-0">
+          <% if (scan.threatsFound && scan.threatsFound.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th scope="col">Ad</th>
+                    <th scope="col">Tür</th>
+                    <th scope="col">Seviye</th>
+                    <th scope="col">Durum</th>
+                    <th scope="col">Detaylar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% scan.threatsFound.forEach(threat => { %>
+                    <tr>
+                      <td><%= threat.name %></td>
+                      <td><%= threat.type %></td>
+                      <td>
+                        <% if (threat.severity === 'HIGH') { %>
+                          <span class="badge bg-danger">Yüksek</span>
+                        <% } else if (threat.severity === 'MEDIUM') { %>
+                          <span class="badge bg-warning">Orta</span>
+                        <% } else { %>
+                          <span class="badge bg-info">Düşük</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (threat.isCleaned) { %>
+                          <span class="badge bg-success">Temizlendi</span>
+                        <% } else { %>
+                          <span class="badge bg-danger">Temizlenmedi</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#threatModal<%= threat.id %>">
+                          <i class="fas fa-info-circle"></i>
+                        </button>
+                        
+                        <!-- Tehdit Detay Modal -->
+                        <div class="modal fade" id="threatModal<%= threat.id %>" tabindex="-1" aria-labelledby="threatModalLabel<%= threat.id %>" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="threatModalLabel<%= threat.id %>">Tehdit Detayları</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <h5 class="mb-3"><%= threat.name %></h5>
+                                
+                                <div class="mb-3">
+                                  <p class="mb-1 text-muted">Tehdit ID</p>
+                                  <p class="mb-0 fw-bold"><%= threat.id %></p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                  <p class="mb-1 text-muted">Tür</p>
+                                  <p class="mb-0 fw-bold"><%= threat.type %></p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                  <p class="mb-1 text-muted">Tehlike Seviyesi</p>
+                                  <p class="mb-0">
+                                    <% if (threat.severity === 'HIGH') { %>
+                                      <span class="badge bg-danger">Yüksek</span>
+                                    <% } else if (threat.severity === 'MEDIUM') { %>
+                                      <span class="badge bg-warning">Orta</span>
+                                    <% } else { %>
+                                      <span class="badge bg-info">Düşük</span>
+                                    <% } %>
+                                  </p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                  <p class="mb-1 text-muted">Açıklama</p>
+                                  <p class="mb-0"><%= threat.description %></p>
+                                </div>
+                                
+                                <% if (threat.filePath) { %>
+                                  <div class="mb-3">
+                                    <p class="mb-1 text-muted">Dosya Yolu</p>
+                                    <p class="mb-0 fw-bold"><%= threat.filePath %></p>
+                                  </div>
+                                <% } %>
+                                
+                                <div class="mb-3">
+                                  <p class="mb-1 text-muted">Tespit Edilme Tarihi</p>
+                                  <p class="mb-0 fw-bold"><%= new Date(threat.detectionDate).toLocaleString('tr-TR') %></p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                  <p class="mb-1 text-muted">Durum</p>
+                                  <p class="mb-0">
+                                    <% if (threat.isCleaned) { %>
+                                      <span class="badge bg-success">Temizlendi</span>
+                                    <% } else { %>
+                                      <span class="badge bg-danger">Temizlenmedi</span>
+                                    <% } %>
+                                  </p>
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                                <% if (!threat.isCleaned) { %>
+                                  <button type="button" class="btn btn-success clean-threat" data-threat-id="<%= threat.id %>">
+                                    <i class="fas fa-broom me-1"></i> Tehdidi Temizle
+                                  </button>
+                                <% } %>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else if (scan.getStatus() === 'RUNNING') { %>
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+              </div>
+              <p class="mb-0 text-muted">Tarama devam ediyor, lütfen bekleyin...</p>
+            </div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+              <p class="mb-0 text-muted">Bu taramada hiçbir tehdit tespit edilmedi.</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tarama Silme Modal -->
+<div class="modal fade" id="deleteScanModal" tabindex="-1" aria-labelledby="deleteScanModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/admin/scans/delete" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteScanModalLabel">Tarama Sil</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="scanId" value="<%= scan.id %>">
+          
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Bu tarama kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="submit" class="btn btn-danger">Taramayı Sil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tehdit temizleme butonlarını izle
+    document.querySelectorAll('.clean-threat').forEach(button => {
+      button.addEventListener('click', function() {
+        const threatId = this.getAttribute('data-threat-id');
+        
+        // Temizleme işlemini başlat
+        fetch(`/api/threats/${threatId}/clean`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Tehdit başarıyla temizlendi!');
+            // Sayfayı yeniden yükle
+            window.location.reload();
+          } else {
+            alert('Tehdit temizlenirken bir hata oluştu: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Temizleme işlemi sırasında hata:', error);
+          alert('Tehdit temizlenirken bir hata oluştu. Lütfen tekrar deneyin.');
+        });
+      });
+    });
+  });
+</script>
