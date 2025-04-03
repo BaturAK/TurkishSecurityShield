@@ -123,6 +123,121 @@ function initScanProgress() {
  * Tehdit temizleme butonlarını initialize eden fonksiyon
  */
 function initThreatCleanButtons() {
+  // Tüm tehditleri temizleme butonu
+  const cleanAllBtn = document.querySelector('.clean-all-threats-btn');
+  if (cleanAllBtn) {
+    cleanAllBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Tüm temizleme butonlarını bul
+      const cleanButtons = document.querySelectorAll('.clean-threat-btn:not([disabled])');
+      
+      if (cleanButtons.length === 0) {
+        showAlert('info', 'Temizlenecek tehdit bulunamadı.');
+        return;
+      }
+      
+      // Buton durumunu güncelle
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Tehditler Temizleniyor...';
+      
+      // Her tehdidi tek tek temizle
+      let completedCount = 0;
+      let failedCount = 0;
+      
+      cleanButtons.forEach(button => {
+        const threatId = button.dataset.threatId;
+        if (!threatId) return;
+        
+        // Buton durumunu güncelle
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Temizleniyor...';
+        
+        // Tehdit temizleme isteği gönder
+        fetch(`/api/threats/${threatId}/clean`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Tehdit temizleme işlemi başarısız');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.status === 'success') {
+            completedCount++;
+            
+            // Başarılı ise, kart görünümünü güncelle
+            const card = button.closest('.threat-card');
+            if (card) {
+              card.classList.remove('border-danger', 'border-warning');
+              card.classList.add('border-success');
+              
+              // Temizlendi etiketini göster
+              const badge = card.querySelector('.threat-status');
+              if (badge) {
+                badge.textContent = 'Temizlendi';
+                badge.classList.remove('bg-danger', 'bg-warning');
+                badge.classList.add('bg-success');
+              }
+              
+              // Butonu güncelle
+              button.innerHTML = '<i class="fas fa-check me-2"></i> Temizlendi';
+              button.classList.remove('btn-danger', 'btn-warning');
+              button.classList.add('btn-success');
+            }
+          } else {
+            failedCount++;
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-broom me-2"></i> Tekrar Dene';
+          }
+          
+          // Tüm işlemler tamamlandı mı kontrol et
+          if (completedCount + failedCount === cleanButtons.length) {
+            // Ana butonu güncelle
+            cleanAllBtn.disabled = false;
+            cleanAllBtn.innerHTML = '<i class="fas fa-broom me-2"></i> Tüm Tehditleri Temizle';
+            
+            // Sonucu göster
+            if (failedCount === 0) {
+              showAlert('success', `${completedCount} tehdit başarıyla temizlendi!`);
+            } else if (completedCount === 0) {
+              showAlert('danger', 'Tehditler temizlenirken hata oluştu.');
+            } else {
+              showAlert('warning', `${completedCount} tehdit temizlendi, ${failedCount} tehdit temizlenemedi.`);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Tehdit temizlenirken hata:', error);
+          failedCount++;
+          
+          // Buton durumunu eski haline getir
+          button.disabled = false;
+          button.innerHTML = '<i class="fas fa-broom me-2"></i> Tekrar Dene';
+          
+          // Tüm işlemler tamamlandı mı kontrol et
+          if (completedCount + failedCount === cleanButtons.length) {
+            // Ana butonu güncelle
+            cleanAllBtn.disabled = false;
+            cleanAllBtn.innerHTML = '<i class="fas fa-broom me-2"></i> Tüm Tehditleri Temizle';
+            
+            // Sonucu göster
+            if (completedCount > 0) {
+              showAlert('warning', `${completedCount} tehdit temizlendi, ${failedCount} tehdit temizlenemedi.`);
+            } else {
+              showAlert('danger', 'Tehditler temizlenirken hata oluştu.');
+            }
+          }
+        });
+      });
+    });
+  }
+  
+  // Bireysel tehdit temizleme butonları
   document.querySelectorAll('.clean-threat-btn').forEach(button => {
     button.addEventListener('click', function(e) {
       e.preventDefault();

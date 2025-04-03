@@ -1,14 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="250" height="60" viewBox="0 0 250 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Shield Background -->
-  <path d="M30 5C30 5 15 10 5 10V30C5 40 15 50 30 55C45 50 55 40 55 30V10C45 10 30 5 30 5Z" fill="#4F46E5" fill-opacity="0.2" stroke="#4F46E5" stroke-width="2"/>
+  <path d="M100 190C100 190 175 155 175 100V35L100 10L25 35V100C25 155 100 190 100 190Z" fill="#4A89DC" fill-opacity="0.9"/>
+  <path d="M100 180C100 180 165 150 165 100V40L100 20L35 40V100C35 150 100 180 100 180Z" fill="#5D9CEC"/>
   
-  <!-- Shield Checkmark -->
-  <path d="M20 30L25 35L40 20" stroke="#4F46E5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Inner Shield Design -->
+  <path d="M100 165C100 165 150 140 150 100V50L100 35L50 50V100C50 140 100 165 100 165Z" fill="#F5F7FA"/>
   
-  <!-- AntiVirüs Text -->
-  <text x="70" y="35" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#4F46E5">AntiVirüs</text>
+  <!-- Shield Border -->
+  <path d="M100 190C100 190 175 155 175 100V35L100 10L25 35V100C25 155 100 190 100 190Z" stroke="#4A89DC" stroke-width="2" fill="none"/>
   
-  <!-- Tagline -->
-  <text x="70" y="50" font-family="Arial, sans-serif" font-size="12" fill="#6B7280">Güvenle Koruma</text>
+  <!-- Virus Symbol -->
+  <g transform="translate(100, 100) scale(0.6)">
+    <!-- Virus Center Circle -->
+    <circle cx="0" cy="0" r="25" fill="#ED5565"/>
+    
+    <!-- Virus Spikes -->
+    <path d="M0 -50 L0 -25 M0 25 L0 50" stroke="#ED5565" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-43.3 -25 L-21.65 -12.5 M21.65 12.5 L43.3 25" stroke="#ED5565" stroke-width="8" stroke-linecap="round"/>
+    <path d="M-43.3 25 L-21.65 12.5 M21.65 -12.5 L43.3 -25" stroke="#ED5565" stroke-width="8" stroke-linecap="round"/>
+    
+    <!-- Virus Small Circles -->
+    <circle cx="0" cy="-50" r="6" fill="#ED5565"/>
+    <circle cx="0" cy="50" r="6" fill="#ED5565"/>
+    <circle cx="-43.3" cy="-25" r="6" fill="#ED5565"/>
+    <circle cx="43.3" cy="25" r="6" fill="#ED5565"/>
+    <circle cx="-43.3" cy="25" r="6" fill="#ED5565"/>
+    <circle cx="43.3" cy="-25" r="6" fill="#ED5565"/>
+  </g>
+  
+  <!-- Checkmark -->
+  <path d="M75 105 L90 120 L125 85" stroke="#A0D468" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

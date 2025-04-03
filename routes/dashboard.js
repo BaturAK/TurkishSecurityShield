@@ -105,9 +105,13 @@ router.get('/scans', async (req, res) => {
     // Kullanıcının tüm taramalarını getir (son 20)
     const scans = await ScanResult.findByUserId(userId, 20);
     
+    // Toplam tarama sayısını al
+    const totalScans = await ScanResult.count({ userId });
+    
     res.render('dashboard/scans', {
       title: 'Taramalar',
-      scans
+      scans,
+      totalScans
     });
   } catch (error) {
     console.error('Taramalar sayfası yüklenirken hata:', error);

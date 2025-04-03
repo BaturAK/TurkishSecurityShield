@@ -1,354 +1,145 @@
-<!-- Tarama Sonuç Başlığı -->
-<div class="scan-header bg-light py-4 border-bottom">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <h1 class="mb-0 fw-bold">
-          <i class="fas <%= scan.type === 'QUICK' ? 'fa-bolt' : (scan.type === 'WIFI' ? 'fa-wifi' : 'fa-shield-alt') %> me-2"></i>
-          <%= scan.type === 'QUICK' ? 'Hızlı Tarama' : (scan.type === 'WIFI' ? 'Wi-Fi Taraması' : 'Tam Tarama') %> Sonucu
-        </h1>
-        <p class="text-muted mb-0">
-          <%= new Date(scan.endTime).toLocaleString('tr-TR') %> tarihinde tamamlandı
-        </p>
-      </div>
-      <div class="col-md-6 text-md-end mt-3 mt-md-0">
-        <a href="/dashboard" class="btn btn-outline-secondary me-2">
-          <i class="fas fa-arrow-left me-2"></i> Kontrol Paneline Dön
-        </a>
-        <button class="btn btn-primary" onclick="location.href='/scan/start?type=<%= scan.type %>'">
-          <i class="fas fa-redo me-2"></i> Yeniden Tara
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Tarama Sonuç Sayfası -->
 
-<!-- Tarama Sonuç İçeriği -->
-<div class="scan-content py-4">
-  <div class="container">
-    <!-- Özet Kartları -->
-    <div class="row mb-4">
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center p-4">
-            <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-search fa-2x"></i>
-            </div>
-            <h3 class="fw-bold"><%= scan.totalScanned %></h3>
-            <p class="text-muted mb-0">Taranan Öğe</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center p-4">
-            <div class="stat-icon <%= scan.threatsFound.length > 0 ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success' %> rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas <%= scan.threatsFound.length > 0 ? 'fa-virus' : 'fa-check' %> fa-2x"></i>
-            </div>
-            <h3 class="fw-bold <%= scan.threatsFound.length > 0 ? 'text-danger' : 'text-success' %>">
-              <%= scan.threatsFound.length %>
-            </h3>
-            <p class="text-muted mb-0">Tespit Edilen Tehdit</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3 mb-4 mb-md-0">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center p-4">
-            <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-clock fa-2x"></i>
-            </div>
-            <h3 class="fw-bold"><%= Math.round(scan.getDuration() / 1000) %> sn</h3>
-            <p class="text-muted mb-0">Tarama Süresi</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body text-center p-4">
-            <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle p-3 mb-3 mx-auto">
-              <i class="fas fa-shield-alt fa-2x"></i>
-            </div>
-            <h3 class="fw-bold text-<%= scan.threatsFound.length === 0 ? 'success' : 'danger' %>">
-              <%= scan.threatsFound.length === 0 ? 'Temiz' : 'Risk' %>
-            </h3>
-            <p class="text-muted mb-0">Genel Durum</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Tarama Detayları ve Tehditler -->
-    <div class="row">
-      <!-- Tarama Detayları -->
-      <div class="col-md-4 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">Tarama Detayları</h5>
-          </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between">
-                  <span>Tarama Tipi</span>
-                  <strong>
-                    <%= scan.type === 'QUICK' ? 'Hızlı Tarama' : (scan.type === 'WIFI' ? 'Wi-Fi Taraması' : 'Tam Tarama') %>
-                  </strong>
-                </div>
-              </li>
-              <li class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between">
-                  <span>Başlangıç Zamanı</span>
-                  <strong><%= new Date(scan.startTime).toLocaleString('tr-TR') %></strong>
-                </div>
-              </li>
-              <li class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between">
-                  <span>Bitiş Zamanı</span>
-                  <strong><%= new Date(scan.endTime).toLocaleString('tr-TR') %></strong>
-                </div>
-              </li>
-              <li class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between">
-                  <span>Taranan Öğe</span>
-                  <strong><%= scan.totalScanned %></strong>
-                </div>
-              </li>
-              <li class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between">
-                  <span>Tespit Edilen Tehdit</span>
-                  <strong class="<%= scan.threatsFound.length > 0 ? 'text-danger' : 'text-success' %>">
-                    <%= scan.threatsFound.length %>
-                  </strong>
-                </div>
-              </li>
-              <li class="list-group-item border-0 px-0">
-                <div class="d-flex justify-content-between">
-                  <span>Tarama Durumu</span>
-                  <strong class="<%= scan.getStatus() === 'COMPLETED' ? 'text-success' : 'text-warning' %>">
-                    <%= scan.getStatus() === 'COMPLETED' ? 'Tamamlandı' : (scan.getStatus() === 'RUNNING' ? 'Devam Ediyor' : 'Başarısız') %>
-                  </strong>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Tespit Edilen Tehditler -->
-      <div class="col-md-8 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">Tespit Edilen Tehditler</h5>
-          </div>
-          <div class="card-body p-0">
-            <% if (scan.threatsFound && scan.threatsFound.length > 0) { %>
-              <div class="list-group list-group-flush">
-                <% scan.threatsFound.forEach(threat => { %>
-                  <div class="list-group-item threat-item severity-<%= threat.severity.toLowerCase() %>">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                      <div>
-                        <h6 class="mb-1 fw-bold text-danger">
-                          <i class="fas <%= threat.type === 'Trojan' ? 'fa-horse' : (threat.type === 'Virus' ? 'fa-virus' : (threat.type === 'Spyware' ? 'fa-eye' : 'fa-bug')) %> me-2"></i>
-                          <%= threat.name %>
-                        </h6>
-                        <p class="mb-1 small text-muted">
-                          <%= threat.type %> | Tehlike: 
-                          <span class="text-<%= threat.severity === 'HIGH' ? 'danger' : (threat.severity === 'MEDIUM' ? 'warning' : 'info') %>">
-                            <%= threat.severity === 'HIGH' ? 'Yüksek' : (threat.severity === 'MEDIUM' ? 'Orta' : 'Düşük') %>
-                          </span>
-                        </p>
-                        <% if (threat.description) { %>
-                          <p class="mb-2 small text-muted">
-                            <%= threat.description %>
-                          </p>
-                        <% } %>
-                        <% if (threat.filePath) { %>
-                          <p class="mb-0 small text-muted text-truncate">
-                            <i class="fas fa-file-alt me-1"></i> <%= threat.filePath %>
-                          </p>
-                        <% } %>
-                      </div>
-                      <div>
-                        <button class="btn btn-sm <%= threat.isCleaned ? 'btn-success disabled' : 'btn-danger' %> clean-threat-btn" 
-                          data-threat-id="<%= threat.id %>" 
-                          <%= threat.isCleaned ? 'disabled' : '' %>>
-                          <i class="fas <%= threat.isCleaned ? 'fa-check' : 'fa-trash-alt' %> me-1"></i>
-                          <%= threat.isCleaned ? 'Temizlendi' : 'Temizle' %>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                <% }); %>
-              </div>
-              
-              <div class="p-3">
-                <button class="btn btn-danger w-100 clean-all-threats-btn">
-                  <i class="fas fa-shield-alt me-2"></i> Tüm Tehditleri Temizle
-                </button>
-              </div>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <% if (scanResult.threatsFound && scanResult.threatsFound.length > 0) { %>
+              <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+              <h2 class="mb-2">Tehditler Tespit Edildi</h2>
+              <p class="text-muted">
+                Tarama sırasında <%= scanResult.threatsFound.length %> tehdit tespit edildi.
+              </p>
             <% } else { %>
-              <div class="text-center p-5">
-                <div class="empty-icon mb-3">
-                  <i class="fas fa-check-circle text-success fa-3x"></i>
-                </div>
-                <h5 class="fw-bold text-success">Tehdit Bulunamadı</h5>
-                <p class="text-muted">Cihazınız temiz ve güvende görünüyor.</p>
-              </div>
+              <i class="fas fa-shield-check fa-3x text-success mb-3"></i>
+              <h2 class="mb-2">Tarama Tamamlandı</h2>
+              <p class="text-muted">
+                Cihazınızda herhangi bir tehdit tespit edilmedi. Cihazınız güvende!
+              </p>
             <% } %>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Tavsiyeler ve Sonraki Adımlar -->
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">Tavsiyeler</h5>
-          </div>
-          <div class="card-body">
-            <% if (scan.threatsFound && scan.threatsFound.length > 0) { %>
-              <div class="alert alert-danger">
-                <h6 class="fw-bold"><i class="fas fa-exclamation-triangle me-2"></i> Güvenlik Tehdidi Tespit Edildi</h6>
-                <p class="mb-0">
-                  Cihazınızda potansiyel güvenlik tehditleri tespit edildi. Bu tehditleri hemen temizlemenizi öneririz.
-                  Temizleme işlemi tamamlandıktan sonra tam bir tarama yaparak cihazınızın güvende olduğundan emin olun.
-                </p>
-              </div>
-              
-              <div class="row mt-4">
-                <div class="col-md-6">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0 text-primary me-3">
-                      <i class="fas fa-shield-alt fa-2x"></i>
-                    </div>
-                    <div>
-                      <h6 class="fw-bold">Güvenlik Önlemleri</h6>
-                      <ul class="text-muted mb-0">
-                        <li>Tüm tespit edilen tehditleri temizleyin</li>
-                        <li>Düzenli olarak cihazınızı güncelleyin</li>
-                        <li>Güvenilir olmayan kaynaklardan uygulama indirmeyin</li>
-                        <li>Gerçek zamanlı korumayı aktif tutun</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="col-md-6 mt-4 mt-md-0">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0 text-success me-3">
-                      <i class="fas fa-check-circle fa-2x"></i>
-                    </div>
-                    <div>
-                      <h6 class="fw-bold">Sonraki Adımlar</h6>
-                      <ul class="text-muted mb-0">
-                        <li>VPN korumasını etkinleştirin</li>
-                        <li>Wi-Fi güvenliğini kontrol edin</li>
-                        <li>Şüpheli uygulamaları kaldırın</li>
-                        <li>Cihazınızı tam taramadan geçirin</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            <% } else { %>
-              <div class="alert alert-success">
-                <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i> Cihazınız Güvende</h6>
-                <p class="mb-0">
-                  Tarama sonucunda herhangi bir tehdit tespit edilmedi. Cihazınız şu anda güvende görünüyor.
-                  Güvenliğinizi sürdürmek için düzenli taramalar yapmaya devam edin.
-                </p>
-              </div>
-              
-              <div class="row mt-4">
-                <div class="col-md-6">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0 text-primary me-3">
-                      <i class="fas fa-shield-alt fa-2x"></i>
-                    </div>
-                    <div>
-                      <h6 class="fw-bold">Korumayı Sürdürün</h6>
-                      <ul class="text-muted mb-0">
-                        <li>Haftada bir tam tarama yapın</li>
-                        <li>Güncelleme ve yamalarınızı kurun</li>
-                        <li>Otomatik taramayı etkinleştirin</li>
-                        <li>Güvenilir kaynaklardan uygulama indirin</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="col-md-6 mt-4 mt-md-0">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0 text-info me-3">
-                      <i class="fas fa-cog fa-2x"></i>
-                    </div>
-                    <div>
-                      <h6 class="fw-bold">Öneriler</h6>
-                      <ul class="text-muted mb-0">
-                        <li>VPN korumasını etkinleştirin</li>
-                        <li>Uygulama kilidini ayarlayın</li>
-                        <li>Wi-Fi güvenliğini kontrol edin</li>
-                        <li>QR Kod tarayıcıyı kullanın</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            <% } %>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Script -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Tüm tehditleri temizleme
-    const cleanAllBtn = document.querySelector('.clean-all-threats-btn');
-    if (cleanAllBtn) {
-      cleanAllBtn.addEventListener('click', function() {
-        if (confirm('Tüm tehditleri temizlemek istediğinizden emin misiniz?')) {
-          this.disabled = true;
-          this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> İşleniyor...';
           
-          fetch('/threats/clean-all', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              scanId: '<%= scan.id %>'
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              showAlert('success', 'Tüm tehditler başarıyla temizlendi!');
-              setTimeout(() => {
-                window.location.reload();
-              }, 1500);
-            } else {
-              showAlert('danger', `Hata: ${data.message}`);
-              this.disabled = false;
-              this.innerHTML = '<i class="fas fa-shield-alt me-2"></i> Tüm Tehditleri Temizle';
-            }
-          })
-          .catch(error => {
-            console.error('Tehdit temizleme hatası:', error);
-            showAlert('danger', 'Bir hata oluştu. Lütfen tekrar deneyin.');
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-shield-alt me-2"></i> Tüm Tehditleri Temizle';
-          });
-        }
-      });
-    }
-  });
-</script>
+          <div class="d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Tarama Tipi:</span>
+              <span class="fw-medium">
+                <% if (scanResult.type === 'QUICK') { %>
+                  <span class="badge bg-primary">Hızlı Tarama</span>
+                <% } else if (scanResult.type === 'FULL') { %>
+                  <span class="badge bg-success">Tam Tarama</span>
+                <% } else if (scanResult.type === 'WIFI') { %>
+                  <span class="badge bg-info">Wi-Fi Tarama</span>
+                <% } else if (scanResult.type === 'QR') { %>
+                  <span class="badge bg-warning">QR Kod Tarama</span>
+                <% } else { %>
+                  <span class="badge bg-secondary"><%= scanResult.type %></span>
+                <% } %>
+              </span>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Başlangıç Zamanı:</span>
+              <span class="fw-medium">
+                <%= new Date(scanResult.startTime).toLocaleString('tr-TR') %>
+              </span>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Bitiş Zamanı:</span>
+              <span class="fw-medium">
+                <%= new Date(scanResult.endTime).toLocaleString('tr-TR') %>
+              </span>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Toplam Süre:</span>
+              <span class="fw-medium">
+                <%= Math.round(scanResult.getDuration() / 1000) %> saniye
+              </span>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Taranan Öğe Sayısı:</span>
+              <span class="fw-medium"><%= scanResult.totalScanned %></span>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-3">
+              <span class="text-muted">Bulunan Tehdit Sayısı:</span>
+              <span class="fw-medium">
+                <% if (scanResult.threatsFound && scanResult.threatsFound.length > 0) { %>
+                  <span class="text-danger fw-bold"><%= scanResult.threatsFound.length %></span>
+                <% } else { %>
+                  <span class="text-success">0</span>
+                <% } %>
+              </span>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-3">
+              <span class="text-muted">Tarama ID:</span>
+              <span class="text-muted small"><%= scanResult.id %></span>
+            </div>
+          </div>
+          
+          <% if (scanResult.threatsFound && scanResult.threatsFound.length > 0) { %>
+            <hr class="my-4">
+            
+            <h4 class="mb-3">Tespit Edilen Tehditler</h4>
+            
+            <div class="threats-list">
+              <% scanResult.threatsFound.forEach((threat, index) => { %>
+                <div class="card threat-card mb-3 border-2 <%= threat.severity === 'HIGH' ? 'border-danger' : (threat.severity === 'MEDIUM' ? 'border-warning' : 'border-info') %>">
+                  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 <%= threat.severity === 'HIGH' ? 'text-danger' : (threat.severity === 'MEDIUM' ? 'text-warning' : 'text-info') %>">
+                      <i class="fas fa-bug me-2"></i> <%= threat.name %>
+                    </h6>
+                    <span class="badge <%= threat.severity === 'HIGH' ? 'bg-danger' : (threat.severity === 'MEDIUM' ? 'bg-warning' : 'bg-info') %> threat-status">
+                      <%= threat.severity === 'HIGH' ? 'Yüksek Risk' : (threat.severity === 'MEDIUM' ? 'Orta Risk' : 'Düşük Risk') %>
+                    </span>
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text mb-3"><%= threat.description %></p>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                      <small class="text-muted">Tehdit Tipi:</small>
+                      <small class="fw-bold"><%= threat.type %></small>
+                    </div>
+                    
+                    <% if (threat.filePath) { %>
+                      <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">Konum:</small>
+                        <small class="text-truncate" style="max-width: 200px;" title="<%= threat.filePath %>">
+                          <%= threat.filePath %>
+                        </small>
+                      </div>
+                    <% } %>
+                    
+                    <button class="btn btn-<%= threat.severity === 'HIGH' ? 'danger' : (threat.severity === 'MEDIUM' ? 'warning' : 'info') %> w-100 clean-threat-btn" data-threat-id="<%= threat.id %>">
+                      <i class="fas fa-broom me-2"></i> Tehdidi Temizle
+                    </button>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+            
+            <div class="d-grid gap-2 mt-4">
+              <button class="btn btn-success clean-all-threats-btn">
+                <i class="fas fa-broom me-2"></i> Tüm Tehditleri Temizle
+              </button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <div class="d-flex justify-content-center gap-3 mt-4">
+        <a href="/dashboard" class="btn btn-primary">
+          <i class="fas fa-tachometer-alt me-2"></i> Dashboard'a Dön
+        </a>
+        <a href="/dashboard/scans" class="btn btn-outline-secondary">
+          <i class="fas fa-list me-2"></i> Tüm Taramalar
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
