@@ -14,36 +14,18 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  # Database
-  mongo_dart: ^0.9.3  # MongoDB sürücüsü
-  
   # State Management
   provider: ^6.1.1
 
   # Local Storage
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
   shared_preferences: ^2.2.1
 
   # UI Components
   cupertino_icons: ^1.0.6
-  intl: ^0.18.1
-  flutter_svg: ^2.0.7
-  lottie: ^2.6.0
-  percent_indicator: ^4.2.3  # İlerleme göstergeleri için
-
+  intl: '>=0.18.1 <0.20.0'
+  
   # Utilities
-  crypto: ^3.0.3
-  device_apps: ^2.2.0
-  permission_handler: ^11.0.0
-  path_provider: ^2.1.1
-  uuid: ^4.1.0
-  workmanager: ^0.5.1
-  flutter_local_notifications: ^16.1.0
-  timezone: ^0.9.2
-  dio: ^5.3.3
-  connectivity_plus: ^5.0.2  # İnternet bağlantısı kontrolü için
-  package_info_plus: ^5.0.1  # Uygulama bilgilerini almak için
+  uuid: ^3.0.7
 
 dev_dependencies:
   flutter_test:

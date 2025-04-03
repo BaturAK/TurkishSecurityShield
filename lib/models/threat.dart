@@ -1,11 +1,11 @@
 enum ThreatType {
+  virus,
   malware,
+  spyware,
   adware,
-  suspiciousPermission,
-  unsafeCommunication,
-  vulnerableApp,
-  riskware,
-  other,
+  rootkit,
+  trojan,
+  ransomware,
 }
 
 enum ThreatSeverity {
@@ -25,89 +25,107 @@ class Threat {
   final String id;
   final String appName;
   final String packageName;
-  final String hash;
+  final String description;
   final ThreatType type;
   final ThreatSeverity severity;
-  final ThreatStatus status;
-  final DateTime detectionTime;
-  final String description;
-  final Map<String, dynamic> details;
+  final String filePath;
+  final int fileSize;
+  final DateTime detectedTime;
+  ThreatStatus status;
 
   Threat({
     required this.id,
     required this.appName,
     required this.packageName,
-    required this.hash,
+    required this.description,
     required this.type,
     required this.severity,
-    required this.status,
-    required this.detectionTime,
-    required this.description,
-    required this.details,
+    required this.filePath,
+    required this.fileSize,
+    required this.detectedTime,
+    this.status = ThreatStatus.detected,
   });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'appName': appName,
-      'packageName': packageName,
-      'hash': hash,
-      'type': type.toString().split('.').last,
-      'severity': severity.toString().split('.').last,
-      'status': status.toString().split('.').last,
-      'detectionTime': detectionTime.toIso8601String(),
-      'description': description,
-      'details': details,
-    };
-  }
 
   factory Threat.fromJson(Map<String, dynamic> json) {
     return Threat(
-      id: json['id'] as String,
-      appName: json['appName'] as String,
-      packageName: json['packageName'] as String,
-      hash: json['hash'] as String,
-      type: ThreatType.values.firstWhere(
-        (e) => e.toString().split('.').last == json['type'],
-        orElse: () => ThreatType.other,
-      ),
-      severity: ThreatSeverity.values.firstWhere(
-        (e) => e.toString().split('.').last == json['severity'],
-        orElse: () => ThreatSeverity.medium,
-      ),
-      status: ThreatStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status'],
-        orElse: () => ThreatStatus.detected,
-      ),
-      detectionTime: DateTime.parse(json['detectionTime'] as String),
-      description: json['description'] as String,
-      details: Map<String, dynamic>.from(json['details'] as Map),
+      id: json['_id'] ?? '',
+      appName: json['appName'] ?? '',
+      packageName: json['packageName'] ?? '',
+      description: json['description'] ?? '',
+      type: _parseThreatType(json['type']),
+      severity: _parseThreatSeverity(json['severity']),
+      filePath: json['filePath'] ?? '',
+      fileSize: json['fileSize'] ?? 0,
+      detectedTime: json['detectedTime'] != null 
+          ? DateTime.parse(json['detectedTime']) 
+          : DateTime.now(),
+      status: _parseThreatStatus(json['status']),
     );
   }
 
-  Threat copyWith({
-    String? id,
-    String? appName,
-    String? packageName,
-    String? hash,
-    ThreatType? type,
-    ThreatSeverity? severity,
-    ThreatStatus? status,
-    DateTime? detectionTime,
-    String? description,
-    Map<String, dynamic>? details,
-  }) {
-    return Threat(
-      id: id ?? this.id,
-      appName: appName ?? this.appName,
-      packageName: packageName ?? this.packageName,
-      hash: hash ?? this.hash,
-      type: type ?? this.type,
-      severity: severity ?? this.severity,
-      status: status ?? this.status,
-      detectionTime: detectionTime ?? this.detectionTime,
-      description: description ?? this.description,
-      details: details ?? this.details,
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'appName': appName,
+      'packageName': packageName,
+      'description': description,
+      'type': type.toString().split('.').last,
+      'severity': severity.toString().split('.').last,
+      'filePath': filePath,
+      'fileSize': fileSize,
+      'detectedTime': detectedTime.toIso8601String(),
+      'status': status.toString().split('.').last,
+    };
+  }
+
+  static ThreatType _parseThreatType(String? type) {
+    if (type == null) return ThreatType.malware;
+
+    switch (type.toLowerCase()) {
+      case 'virus':
+        return ThreatType.virus;
+      case 'spyware':
+        return ThreatType.spyware;
+      case 'adware':
+        return ThreatType.adware;
+      case 'rootkit':
+        return ThreatType.rootkit;
+      case 'trojan':
+        return ThreatType.trojan;
+      case 'ransomware':
+        return ThreatType.ransomware;
+      default:
+        return ThreatType.malware;
+    }
+  }
+
+  static ThreatSeverity _parseThreatSeverity(String? severity) {
+    if (severity == null) return ThreatSeverity.medium;
+
+    switch (severity.toLowerCase()) {
+      case 'high':
+        return ThreatSeverity.high;
+      case 'medium':
+        return ThreatSeverity.medium;
+      case 'low':
+        return ThreatSeverity.low;
+      default:
+        return ThreatSeverity.medium;
+    }
+  }
+
+  static ThreatStatus _parseThreatStatus(String? status) {
+    if (status == null) return ThreatStatus.detected;
+
+    switch (status.toLowerCase()) {
+      case 'quarantined':
+        return ThreatStatus.quarantined;
+      case 'removed':
+        return ThreatStatus.removed;
+      case 'ignored':
+        return ThreatStatus.ignored;
+      default:
+        return ThreatStatus.detected;
+    }
   }
 }

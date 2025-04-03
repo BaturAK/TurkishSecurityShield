@@ -2,58 +2,60 @@ import 'package:flutter/material.dart';
 
 class ScanButton extends StatelessWidget {
   final String title;
+  final String description;
   final IconData icon;
   final Color color;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  
+  final VoidCallback onPressed;
+
   const ScanButton({
     Key? key,
     required this.title,
+    required this.description,
     required this.icon,
     required this.color,
-    this.onPressed,
-    this.isLoading = false,
+    required this.onPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.1),
-        foregroundColor: color,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isLoading)
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
+    return Card(
+      elevation: 2,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 40,
+                color: color,
               ),
-            )
-          else
-            Icon(
-              icon,
-              size: 32,
-              color: color,
-            ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

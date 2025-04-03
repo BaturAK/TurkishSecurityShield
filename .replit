@@ -1,4 +1,4 @@
-modules = ["flutter", "dart"]
+modules = ["flutter", "dart", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
@@ -13,10 +13,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flutter Antivirus App"
+args = "Antivirüs Uygulaması"
 
 [[workflows.workflow]]
-name = "Flutter Antivirus App"
+name = "Antivirüs Uygulaması"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -27,8 +27,12 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "flutter run -d web-server --web-port 5000 --web-hostname 0.0.0.0"
+args = "node index.js"
 waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "flutter run -d web-server --web-port 5000 --web-hostname 0.0.0.0"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80

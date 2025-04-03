@@ -16,76 +16,87 @@ enum ScanStatus {
 
 class ScanResult {
   final String id;
-  final DateTime scanTime;
   final ScanType scanType;
-  final ScanStatus status;
-  final List<Threat> threats;
-  final int scannedItems;
+  final DateTime scanTime;
   final Duration duration;
+  final int scannedItems;
+  final List<Threat> threats;
+  final ScanStatus status;
   final String? errorMessage;
 
   ScanResult({
     required this.id,
-    required this.scanTime,
     required this.scanType,
-    required this.status,
-    required this.threats,
-    required this.scannedItems,
+    required this.scanTime,
     required this.duration,
+    required this.scannedItems,
+    required this.threats,
+    required this.status,
     this.errorMessage,
   });
 
+  factory ScanResult.fromJson(Map<String, dynamic> json) {
+    List<Threat> threatsList = [];
+    if (json['threats'] != null) {
+      threatsList = (json['threats'] as List)
+          .map((threatJson) => Threat.fromJson(threatJson))
+          .toList();
+    }
+
+    return ScanResult(
+      id: json['_id'] ?? '',
+      scanType: _parseScanType(json['scanType']),
+      scanTime: json['scanTime'] != null
+          ? DateTime.parse(json['scanTime'])
+          : DateTime.now(),
+      duration: Duration(milliseconds: json['durationMs'] ?? 0),
+      scannedItems: json['scannedItems'] ?? 0,
+      threats: threatsList,
+      status: _parseScanStatus(json['status']),
+      errorMessage: json['errorMessage'],
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'scanTime': scanTime.toIso8601String(),
+      '_id': id,
       'scanType': scanType.toString().split('.').last,
-      'status': status.toString().split('.').last,
-      'threats': threats.map((threat) => threat.toJson()).toList(),
+      'scanTime': scanTime.toIso8601String(),
+      'durationMs': duration.inMilliseconds,
       'scannedItems': scannedItems,
-      'duration': duration.inMilliseconds,
+      'threats': threats.map((threat) => threat.toJson()).toList(),
+      'status': status.toString().split('.').last,
       'errorMessage': errorMessage,
     };
   }
 
-  factory ScanResult.fromJson(Map<String, dynamic> json) {
-    return ScanResult(
-      id: json['id'] as String,
-      scanTime: DateTime.parse(json['scanTime'] as String),
-      scanType: ScanType.values.firstWhere(
-        (e) => e.toString().split('.').last == json['scanType'],
-      ),
-      status: ScanStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status'],
-      ),
-      threats: (json['threats'] as List)
-          .map((e) => Threat.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
-      scannedItems: json['scannedItems'] as int,
-      duration: Duration(milliseconds: json['duration'] as int),
-      errorMessage: json['errorMessage'] as String?,
-    );
+  static ScanType _parseScanType(String? type) {
+    if (type == null) return ScanType.quick;
+
+    switch (type.toLowerCase()) {
+      case 'full':
+        return ScanType.full;
+      case 'app':
+        return ScanType.app;
+      case 'background':
+        return ScanType.background;
+      default:
+        return ScanType.quick;
+    }
   }
 
-  ScanResult copyWith({
-    String? id,
-    DateTime? scanTime,
-    ScanType? scanType,
-    ScanStatus? status,
-    List<Threat>? threats,
-    int? scannedItems,
-    Duration? duration,
-    String? errorMessage,
-  }) {
-    return ScanResult(
-      id: id ?? this.id,
-      scanTime: scanTime ?? this.scanTime,
-      scanType: scanType ?? this.scanType,
-      status: status ?? this.status,
-      threats: threats ?? this.threats,
-      scannedItems: scannedItems ?? this.scannedItems,
-      duration: duration ?? this.duration,
-      errorMessage: errorMessage ?? this.errorMessage,
-    );
+  static ScanStatus _parseScanStatus(String? status) {
+    if (status == null) return ScanStatus.completed;
+
+    switch (status.toLowerCase()) {
+      case 'notstarted':
+        return ScanStatus.notStarted;
+      case 'inprogress':
+        return ScanStatus.inProgress;
+      case 'failed':
+        return ScanStatus.failed;
+      default:
+        return ScanStatus.completed;
+    }
   }
 }

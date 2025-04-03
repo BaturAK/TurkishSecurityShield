@@ -3,25 +3,43 @@ class AppInfo {
   final String appName;
   final String versionName;
   final int versionCode;
-  final String apkPath;
+  final String installDate;
+  final String updateDate;
+  final String appSize;
   final bool isSystemApp;
-  final String installTime;
-  final String lastUpdateTime;
-  final List<String> permissions;
-  final String hash;
+  final String permissions;
+  final String appIcon;
+  final bool isRunning;
 
   AppInfo({
     required this.packageName,
     required this.appName,
     required this.versionName,
     required this.versionCode,
-    required this.apkPath,
+    required this.installDate,
+    required this.updateDate,
+    required this.appSize,
     required this.isSystemApp,
-    required this.installTime,
-    required this.lastUpdateTime,
     required this.permissions,
-    required this.hash,
+    required this.appIcon,
+    required this.isRunning,
   });
+
+  factory AppInfo.fromJson(Map<String, dynamic> json) {
+    return AppInfo(
+      packageName: json['packageName'] ?? '',
+      appName: json['appName'] ?? '',
+      versionName: json['versionName'] ?? '',
+      versionCode: json['versionCode'] ?? 0,
+      installDate: json['installDate'] ?? '',
+      updateDate: json['updateDate'] ?? '',
+      appSize: json['appSize'] ?? '',
+      isSystemApp: json['isSystemApp'] ?? false,
+      permissions: json['permissions'] ?? '',
+      appIcon: json['appIcon'] ?? '',
+      isRunning: json['isRunning'] ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -29,27 +47,13 @@ class AppInfo {
       'appName': appName,
       'versionName': versionName,
       'versionCode': versionCode,
-      'apkPath': apkPath,
+      'installDate': installDate,
+      'updateDate': updateDate,
+      'appSize': appSize,
       'isSystemApp': isSystemApp,
-      'installTime': installTime,
-      'lastUpdateTime': lastUpdateTime,
       'permissions': permissions,
-      'hash': hash,
+      'appIcon': appIcon,
+      'isRunning': isRunning,
     };
-  }
-
-  factory AppInfo.fromJson(Map<String, dynamic> json) {
-    return AppInfo(
-      packageName: json['packageName'] as String,
-      appName: json['appName'] as String,
-      versionName: json['versionName'] as String,
-      versionCode: json['versionCode'] as int,
-      apkPath: json['apkPath'] as String,
-      isSystemApp: json['isSystemApp'] as bool,
-      installTime: json['installTime'] as String,
-      lastUpdateTime: json['lastUpdateTime'] as String,
-      permissions: List<String>.from(json['permissions']),
-      hash: json['hash'] as String,
-    );
   }
 }
