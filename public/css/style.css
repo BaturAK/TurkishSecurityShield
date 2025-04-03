@@ -1,0 +1,218 @@
+/**
+ * AntiVirüs Uygulaması Ana CSS Dosyası
+ */
+
+/* Genel Stiller */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Header Stiller */
+.navbar {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: #0066cc !important;
+}
+
+/* Ana Sayfa Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #0066cc 0%, #004999 100%);
+  color: white;
+  padding: 80px 0;
+}
+
+/* Kartlar */
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: none;
+  transition: transform 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  padding: 15px 20px;
+}
+
+/* Butonlar */
+.btn-primary {
+  background-color: #0066cc;
+  border-color: #0066cc;
+}
+
+.btn-primary:hover {
+  background-color: #0055aa;
+  border-color: #0055aa;
+}
+
+.btn-outline-primary {
+  color: #0066cc;
+  border-color: #0066cc;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0066cc;
+  color: white;
+}
+
+/* Tehdit Kartları */
+.threat-card {
+  border-left: 4px solid;
+}
+
+.threat-card.high {
+  border-color: #dc3545;
+}
+
+.threat-card.medium {
+  border-color: #fd7e14;
+}
+
+.threat-card.low {
+  border-color: #0dcaf0;
+}
+
+/* Tarama Özeti */
+.scan-summary {
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* İstatistik Kartları */
+.stat-card {
+  text-align: center;
+  padding: 20px;
+}
+
+.stat-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #0066cc;
+}
+
+.stat-card .count {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-card .label {
+  color: #6c757d;
+}
+
+/* Tarama Seçenek Kartları */
+.scan-option {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.scan-option:hover {
+  background-color: #f8f9fa;
+}
+
+.scan-option.selected {
+  border: 2px solid #0066cc;
+  background-color: #e6f2ff;
+}
+
+/* Animasyonlar */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Footer */
+footer {
+  background-color: #343a40;
+  color: white;
+  padding: 40px 0 20px;
+}
+
+footer a {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+footer a:hover {
+  color: white;
+}
+
+/* Kullanıcı Profil Dropdown */
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Dashboard Kartları */
+.feature-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.feature-icon i {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.feature-icon.bg-primary {
+  background-color: #0066cc !important;
+}
+
+.feature-icon.bg-success {
+  background-color: #198754 !important;
+}
+
+.feature-icon.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.feature-icon.bg-warning {
+  background-color: #fd7e14 !important;
+}
+
+/* Mobil Uyumlu Düzenlemeler */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 40px 0;
+  }
+  
+  .hero-section h1 {
+    font-size: 2rem;
+  }
+  
+  .stat-card .count {
+    font-size: 1.5rem;
+  }
+}

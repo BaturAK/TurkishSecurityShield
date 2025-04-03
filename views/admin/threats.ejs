@@ -1,0 +1,393 @@
+<!-- Admin Header -->
+<div class="row mb-4">
+  <div class="col-lg-12">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0">
+            <div class="bg-danger text-white rounded-circle p-3" style="width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-bug fa-2x"></i>
+            </div>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <h2 class="mb-1">Tehdit Yönetimi</h2>
+            <p class="text-muted mb-0">Tehdit veritabanını görüntüle ve yönet</p>
+          </div>
+          <div>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addThreatModal">
+              <i class="fas fa-plus me-2"></i>Yeni Tehdit Ekle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Threat Database -->
+<div class="row mb-4">
+  <div class="col-lg-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Tehdit Veritabanı</h5>
+        <div class="d-flex gap-2">
+          <div class="input-group" style="width: 300px;">
+            <input type="text" class="form-control" placeholder="Tehdit ara..." id="searchThreat">
+            <button class="btn btn-outline-secondary" type="button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              Filtrele
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><h6 class="dropdown-header">Tehdit Tipi</h6></li>
+              <li><a class="dropdown-item" href="#">Tümü</a></li>
+              <li><a class="dropdown-item" href="#">Virüs</a></li>
+              <li><a class="dropdown-item" href="#">Trojan</a></li>
+              <li><a class="dropdown-item" href="#">Spyware</a></li>
+              <li><a class="dropdown-item" href="#">Adware</a></li>
+              
+              <li><hr class="dropdown-divider"></li>
+              <li><h6 class="dropdown-header">Tehdit Seviyesi</h6></li>
+              <li><a class="dropdown-item" href="#">Tümü</a></li>
+              <li><a class="dropdown-item" href="#">Düşük</a></li>
+              <li><a class="dropdown-item" href="#">Orta</a></li>
+              <li><a class="dropdown-item" href="#">Yüksek</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Tehdit Adı</th>
+                <th>Tip</th>
+                <th>Tehlike Seviyesi</th>
+                <th>Tespit Tarihi</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% threats.forEach(threat => { %>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="flex-shrink-0">
+                        <% if (threat.type === 'Trojan') { %>
+                          <i class="fas fa-horse-head text-danger fa-lg"></i>
+                        <% } else if (threat.type === 'Spyware') { %>
+                          <i class="fas fa-user-secret text-warning fa-lg"></i>
+                        <% } else if (threat.type === 'Adware') { %>
+                          <i class="fas fa-ad text-primary fa-lg"></i>
+                        <% } else { %>
+                          <i class="fas fa-virus text-danger fa-lg"></i>
+                        <% } %>
+                      </div>
+                      <div class="flex-grow-1 ms-2">
+                        <h6 class="mb-0"><%= threat.name %></h6>
+                        <small class="text-muted">ID: <%= threat.id %></small>
+                      </div>
+                    </div>
+                  </td>
+                  <td><%= threat.type %></td>
+                  <td>
+                    <span class="badge <%= threat.severity === 'Yüksek' ? 'bg-danger' : (threat.severity === 'Orta' ? 'bg-warning' : 'bg-info') %>">
+                      <%= threat.severity %>
+                    </span>
+                  </td>
+                  <td><%= new Date(threat.detectionDate).toLocaleDateString('tr-TR') %></td>
+                  <td>
+                    <% if (threat.isCleaned) { %>
+                      <span class="badge bg-success">Temizlendi</span>
+                    <% } else { %>
+                      <span class="badge bg-danger">Aktif</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        İşlemler
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/threats/<%= threat.id %>"><i class="fas fa-eye me-2"></i>Detaylar</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editThreatModal" data-threat-id="<%= threat.id %>"><i class="fas fa-edit me-2"></i>Düzenle</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-success" href="#"><i class="fas fa-shield-alt me-2"></i>İmzayı Güncelle</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteThreatModal" data-threat-id="<%= threat.id %>"><i class="fas fa-trash me-2"></i>Sil</a></li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted">Toplam <%= threats.length %> tehdit</span>
+        </div>
+        <nav aria-label="Page navigation">
+          <ul class="pagination mb-0">
+            <li class="page-item disabled">
+              <a class="page-link" href="#" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+              <a class="page-link" href="#" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Threat Statistics -->
+<div class="row">
+  <!-- Threat Types Chart -->
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Tehdit Tipleri</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="threatTypesChart" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Detection Timeline -->
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Tespit Zaman Çizelgesi</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="detectionTimelineChart" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<!-- Add Threat Modal -->
+<div class="modal fade" id="addThreatModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Yeni Tehdit Ekle</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addThreatForm">
+          <div class="mb-3">
+            <label for="threatName" class="form-label">Tehdit Adı</label>
+            <input type="text" class="form-control" id="threatName" required>
+          </div>
+          <div class="mb-3">
+            <label for="threatType" class="form-label">Tip</label>
+            <select class="form-select" id="threatType" required>
+              <option value="" selected disabled>Seç...</option>
+              <option value="virus">Virüs</option>
+              <option value="trojan">Trojan</option>
+              <option value="spyware">Spyware</option>
+              <option value="adware">Adware</option>
+              <option value="ransomware">Ransomware</option>
+              <option value="rootkit">Rootkit</option>
+              <option value="other">Diğer</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="threatSeverity" class="form-label">Tehlike Seviyesi</label>
+            <select class="form-select" id="threatSeverity" required>
+              <option value="" selected disabled>Seç...</option>
+              <option value="high">Yüksek</option>
+              <option value="medium">Orta</option>
+              <option value="low">Düşük</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="threatDescription" class="form-label">Açıklama</label>
+            <textarea class="form-control" id="threatDescription" rows="3" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="threatSignature" class="form-label">İmza (Pattern)</label>
+            <input type="text" class="form-control" id="threatSignature" placeholder="İmza paterni...">
+            <div class="form-text">Tespitte kullanılacak imza paterni.</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-danger">Tehdit Ekle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Threat Modal -->
+<div class="modal fade" id="editThreatModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tehdidi Düzenle</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editThreatForm">
+          <div class="mb-3">
+            <label for="editThreatName" class="form-label">Tehdit Adı</label>
+            <input type="text" class="form-control" id="editThreatName" value="Trojan.Win32.Generic" required>
+          </div>
+          <div class="mb-3">
+            <label for="editThreatType" class="form-label">Tip</label>
+            <select class="form-select" id="editThreatType" required>
+              <option value="virus">Virüs</option>
+              <option value="trojan" selected>Trojan</option>
+              <option value="spyware">Spyware</option>
+              <option value="adware">Adware</option>
+              <option value="ransomware">Ransomware</option>
+              <option value="rootkit">Rootkit</option>
+              <option value="other">Diğer</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="editThreatSeverity" class="form-label">Tehlike Seviyesi</label>
+            <select class="form-select" id="editThreatSeverity" required>
+              <option value="high" selected>Yüksek</option>
+              <option value="medium">Orta</option>
+              <option value="low">Düşük</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="editThreatDescription" class="form-label">Açıklama</label>
+            <textarea class="form-control" id="editThreatDescription" rows="3" required>Bu trojan, sisteme izinsiz erişim sağlar ve kullanıcı verilerini çalabilir.</textarea>
+          </div>
+          <div class="mb-3">
+            <label for="editThreatSignature" class="form-label">İmza (Pattern)</label>
+            <input type="text" class="form-control" id="editThreatSignature" value="48 65 6C 6C 6F 20 57 6F 72 6C 64">
+          </div>
+          <div class="mb-3">
+            <label for="editThreatStatus" class="form-label">Durum</label>
+            <select class="form-select" id="editThreatStatus">
+              <option value="active" selected>Aktif</option>
+              <option value="cleaned">Temizlendi</option>
+              <option value="quarantined">Karantinada</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-danger">Değişiklikleri Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Threat Modal -->
+<div class="modal fade" id="deleteThreatModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tehdidi Sil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+          <h5>Bu tehdidi silmek istediğinizden emin misiniz?</h5>
+          <p class="text-muted">Bu işlem geri alınamaz ve bu tehdide ait tüm kayıtlar silinecektir.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-danger">Kalıcı Olarak Sil</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts.js için -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tehdit Tipleri Grafiği
+    const typesCtx = document.getElementById('threatTypesChart').getContext('2d');
+    const typesData = {
+      labels: ['Trojan', 'Virüs', 'Spyware', 'Adware', 'Ransomware', 'Diğer'],
+      datasets: [{
+        label: 'Tehdit Sayısı',
+        data: [10, 5, 7, 12, 3, 2],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(153, 102, 255, 0.7)',
+          'rgba(201, 203, 207, 0.7)'
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(201, 203, 207, 1)'
+        ],
+        borderWidth: 1
+      }]
+    };
+    
+    new Chart(typesCtx, {
+      type: 'doughnut',
+      data: typesData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+    
+    // Tespit Zaman Çizelgesi Grafiği
+    const timelineCtx = document.getElementById('detectionTimelineChart').getContext('2d');
+    const timelineData = {
+      labels: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran'],
+      datasets: [{
+        label: 'Tespit Edilen Tehditler',
+        data: [12, 19, 8, 15, 25, 17],
+        fill: false,
+        borderColor: 'rgba(255, 99, 132, 1)',
+        tension: 0.4
+      }]
+    };
+    
+    new Chart(timelineCtx, {
+      type: 'line',
+      data: timelineData,
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  });
+</script>

@@ -1,0 +1,215 @@
+<section class="pt-2 pb-5">
+  <div class="container">
+    <!-- Ana Banner -->
+    <div class="row align-items-center py-4 mb-5">
+      <div class="col-lg-6 text-center text-lg-start mb-4 mb-lg-0">
+        <h1 class="display-4 fw-bold mb-3">Cihazınızı Güvende<br>Tutuyoruz!</h1>
+        <p class="lead mb-4">
+          AntiVirüs Uygulaması ile cihazınızı zararlı yazılımlara karşı koruyun. 
+          Gelişmiş tarama özellikleri, WiFi güvenliği ve güvenli QR tarama ile 
+          eksiksiz koruma sağlıyoruz.
+        </p>
+        <div class="d-flex gap-2 justify-content-center justify-content-lg-start">
+          <% if (!user) { %>
+            <a href="/auth/register" class="btn btn-primary btn-lg">
+              <i class="fas fa-user-plus me-2"></i> Kayıt Ol
+            </a>
+            <a href="/auth/login" class="btn btn-outline-primary btn-lg">
+              <i class="fas fa-sign-in-alt me-2"></i> Giriş Yap
+            </a>
+          <% } else { %>
+            <a href="/dashboard" class="btn btn-primary btn-lg">
+              <i class="fas fa-tachometer-alt me-2"></i> Kontrol Paneline Git
+            </a>
+            <a href="/scan/new" class="btn btn-success btn-lg">
+              <i class="fas fa-shield-alt me-2"></i> Yeni Tarama
+            </a>
+          <% } %>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center">
+        <img src="/img/antivirus-hero.svg" alt="AntiVirüs Koruma" class="img-fluid" style="max-height: 400px;">
+      </div>
+    </div>
+
+    <!-- Özellikler -->
+    <h2 class="text-center fw-bold mb-5">Öne Çıkan Özellikler</h2>
+    <div class="row g-4 mb-5">
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-primary d-inline-flex mb-3">
+              <i class="fas fa-shield-alt text-white"></i>
+            </div>
+            <h4 class="card-title">Gerçek Zamanlı Koruma</h4>
+            <p class="card-text text-muted">
+              Cihazınız için sürekli koruma. Uygulama, sisteminizi sürekli olarak izler ve tehdit oluştuğunda anında müdahale eder.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-success d-inline-flex mb-3">
+              <i class="fas fa-wifi text-white"></i>
+            </div>
+            <h4 class="card-title">WiFi Tarayıcı</h4>
+            <p class="card-text text-muted">
+              Bağlandığınız kablosuz ağları analiz eder ve potansiyel güvenlik açıklarını tespit ederek sizi bilgilendirir.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-danger d-inline-flex mb-3">
+              <i class="fas fa-qrcode text-white"></i>
+            </div>
+            <h4 class="card-title">Güvenli QR Tarama</h4>
+            <p class="card-text text-muted">
+              QR kodların içeriğini, açmadan önce güvenlik tehditleri için tarar ve güvenli olmayan bağlantılardan sizi korur.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-warning d-inline-flex mb-3">
+              <i class="fas fa-lock text-white"></i>
+            </div>
+            <h4 class="card-title">Uygulama Kilidi</h4>
+            <p class="card-text text-muted">
+              Gizlilik gerektiren uygulamalarınızı şifre veya biyometrik kimlik doğrulama ile koruyarak izinsiz erişimi engeller.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-info d-inline-flex mb-3">
+              <i class="fas fa-tachometer-alt text-white"></i>
+            </div>
+            <h4 class="card-title">Sistem Optimizasyonu</h4>
+            <p class="card-text text-muted">
+              Cihazınızın performansını artırmak için gereksiz dosyaları temizler ve sistem kaynakları optimizasyonu sağlar.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100 feature-card">
+          <div class="card-body text-center p-4">
+            <div class="feature-icon bg-secondary d-inline-flex mb-3">
+              <i class="fas fa-globe text-white"></i>
+            </div>
+            <h4 class="card-title">VPN Hizmeti</h4>
+            <p class="card-text text-muted">
+              Güvenli, şifrelenmiş internet bağlantısı sağlayarak verilerinizi korur ve çevrimiçi gizliliğinizi artırır.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kullanıcı Yorumları -->
+    <h2 class="text-center fw-bold mb-5">Kullanıcı Görüşleri</h2>
+    <div class="row mb-5">
+      <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+              <div class="avatar me-3">
+                <img src="/img/testimonial-1.jpg" class="rounded-circle" width="50" height="50" alt="Avatar">
+              </div>
+              <div>
+                <h5 class="mb-0">Ahmet Yılmaz</h5>
+                <div class="text-warning mb-1">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                </div>
+              </div>
+            </div>
+            <p class="testimonial-text fst-italic text-muted">
+              "Bu antivirüs uygulaması, telefonumun hızını düşürmeden mükemmel koruma sağlıyor. Özellikle QR kod tarayıcısı çok kullanışlı, artık QR kodları güvenle tarayabiliyorum."
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+              <div class="avatar me-3">
+                <img src="/img/testimonial-2.jpg" class="rounded-circle" width="50" height="50" alt="Avatar">
+              </div>
+              <div>
+                <h5 class="mb-0">Ayşe Demir</h5>
+                <div class="text-warning mb-1">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star-half-alt"></i>
+                </div>
+              </div>
+            </div>
+            <p class="testimonial-text fst-italic text-muted">
+              "VPN özelliği ve WiFi güvenlik taraması sayesinde halka açık ağlarda bile güvende hissediyorum. Bataryayı da çok az tüketiyor, kesinlikle tavsiye ederim."
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+              <div class="avatar me-3">
+                <img src="/img/testimonial-3.jpg" class="rounded-circle" width="50" height="50" alt="Avatar">
+              </div>
+              <div>
+                <h5 class="mb-0">Mehmet Kaya</h5>
+                <div class="text-warning mb-1">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                </div>
+              </div>
+            </div>
+            <p class="testimonial-text fst-italic text-muted">
+              "Uygulama kilidi özelliği çok kullanışlı, artık özel uygulamalarım için ekstra güvenlik sağlıyorum. Arayüzü de oldukça kullanıcı dostu ve sezgisel."
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Son CTA -->
+    <div class="p-5 text-center bg-light rounded-3 shadow-sm mb-5">
+      <h2 class="fw-bold mb-3">Cihazınızı Hemen Korumaya Alın</h2>
+      <p class="lead mb-4 mx-auto" style="max-width: 700px;">
+        AntiVirüs Uygulaması ile cihazınızın güvenliğini en üst seviyeye taşıyın. 
+        Hemen üye olun ve gelişmiş özelliklere erişin.
+      </p>
+      <div class="d-inline-flex gap-2">
+        <% if (!user) { %>
+          <a href="/auth/register" class="btn btn-primary btn-lg">
+            <i class="fas fa-shield-alt me-2"></i> Ücretsiz Başlayın
+          </a>
+        <% } else { %>
+          <a href="/dashboard" class="btn btn-primary btn-lg">
+            <i class="fas fa-tachometer-alt me-2"></i> Kontrol Paneline Git
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
