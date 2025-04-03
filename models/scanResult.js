@@ -25,8 +25,8 @@ class ScanResult {
   constructor(id, type, startTime, endTime = null, totalScanned = 0, threatsFound = [], userId = null) {
     this.id = id || uuidv4();
     this.type = type;
-    this.startTime = startTime instanceof Date ? startTime : new Date(startTime);
-    this.endTime = endTime instanceof Date ? endTime : (endTime ? new Date(endTime) : null);
+    this.startTime = startTime || new Date();
+    this.endTime = endTime;
     this.totalScanned = totalScanned;
     this.threatsFound = threatsFound;
     this.userId = userId;
@@ -43,9 +43,12 @@ class ScanResult {
       startTime: this.startTime,
       endTime: this.endTime,
       totalScanned: this.totalScanned,
-      threatsFound: this.threatsFound.map(threat => typeof threat.toJSON === 'function' ? threat.toJSON() : threat),
+      threatsFound: this.threatsFound.map(threat => 
+        typeof threat.toJSON === 'function' ? threat.toJSON() : threat
+      ),
       userId: this.userId,
-      status: this.getStatus()
+      status: this.getStatus(),
+      duration: this.getDuration()
     };
   }
 
@@ -54,15 +57,8 @@ class ScanResult {
    * @returns {string} - Tarama durumu (RUNNING, COMPLETED, FAILED)
    */
   getStatus() {
-    if (!this.endTime) {
-      return 'RUNNING';
-    }
-    
-    if (this.endTime && this.totalScanned > 0) {
-      return 'COMPLETED';
-    }
-    
-    return 'FAILED';
+    if (!this.endTime) return 'RUNNING';
+    return this.threatsFound ? 'COMPLETED' : 'FAILED';
   }
 
   /**
@@ -70,12 +66,10 @@ class ScanResult {
    * @returns {number} - Tarama süresi
    */
   getDuration() {
-    if (!this.startTime) {
-      return 0;
-    }
+    if (!this.startTime) return 0;
     
     const endTime = this.endTime || new Date();
-    return endTime - this.startTime;
+    return endTime.getTime() - this.startTime.getTime();
   }
 
   /**
@@ -87,6 +81,7 @@ class ScanResult {
     this.endTime = new Date();
     this.totalScanned = totalScanned;
     this.threatsFound = threatsFound;
+    return this;
   }
 
   /**
@@ -94,30 +89,30 @@ class ScanResult {
    * @returns {Promise<boolean>} - Kaydetme işlemi başarılı ise true döner
    */
   async save() {
-    try {
-      const db = getDb();
-      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı yok');
 
-      const collection = db.collection('scans');
+    try {
+      const scanCollection = db.collection('scanResults');
       
-      // Taramanın daha önce kaydedilip kaydedilmediğini kontrol et
-      const existingScan = await collection.findOne({ id: this.id });
+      // Mevcut taramayı kontrol et
+      const existingScan = await scanCollection.findOne({ id: this.id });
       
       if (existingScan) {
-        // Tarama güncelleme
-        await collection.updateOne(
+        // Tarama var, güncelle
+        const result = await scanCollection.updateOne(
           { id: this.id },
           { $set: this.toJSON() }
         );
+        return result.modifiedCount > 0;
       } else {
-        // Yeni tarama ekleme
-        await collection.insertOne(this.toJSON());
+        // Yeni tarama ekle
+        const result = await scanCollection.insertOne(this.toJSON());
+        return !!result.insertedId;
       }
-      
-      return true;
     } catch (error) {
-      console.error('Tarama sonucu kaydetme hatası:', error);
-      return false;
+      console.error('Tarama sonucu kaydederken hata:', error);
+      throw error;
     }
   }
 
@@ -127,14 +122,28 @@ class ScanResult {
    * @returns {Promise<ScanResult|null>} - Bulunan tarama sonucu, yoksa null
    */
   static async findById(id) {
-    try {
-      const db = getDb();
-      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı yok');
 
-      const collection = db.collection('scans');
-      const scanData = await collection.findOne({ id });
+    try {
+      const scanCollection = db.collection('scanResults');
+      const scanData = await scanCollection.findOne({ id });
       
       if (!scanData) return null;
+      
+      // Tehdit nesnelerini oluştur
+      const threatsFound = scanData.threatsFound.map(threatData => 
+        new Threat(
+          threatData.id,
+          threatData.name,
+          threatData.type,
+          threatData.description,
+          threatData.severity,
+          threatData.filePath,
+          threatData.isCleaned,
+          new Date(threatData.detectionDate)
+        )
+      );
       
       return new ScanResult(
         scanData.id,
@@ -142,12 +151,12 @@ class ScanResult {
         new Date(scanData.startTime),
         scanData.endTime ? new Date(scanData.endTime) : null,
         scanData.totalScanned,
-        scanData.threatsFound,
+        threatsFound,
         scanData.userId
       );
     } catch (error) {
-      console.error('Tarama sonucu bulma hatası:', error);
-      return null;
+      console.error('ID ile tarama sonucu arama hatası:', error);
+      throw error;
     }
   }
 
@@ -158,28 +167,45 @@ class ScanResult {
    * @returns {Promise<ScanResult[]>} - Tarama sonuçları dizisi
    */
   static async findByUserId(userId, limit = 10) {
-    try {
-      const db = getDb();
-      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı yok');
 
-      const collection = db.collection('scans');
-      const scansData = await collection.find({ userId })
+    try {
+      const scanCollection = db.collection('scanResults');
+      const scansData = await scanCollection
+        .find({ userId })
         .sort({ startTime: -1 })
         .limit(limit)
         .toArray();
       
-      return scansData.map(scanData => new ScanResult(
-        scanData.id,
-        scanData.type,
-        new Date(scanData.startTime),
-        scanData.endTime ? new Date(scanData.endTime) : null,
-        scanData.totalScanned,
-        scanData.threatsFound,
-        scanData.userId
-      ));
+      return scansData.map(scanData => {
+        // Tehdit nesnelerini oluştur
+        const threatsFound = scanData.threatsFound.map(threatData => 
+          new Threat(
+            threatData.id,
+            threatData.name,
+            threatData.type,
+            threatData.description,
+            threatData.severity,
+            threatData.filePath,
+            threatData.isCleaned,
+            new Date(threatData.detectionDate)
+          )
+        );
+        
+        return new ScanResult(
+          scanData.id,
+          scanData.type,
+          new Date(scanData.startTime),
+          scanData.endTime ? new Date(scanData.endTime) : null,
+          scanData.totalScanned,
+          threatsFound,
+          scanData.userId
+        );
+      });
     } catch (error) {
-      console.error('Kullanıcı tarama sonuçları getirme hatası:', error);
-      return [];
+      console.error('Kullanıcı ID ile tarama sonuçları arama hatası:', error);
+      throw error;
     }
   }
 
@@ -189,28 +215,45 @@ class ScanResult {
    * @returns {Promise<ScanResult[]>} - Tarama sonuçları dizisi
    */
   static async findRecent(limit = 10) {
-    try {
-      const db = getDb();
-      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı yok');
 
-      const collection = db.collection('scans');
-      const scansData = await collection.find()
+    try {
+      const scanCollection = db.collection('scanResults');
+      const scansData = await scanCollection
+        .find()
         .sort({ startTime: -1 })
         .limit(limit)
         .toArray();
       
-      return scansData.map(scanData => new ScanResult(
-        scanData.id,
-        scanData.type,
-        new Date(scanData.startTime),
-        scanData.endTime ? new Date(scanData.endTime) : null,
-        scanData.totalScanned,
-        scanData.threatsFound,
-        scanData.userId
-      ));
+      return scansData.map(scanData => {
+        // Tehdit nesnelerini oluştur
+        const threatsFound = scanData.threatsFound.map(threatData => 
+          new Threat(
+            threatData.id,
+            threatData.name,
+            threatData.type,
+            threatData.description,
+            threatData.severity,
+            threatData.filePath,
+            threatData.isCleaned,
+            new Date(threatData.detectionDate)
+          )
+        );
+        
+        return new ScanResult(
+          scanData.id,
+          scanData.type,
+          new Date(scanData.startTime),
+          scanData.endTime ? new Date(scanData.endTime) : null,
+          scanData.totalScanned,
+          threatsFound,
+          scanData.userId
+        );
+      });
     } catch (error) {
-      console.error('Son tarama sonuçları getirme hatası:', error);
-      return [];
+      console.error('Son tarama sonuçlarını getirme hatası:', error);
+      throw error;
     }
   }
 
@@ -220,15 +263,15 @@ class ScanResult {
    * @returns {Promise<number>} - Tarama sayısı
    */
   static async count(filter = {}) {
-    try {
-      const db = getDb();
-      if (!db) throw new Error('Veritabanı bağlantısı bulunamadı');
+    const db = getDb();
+    if (!db) throw new Error('Veritabanı bağlantısı yok');
 
-      const collection = db.collection('scans');
-      return await collection.countDocuments(filter);
+    try {
+      const scanCollection = db.collection('scanResults');
+      return await scanCollection.countDocuments(filter);
     } catch (error) {
-      console.error('Tarama sayısı getirme hatası:', error);
-      return 0;
+      console.error('Tarama sayma hatası:', error);
+      throw error;
     }
   }
 
@@ -239,51 +282,25 @@ class ScanResult {
    * @returns {ScanResult} - Simüle edilmiş tarama sonucu
    */
   static createSimulatedScan(type, userId = null) {
-    // Tarama başlangıç zamanı (şimdi)
     const startTime = new Date();
+    startTime.setMinutes(startTime.getMinutes() - Math.floor(Math.random() * 10));
     
-    // Tarama tipi
-    const scanType = type.toUpperCase();
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + Math.floor(Math.random() * 5) + 1);
     
-    // Oluşturulacak tehdit sayısı (rastgele)
-    const threatCount = scanType === 'QUICK' 
-      ? Math.floor(Math.random() * 3) // 0-2 tehdit
-      : scanType === 'FULL' 
-        ? Math.floor(Math.random() * 5) + 1 // 1-5 tehdit
-        : scanType === 'WIFI' 
-          ? Math.floor(Math.random() * 2) // 0-1 tehdit
-          : Math.floor(Math.random() * 2); // 0-1 tehdit
+    const totalScanned = Math.floor(Math.random() * 500) + 100;
     
-    // Rastgele tehditler
-    const threats = Threat.getRandomThreats(threatCount);
+    // Rastgele tehditler oluştur
+    const threatCount = Math.floor(Math.random() * 5);
+    const threatsFound = Threat.getRandomThreats(threatCount);
     
-    // Kullanıcı ID'sini tehdit nesnelerine ekle
-    if (userId) {
-      threats.forEach(threat => {
-        threat.userId = userId;
-      });
-    }
-    
-    // Toplam taranan öğe sayısı (rastgele)
-    const totalScanned = scanType === 'QUICK' 
-      ? Math.floor(Math.random() * 500) + 500 // 500-999 öğe
-      : scanType === 'FULL' 
-        ? Math.floor(Math.random() * 2000) + 2000 // 2000-3999 öğe
-        : scanType === 'WIFI' 
-          ? Math.floor(Math.random() * 20) + 5 // 5-24 öğe
-          : Math.floor(Math.random() * 50) + 20; // 20-69 öğe
-    
-    // Tarama bitiş zamanı (rastgele ama kısa bir süre sonra)
-    const endTime = new Date(startTime.getTime() + (Math.random() * 20000) + 5000); // 5-25 saniye
-    
-    // Tarama sonucu
     return new ScanResult(
       uuidv4(),
-      scanType,
+      type,
       startTime,
       endTime,
       totalScanned,
-      threats.map(t => t.toJSON()),
+      threatsFound,
       userId
     );
   }

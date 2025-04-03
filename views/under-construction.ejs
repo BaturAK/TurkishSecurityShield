@@ -1,22 +1,21 @@
 <div class="container py-5 text-center">
+  <div class="mt-5 mb-4">
+    <i class="fas fa-hard-hat fa-5x text-warning"></i>
+  </div>
+  
   <div class="row justify-content-center">
     <div class="col-md-8">
-      <div class="under-construction-container my-5">
-        <img src="/img/logo.svg" alt="AntiVirüs Logo" class="mb-4" height="80">
+      <div class="card border-0 shadow p-5">
+        <h1 class="display-4 mb-3">Çalışma Devam Ediyor</h1>
+        <h2 class="h4 text-muted mb-4">Bu sayfa yapım aşamasındadır</h2>
         
-        <h1 class="display-4 fw-bold mb-3">Çalışma Devam Ediyor</h1>
-        <h2 class="text-muted mb-4"><%= pageName || 'Bu Sayfa' %> yapım aşamasında</h2>
-        
-        <div class="construction-icon my-5">
-          <i class="fas fa-hard-hat fa-5x text-warning"></i>
-          <div class="gear-animation">
-            <i class="fas fa-cog fa-4x text-primary"></i>
-          </div>
+        <div class="progress mb-4" style="height: 10px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+               role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         
-        <p class="lead text-muted mb-5">
-          Bu bölüm üzerinde çalışmalarımız devam ediyor. 
-          En kısa sürede bu sayfayı tamamlayacağız.
+        <p class="lead mb-5">
+          Daha iyi bir deneyim sunmak için bu özellik üzerinde çalışıyoruz. Kısa süre içinde kullanıma açılacaktır.
         </p>
         
         <div class="d-flex justify-content-center gap-3">
@@ -33,30 +32,11 @@
 </div>
 
 <style>
-  .under-construction-container {
-    padding: 2rem;
+  body {
+    background-color: #f8f9fa;
   }
   
-  .construction-icon {
-    position: relative;
-    display: inline-block;
-    height: 120px;
-    width: 200px;
-  }
-  
-  .gear-animation {
-    position: absolute;
-    bottom: 0;
-    right: 40px;
-    animation: rotate 8s linear infinite;
-  }
-  
-  @keyframes rotate {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+  .fa-hard-hat {
+    filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.5));
   }
 </style>
