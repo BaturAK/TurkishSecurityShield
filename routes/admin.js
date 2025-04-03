@@ -70,9 +70,13 @@ router.get('/users', async (req, res) => {
     // Tüm kullanıcıları getir
     const users = await User.findAll();
     
+    // Toplam kullanıcı sayısını al
+    const totalUsers = await User.count();
+    
     res.render('admin/users', {
       title: 'Admin - Kullanıcı Yönetimi',
       users,
+      totalUsers,
       success: req.query.success,
       error: req.query.error
     });
@@ -140,9 +144,13 @@ router.get('/scans', async (req, res) => {
     // Tüm taramaları getir (son 100)
     const scans = await ScanResult.findRecent(100);
     
+    // Toplam tarama sayısını al
+    const totalScans = await ScanResult.count();
+    
     res.render('admin/scans', {
       title: 'Admin - Tarama Yönetimi',
       scans,
+      totalScans,
       success: req.query.success,
       error: req.query.error
     });

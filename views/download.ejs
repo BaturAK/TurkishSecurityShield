@@ -1,211 +1,218 @@
 <!-- İndirme Sayfası -->
 
-<section class="py-5 bg-light">
-  <div class="container py-5 text-center">
-    <h1 class="display-4 fw-bold mb-4">AntiVirüs'ü İndirin</h1>
-    <p class="lead mb-5">
-      Android cihazınızı zararlı yazılımlardan korumak ve güvenliğinizi sağlamak için AntiVirüs uygulamasını hemen indirin.
-    </p>
-    
-    <div class="row justify-content-center mb-5">
-      <div class="col-md-8">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-primary text-white py-3">
-            <h5 class="mb-0">AntiVirüs v1.0.0</h5>
-          </div>
-          <div class="card-body p-4">
-            <div class="row align-items-center">
-              <div class="col-md-4 mb-3 mb-md-0 text-center">
-                <img src="/img/logo.svg" alt="AntiVirüs" class="img-fluid mb-3" style="max-height: 120px;">
-                <p class="mb-0 text-muted small">Son Güncelleme: <%= new Date().toLocaleDateString('tr-TR') %></p>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <h1 class="mb-4 text-center">Android AntiVirüs Uygulamasını İndirin</h1>
+      <p class="lead text-center mb-5">Cihazınızı virüslerden, kötü amaçlı yazılımlardan ve diğer tehditlerden koruyun.</p>
+      
+      <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+              <div class="icon-wrapper bg-primary bg-opacity-10 rounded-circle mb-3 mx-auto">
+                <i class="fas fa-bolt text-primary fa-2x"></i>
               </div>
-              <div class="col-md-8">
-                <h5 class="mb-3">AntiVirüs Android Uygulaması</h5>
-                <ul class="list-unstyled mb-3">
+              <h4>Hızlı Koruma</h4>
+              <p class="text-muted mb-0">Gerçek zamanlı tehdit algılama ve anında koruma.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+              <div class="icon-wrapper bg-success bg-opacity-10 rounded-circle mb-3 mx-auto">
+                <i class="fas fa-lock text-success fa-2x"></i>
+              </div>
+              <h4>Güvenli Tarama</h4>
+              <p class="text-muted mb-0">Wi-Fi taraması, QR kod güvenlik kontrolü ve daha fazlası.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center">
+              <div class="icon-wrapper bg-info bg-opacity-10 rounded-circle mb-3 mx-auto">
+                <i class="fas fa-sync-alt text-info fa-2x"></i>
+              </div>
+              <h4>Düzenli Güncellemeler</h4>
+              <p class="text-muted mb-0">En son tehdit tanımları ile sürekli güncellenen koruma.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="download-area mb-5">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="card bg-primary text-white border-0 shadow p-4 mb-4 mb-lg-0">
+              <div class="card-body p-2 p-lg-3">
+                <h3 class="mb-3">Android Uygulamasını İndirin</h3>
+                <p class="mb-4">Cihazınızı güvende tutmak için şimdi Android AntiVirüs uygulamamızı indirin. Uygulama ücretsizdir ve yüklenmesi sadece birkaç dakika sürer.</p>
+                
+                <div class="d-grid gap-3">
+                  <a href="#" id="direct-download" class="btn btn-light text-primary fw-bold">
+                    <i class="fas fa-download me-2"></i> Doğrudan İndir (APK)
+                  </a>
+                  <a href="https://play.google.com" target="_blank" class="btn btn-outline-light">
+                    <i class="fab fa-google-play me-2"></i> Google Play'den İndir
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-6">
+            <div class="qr-download text-center">
+              <h4 class="mb-3">QR Kodu Tarayın</h4>
+              <p class="text-muted mb-4">Telefonunuzun kamerasıyla QR kodu tarayarak uygulamayı cihazınıza hızlıca indirebilirsiniz.</p>
+              
+              <div class="qr-code-wrapper mb-3 mx-auto">
+                <div class="p-3 bg-white d-inline-block rounded shadow-sm">
+                  <!-- QR kod burada olacak -->
+                  <div style="width: 180px; height: 180px; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;">
+                    <i class="fas fa-qrcode fa-5x text-primary"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-5">
+        <h2 class="mb-4 text-center">Sistem Gereksinimleri</h2>
+        
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4">
+                <h5 class="card-title mb-3">Minimum Gereksinimler</h5>
+                <ul class="list-unstyled mb-0">
                   <li class="mb-2">
-                    <i class="fas fa-check-circle text-success me-2"></i> 
-                    Gelişmiş Zararlı Yazılım Koruması
+                    <i class="fas fa-check-circle text-success me-2"></i> Android 6.0 (Marshmallow) veya üzeri
                   </li>
                   <li class="mb-2">
-                    <i class="fas fa-check-circle text-success me-2"></i> 
-                    Wi-Fi Güvenlik Taraması
+                    <i class="fas fa-check-circle text-success me-2"></i> 2 GB RAM
                   </li>
                   <li class="mb-2">
-                    <i class="fas fa-check-circle text-success me-2"></i> 
-                    Uygulama Kilidi
+                    <i class="fas fa-check-circle text-success me-2"></i> 70 MB boş depolama alanı
                   </li>
-                  <li>
-                    <i class="fas fa-check-circle text-success me-2"></i> 
-                    QR Kod Güvenlik Kontrolü
+                  <li class="mb-2">
+                    <i class="fas fa-check-circle text-success me-2"></i> İnternet bağlantısı
                   </li>
                 </ul>
-                <a href="#" class="btn btn-primary btn-lg w-100">
-                  <i class="fab fa-android me-2"></i> APK İndir
-                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4">
+                <h5 class="card-title mb-3">Önerilen Özellikler</h5>
+                <ul class="list-unstyled mb-0">
+                  <li class="mb-2">
+                    <i class="fas fa-check-circle text-success me-2"></i> Android 8.0 (Oreo) veya üzeri
+                  </li>
+                  <li class="mb-2">
+                    <i class="fas fa-check-circle text-success me-2"></i> 3 GB veya daha fazla RAM
+                  </li>
+                  <li class="mb-2">
+                    <i class="fas fa-check-circle text-success me-2"></i> 100 MB boş depolama alanı
+                  </li>
+                  <li class="mb-2">
+                    <i class="fas fa-check-circle text-success me-2"></i> Kamera (QR tarama için)
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4 text-center">
-            <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="fab fa-google-play text-primary fa-2x"></i>
+      
+      <div class="faq-section">
+        <h2 class="mb-4 text-center">Sık Sorulan Sorular</h2>
+        
+        <div class="accordion mb-4" id="downloadFaq">
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="faqOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                Uygulama tamamen ücretsiz mi?
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="faqOne" data-bs-parent="#downloadFaq">
+              <div class="accordion-body">
+                Evet, Android AntiVirüs uygulaması temel özellikleriyle tamamen ücretsizdir. Ancak bazı gelişmiş özellikler için (VPN servisi, gelişmiş koruma vb.) premium abonelik gerekebilir.
+              </div>
             </div>
-            <h5 class="mb-3">Google Play Store</h5>
-            <p class="text-muted mb-4">
-              Google Play Store üzerinden AntiVirüs uygulamasını indirin ve otomatik güncellemelerden yararlanın.
-            </p>
-            <a href="#" class="btn btn-outline-primary">
-              <i class="fab fa-google-play me-2"></i> Google Play'den İndir
-            </a>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="faqTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                APK dosyasını indirirken güvenlik uyarısı alırsam ne yapmalıyım?
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#downloadFaq">
+              <div class="accordion-body">
+                Android işletim sistemi, resmi mağaza dışından APK dosyalarını indirirken güvenlik uyarısı verebilir. Uygulamamız tamamen güvenlidir. İndirme işlemine devam etmek için cihazınızda "Bilinmeyen Kaynaklar" ayarını etkinleştirmeniz gerekebilir.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 mb-3 shadow-sm">
+            <h2 class="accordion-header" id="faqThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Uygulamayı güncellemek gerekir mi?
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#downloadFaq">
+              <div class="accordion-body">
+                Evet, AntiVirüs uygulaması en iyi koruma için düzenli olarak güncellenmelidir. Uygulama, yeni tehdit tanımları ve güvenlik yamaları için otomatik güncellemeler sunar. Ayrıca, uygulama içinde manuel olarak da güncelleme kontrolü yapabilirsiniz.
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item border-0 shadow-sm">
+            <h2 class="accordion-header" id="faqFour">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                Uygulamayı kaldırmak istersem ne olur?
+              </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="faqFour" data-bs-parent="#downloadFaq">
+              <div class="accordion-body">
+                Uygulamayı kaldırmak için Android cihazınızın standart uygulama kaldırma prosedürünü izleyebilirsiniz. Hesap bilgileriniz ve tarama geçmişiniz sunucularımızda saklanır, böylece uygulamayı yeniden yüklediğinizde hesabınıza erişebilirsiniz.
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4 text-center">
-            <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="fas fa-box text-success fa-2x"></i>
-            </div>
-            <h5 class="mb-3">APK Dosyası</h5>
-            <p class="text-muted mb-4">
-              APK dosyasını doğrudan indirin ve manuel olarak cihazınıza yükleyin. Yükleme için "Bilinmeyen Kaynaklara" izin vermeniz gerekir.
-            </p>
-            <a href="#" class="btn btn-outline-success">
-              <i class="fas fa-download me-2"></i> APK Dosyasını İndir
-            </a>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body p-4 text-center">
-            <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="fas fa-code-branch text-info fa-2x"></i>
-            </div>
-            <h5 class="mb-3">Beta Sürümü</h5>
-            <p class="text-muted mb-4">
-              En son özellikleri ve geliştirmeleri içeren beta sürümünü test edin ve geri bildirim sağlayın.
-            </p>
-            <a href="#" class="btn btn-outline-info">
-              <i class="fas fa-flask me-2"></i> Beta Sürüm İndir
-            </a>
-          </div>
-        </div>
+      <div class="text-center">
+        <p class="text-muted mb-3">Teknik destek mi gerekiyor?</p>
+        <a href="/contact" class="btn btn-outline-primary">
+          <i class="fas fa-envelope me-2"></i> Bizimle İletişime Geçin
+        </a>
       </div>
     </div>
   </div>
-</section>
+</div>
 
-<section class="py-5">
-  <div class="container">
-    <div class="row mb-5">
-      <div class="col-12 text-center">
-        <h2 class="display-5 fw-bold mb-3">Sistem Gereksinimleri</h2>
-        <p class="lead mb-0">AntiVirüs uygulamasını kullanmak için cihazınızın aşağıdaki gereksinimleri karşılaması gerekmektedir.</p>
-      </div>
-    </div>
-    
-    <div class="row g-4">
-      <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h5 class="mb-4">Minimum Gereksinimler</h5>
-            <ul class="list-unstyled">
-              <li class="d-flex mb-3">
-                <i class="fas fa-mobile-alt text-primary me-3 mt-1"></i>
-                <div>
-                  <strong>İşletim Sistemi:</strong>
-                  <p class="mb-0">Android 6.0 Marshmallow veya üzeri</p>
-                </div>
-              </li>
-              <li class="d-flex mb-3">
-                <i class="fas fa-memory text-primary me-3 mt-1"></i>
-                <div>
-                  <strong>RAM:</strong>
-                  <p class="mb-0">1 GB veya daha fazla</p>
-                </div>
-              </li>
-              <li class="d-flex mb-3">
-                <i class="fas fa-hdd text-primary me-3 mt-1"></i>
-                <div>
-                  <strong>Depolama:</strong>
-                  <p class="mb-0">En az 50 MB boş alan</p>
-                </div>
-              </li>
-              <li class="d-flex">
-                <i class="fas fa-wifi text-primary me-3 mt-1"></i>
-                <div>
-                  <strong>İnternet Bağlantısı:</strong>
-                  <p class="mb-0">İlk kurulum ve veritabanı güncellemeleri için gerekli</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // APK indirme butonu işlevi
+    document.getElementById('direct-download').addEventListener('click', function(e) {
+      e.preventDefault();
       
-      <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h5 class="mb-4">Önerilen Gereksinimler</h5>
-            <ul class="list-unstyled">
-              <li class="d-flex mb-3">
-                <i class="fas fa-mobile-alt text-success me-3 mt-1"></i>
-                <div>
-                  <strong>İşletim Sistemi:</strong>
-                  <p class="mb-0">Android 9.0 Pie veya üzeri</p>
-                </div>
-              </li>
-              <li class="d-flex mb-3">
-                <i class="fas fa-memory text-success me-3 mt-1"></i>
-                <div>
-                  <strong>RAM:</strong>
-                  <p class="mb-0">2 GB veya daha fazla</p>
-                </div>
-              </li>
-              <li class="d-flex mb-3">
-                <i class="fas fa-hdd text-success me-3 mt-1"></i>
-                <div>
-                  <strong>Depolama:</strong>
-                  <p class="mb-0">100 MB veya daha fazla boş alan</p>
-                </div>
-              </li>
-              <li class="d-flex">
-                <i class="fas fa-wifi text-success me-3 mt-1"></i>
-                <div>
-                  <strong>İnternet Bağlantısı:</strong>
-                  <p class="mb-0">Sürekli bağlantı gerçek zamanlı koruma için önerilir</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-5 bg-primary text-white">
-  <div class="container py-4 text-center">
-    <h2 class="display-5 fw-bold mb-4">Cihazınızı Hemen Korumaya Alın</h2>
-    <p class="lead mb-4">
-      AntiVirüs'ü hemen indirin ve Android cihazınızı zararlı yazılımlara karşı koruyun.
-    </p>
-    <div class="d-flex flex-wrap justify-content-center gap-3">
-      <a href="#" class="btn btn-light btn-lg px-4">
-        <i class="fas fa-download me-2"></i> Ücretsiz İndirin
-      </a>
-      <a href="/features" class="btn btn-outline-light btn-lg px-4">
-        <i class="fas fa-info-circle me-2"></i> Daha Fazla Bilgi
-      </a>
-    </div>
-  </div>
-</section>
+      // İndirme işlemini simüle et
+      alert('Android AntiVirüs APK indirmesi başlatılıyor...');
+      
+      // Gerçek bir uygulamada burası APK dosyasına yönlendirilir
+      setTimeout(function() {
+        alert('İndirme tamamlandı! Cihazınızda APK dosyasını bulup yükleyebilirsiniz.');
+      }, 2000);
+    });
+  });
+</script>
