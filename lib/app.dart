@@ -1,48 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/premium_screen.dart';
-import 'screens/settings_screen.dart';
 import 'screens/scan_results_screen.dart';
+import 'screens/settings_screen.dart';
+import 'providers/auth_provider.dart';
+import 'utils/constants.dart';
 
 class AntivirusApp extends StatelessWidget {
-  const AntivirusApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
+    // Sistem barlarını güncelle
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+
     return MaterialApp(
-      title: 'Antivirüs Uygulaması',
+      title: 'AntiVirüs',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        brightness: Brightness.light,
-        useMaterial3: true,
+        primaryColor: AppColors.primaryColor,
+        accentColor: AppColors.accentColor,
+        scaffoldBackgroundColor: Colors.white,
+        fontFamily: 'Roboto',
+        appBarTheme: AppBarTheme(
+          color: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.primaryColor),
+          textTheme: TextTheme(
+            headline6: TextStyle(
+              color: AppColors.textPrimaryColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        buttonTheme: ButtonThemeData(
+          buttonColor: AppColors.primaryColor,
+          textTheme: ButtonTextTheme.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
       ),
-      darkTheme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('tr', 'TR'),
-        Locale('en', 'US'),
-      ],
-      locale: const Locale('tr', 'TR'),
-      initialRoute: '/',
       routes: {
-        '/': (context) => const HomeScreen(),
-        '/premium': (context) => const PremiumScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/scan_results': (context) => const ScanResultsScreen(),
+        '/': (context) => AuthWrapper(),
+        '/home': (context) => HomeScreen(),
+        '/login': (context) => LoginScreen(),
+        '/premium': (context) => PremiumScreen(),
+        '/scan_results': (context) => ScanResultsScreen(),
+        '/settings': (context) => SettingsScreen(),
       },
+      initialRoute: '/',
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    
+    // Kullanıcı oturum durumuna göre doğru ekranı göster
+    if (authProvider.isLoggedIn) {
+      return HomeScreen();
+    } else {
+      return LoginScreen();
+    }
   }
 }

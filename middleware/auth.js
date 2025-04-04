@@ -11,15 +11,10 @@
  */
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
-    // Kullanıcı oturum açmış, devam et
     return next();
   }
   
-  // İstenilen URL'i kaydet, giriş yaptıktan sonra yönlendirmek için
-  req.session.returnTo = req.originalUrl;
-  
-  // Kullanıcı oturum açmamış, giriş sayfasına yönlendir
-  res.redirect('/auth/login');
+  return res.redirect('/auth/login?redirect=' + encodeURIComponent(req.originalUrl));
 }
 
 /**
@@ -30,16 +25,14 @@ function isAuthenticated(req, res, next) {
  */
 function isAdmin(req, res, next) {
   if (req.session && req.session.user && req.session.user.isAdmin) {
-    // Kullanıcı admin yetkisine sahip, devam et
     return next();
   }
   
-  // Kullanıcı admin yetkisine sahip değil, hata sayfasına yönlendir
-  res.status(403).render('error', {
+  return res.status(403).render('error', {
     title: 'Erişim Reddedildi',
     error: {
       status: 403,
-      message: 'Bu sayfaya erişim yetkiniz bulunmamaktadır.'
+      message: 'Bu sayfaya erişim yetkiniz yok.'
     }
   });
 }
@@ -52,12 +45,10 @@ function isAdmin(req, res, next) {
  */
 function isNotAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
-    // Kullanıcı zaten oturum açmış, dashboard'a yönlendir
     return res.redirect('/dashboard');
   }
   
-  // Kullanıcı oturum açmamış, devam et
-  next();
+  return next();
 }
 
 /**
@@ -67,8 +58,9 @@ function isNotAuthenticated(req, res, next) {
  * @param {Function} next - Sonraki middleware
  */
 function injectUserToViews(req, res, next) {
-  // Kullanıcı bilgisini locals'a ekleyerek tüm şablonlarda kullanılabilir hale getir
-  res.locals.user = req.session.user || null;
+  res.locals.user = req.session && req.session.user ? req.session.user : null;
+  res.locals.isAuthenticated = !!(req.session && req.session.user);
+  res.locals.isAdmin = !!(req.session && req.session.user && req.session.user.isAdmin);
   next();
 }
 

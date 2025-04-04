@@ -1,326 +1,228 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/scan_provider.dart';
-import '../widgets/scan_button.dart';
-import '../widgets/status_card.dart';
-import '../widgets/threat_list_item.dart';
+import '../providers/premium_provider.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/app_drawer.dart';
-import 'scan_results_screen.dart';
+import '../widgets/scan_button.dart';
+import '../widgets/security_status_card.dart';
+import '../widgets/last_scan_card.dart';
+import '../utils/constants.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     final scanProvider = Provider.of<ScanProvider>(context);
-    
+    final premiumProvider = Provider.of<PremiumProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Güvenlik Kontrolü'),
-        elevation: 0,
+        title: Text(
+          AppTexts.appName,
+          style: TextStyle(
+            color: AppColors.textPrimaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
+          // Premium durumunu gösteren simge
+          if (premiumProvider.isPremium)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Icon(
+                Icons.verified,
+                color: AppColors.secondaryColor,
+              ),
+            ),
+          // Ayarlar simgesi
           IconButton(
-            icon: const Icon(Icons.workspace_premium),
-            onPressed: () {
-              Navigator.pushNamed(context, '/premium');
-            },
+            icon: Icon(
+              Icons.settings,
+              color: AppColors.textPrimaryColor,
+            ),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
         ],
       ),
-      drawer: const AppDrawer(),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Herhangi bir yenileme işlemi gerekirse
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              
-              // Durum Kartları
-              Row(
+      drawer: AppDrawer(),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Güvenlik durumu kartı
+            SecurityStatusCard(
+              isProtected: !scanProvider.detectedThreats.any((threat) => !threat.isCleaned),
+            ),
+            
+            // Tarama butonları
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: Wrap(
+                spacing: 20,
+                runSpacing: 20,
+                alignment: WrapAlignment.spaceEvenly,
                 children: [
-                  Expanded(
-                    child: StatusCard(
-                      title: 'Güvenlik Durumu',
-                      value: scanProvider.detectedThreats.where((t) => !t.isFixed).isEmpty 
-                          ? 'Güvenli' 
-                          : 'Risk Altında',
-                      icon: Icons.security,
-                      color: scanProvider.detectedThreats.where((t) => !t.isFixed).isEmpty 
-                          ? Colors.green 
-                          : Colors.red,
-                    ),
+                  // Hızlı tarama butonu
+                  ScanButton(
+                    title: AppTexts.quickScan,
+                    icon: Icons.flash_on,
+                    color: AppColors.primaryColor,
+                    onTap: () => _startScan(context, ScanTypes.quick),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: StatusCard(
-                      title: 'Son Tarama',
-                      value: scanProvider.scanHistory.isNotEmpty
-                          ? '${_formatDate(scanProvider.scanHistory.last.endTime ?? DateTime.now())}'
-                          : 'Hiç Tarama Yok',
-                      icon: Icons.history,
-                      color: Colors.blue,
-                    ),
+                  
+                  // Tam tarama butonu
+                  ScanButton(
+                    title: AppTexts.fullScan,
+                    icon: Icons.security,
+                    color: AppColors.accentColor,
+                    onTap: () => _startScan(context, ScanTypes.full),
+                  ),
+                  
+                  // Wi-Fi tarama butonu
+                  ScanButton(
+                    title: AppTexts.wifiScan,
+                    icon: Icons.wifi,
+                    color: Colors.green,
+                    isPremium: true,
+                    isLocked: !premiumProvider.isPremium,
+                    onTap: () {
+                      if (premiumProvider.isPremium) {
+                        _startScan(context, ScanTypes.wifi);
+                      } else {
+                        _showPremiumDialog(context);
+                      }
+                    },
+                  ),
+                  
+                  // QR kod tarama butonu
+                  ScanButton(
+                    title: AppTexts.qrScan,
+                    icon: Icons.qr_code_scanner,
+                    color: Colors.purple,
+                    isPremium: true,
+                    isLocked: !premiumProvider.isPremium,
+                    onTap: () {
+                      if (premiumProvider.isPremium) {
+                        _startScan(context, ScanTypes.qr);
+                      } else {
+                        _showPremiumDialog(context);
+                      }
+                    },
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 16),
-              
-              // Tarama Butonları
-              Text(
-                'Tarama İşlemleri',
-                style: Theme.of(context).textTheme.titleLarge,
+            ),
+            
+            // Son tarama sonucu
+            if (scanProvider.lastScanResult != null)
+              LastScanCard(
+                scanResult: scanProvider.lastScanResult!,
+                onViewDetails: () => Navigator.pushNamed(
+                  context,
+                  '/scan_results',
+                  arguments: scanProvider.lastScanResult!.id,
+                ),
               ),
-              const SizedBox(height: 16),
-              
-              if (scanProvider.isScanning)
-                _buildScanningIndicator(context, scanProvider)
-              else
-                _buildScanButtons(context),
-                
-              const SizedBox(height: 24),
-              
-              // Tehdit Listesi Başlığı
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Tespit Edilen Tehditler',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  if (scanProvider.detectedThreats.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ScanResultsScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('Tümünü Gör'),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              
-              // Tehdit Listesi veya Boş Mesaj
-              scanProvider.detectedThreats.isEmpty
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: Text(
-                          'Herhangi bir tehdit tespit edilmedi. Cihazınız güvenli görünüyor.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                    )
-                  : Column(
+            
+            SizedBox(height: 24),
+            
+            // Premium butonu
+            if (!premiumProvider.isPremium)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pushNamed(context, '/premium'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        for (var i = 0; i < scanProvider.detectedThreats.length; i++)
-                          if (i < 3) // Sadece ilk 3 tehdidi göster
-                            ThreatListItem(
-                              threat: scanProvider.detectedThreats[i],
-                              onFix: () => scanProvider.fixThreat(scanProvider.detectedThreats[i].id),
-                            ),
+                        Icon(Icons.star, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          AppTexts.goPremium,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
-              
-              const SizedBox(height: 16),
-              
-              // Hepsini Temizle Butonu
-              if (scanProvider.detectedThreats.where((t) => !t.isFixed).isNotEmpty)
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: scanProvider.fixAllThreats,
-                    icon: const Icon(Icons.cleaning_services),
-                    label: const Text('Tüm Tehditleri Temizle'),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    primary: AppColors.secondaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildScanningIndicator(BuildContext context, ScanProvider provider) {
-    final scanTypeText = _getScanTypeText(provider.currentScan!.type);
-    
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              '$scanTypeText Taraması Yapılıyor...',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: provider.cancelScan,
-              child: const Text('İptal Et'),
-            ),
+              ),
+            
+            SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
-  
-  Widget _buildScanButtons(BuildContext context) {
+
+  // Tarama başlatma
+  void _startScan(BuildContext context, String scanType) async {
     final scanProvider = Provider.of<ScanProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Eğer zaten bir tarama devam ediyorsa uyarı göster
+    if (scanProvider.isScanning) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Zaten bir tarama devam ediyor')),
+      );
+      return;
+    }
+
+    // Taramayı başlat
+    final scanResult = await scanProvider.startScan(scanType, authProvider.userId);
     
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: ScanButton(
-                title: 'Hızlı Tarama',
-                description: 'Kritik sistem alanlarını hızlıca tarar',
-                icon: Icons.flash_on,
-                color: Colors.orange,
-                onPressed: () => scanProvider.startScan(ScanType.quick),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ScanButton(
-                title: 'Tam Tarama',
-                description: 'Tüm sistemi detaylı tarar',
-                icon: Icons.shield,
-                color: Colors.blue,
-                onPressed: () => scanProvider.startScan(ScanType.full),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: ScanButton(
-                title: 'WiFi Taraması',
-                description: 'Ağ güvenliğini kontrol eder',
-                icon: Icons.wifi,
-                color: Colors.green,
-                onPressed: () => _showWifiScanDialog(context),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ScanButton(
-                title: 'QR Taraması',
-                description: 'Güvenli QR kod kontrolü yapar',
-                icon: Icons.qr_code_scanner,
-                color: Colors.purple,
-                onPressed: () => _showQrScanDialog(context),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-  
-  void _showWifiScanDialog(BuildContext context) {
-    final scanProvider = Provider.of<ScanProvider>(context, listen: false);
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('WiFi Taraması'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.wifi, size: 48, color: Colors.blue),
-            SizedBox(height: 16),
-            Text('Bağlı olduğunuz WiFi ağının güvenliğini kontrol etmek istiyor musunuz?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              scanProvider.startScan(ScanType.wifi);
-              Navigator.pop(context);
-            },
-            child: const Text('Tara'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  void _showQrScanDialog(BuildContext context) {
-    final scanProvider = Provider.of<ScanProvider>(context, listen: false);
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('QR Kod Taraması'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.qr_code_scanner, size: 48, color: Colors.purple),
-            SizedBox(height: 16),
-            Text('QR kod taramak için kamera erişimine izin vermeniz gerekiyor. Devam etmek istiyor musunuz?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              scanProvider.startScan(ScanType.qrCode);
-              Navigator.pop(context);
-            },
-            child: const Text('İzin Ver ve Tara'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  String _getScanTypeText(ScanType type) {
-    switch (type) {
-      case ScanType.quick:
-        return 'Hızlı';
-      case ScanType.full:
-        return 'Tam';
-      case ScanType.custom:
-        return 'Özel';
-      case ScanType.app:
-        return 'Uygulama';
-      case ScanType.wifi:
-        return 'WiFi';
-      case ScanType.qrCode:
-        return 'QR Kod';
-      default:
-        return '';
+    if (scanResult != null) {
+      // Tarama başarıyla başlatıldı, tarama ilerleme sayfasına git
+      Navigator.pushNamed(
+        context,
+        '/scan_results',
+        arguments: scanResult.id,
+      );
+    } else if (scanProvider.error != null) {
+      // Hata oluştu
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(scanProvider.error!)),
+      );
     }
   }
-  
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+
+  // Premium özellikleri için diyalog gösterimi
+  void _showPremiumDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppTexts.premiumFeatures),
+        content: Text('Bu özellik sadece premium kullanıcılara açıktır. Premium'a geçmek ister misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppTexts.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/premium');
+            },
+            child: Text(AppTexts.goPremium),
+            style: ElevatedButton.styleFrom(
+              primary: AppColors.secondaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

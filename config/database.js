@@ -4,14 +4,22 @@
  */
 
 const { MongoClient } = require('mongodb');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
-// MongoDB bağlantı URL'i
-const mongoUrl = process.env.MONGODB_URI || 'mongodb+srv://webdb:Hacked_22@mongodb.sgpezuw.mongodb.net/';
-const dbName = process.env.MONGODB_DB || 'antivirus_db';
+// .env değişkenlerini yükle
+dotenv.config();
 
-// MongoDB istemcisi
-let client;
+// MongoDB bağlantı bilgileri
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://webdb:Hacked_22@mongodb.sgpezuw.mongodb.net/';
+const DB_NAME = process.env.DB_NAME || 'antivirus_app';
+
+// Bağlantı seçenekleri
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+};
+
+// Global database değişkeni
 let db;
 
 /**
@@ -20,29 +28,25 @@ let db;
  */
 async function connectToDatabase() {
   try {
-    if (client && client.topology && client.topology.isConnected()) {
-      console.log('Veritabanı bağlantısı zaten mevcut.');
+    if (db) {
       return db;
     }
     
     console.log('MongoDB bağlantısı kuruluyor...');
-    client = new MongoClient(mongoUrl, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    
+    const client = new MongoClient(MONGODB_URI, options);
     await client.connect();
-    console.log('MongoDB bağlantısı başarılı.');
     
-    db = client.db(dbName);
+    db = client.db(DB_NAME);
+    console.log('MongoDB bağlantısı başarılı');
     
-    // Gerekli koleksiyonları oluştur
+    // Koleksiyonları ve varsayılan verileri oluştur
     await initializeCollections();
     
     return db;
   } catch (error) {
     console.error('MongoDB bağlantı hatası:', error);
-    throw error;
+    console.log('Demo mod etkinleştiriliyor...');
+    return null;
   }
 }
 
@@ -51,56 +55,134 @@ async function connectToDatabase() {
  */
 async function initializeCollections() {
   try {
+    // Koleksiyonların varlığını kontrol et
     const collections = await db.listCollections().toArray();
     const collectionNames = collections.map(c => c.name);
     
     // Users koleksiyonu
     if (!collectionNames.includes('users')) {
+      console.log('Users koleksiyonu oluşturuluyor...');
       await db.createCollection('users');
-      console.log('users koleksiyonu oluşturuldu.');
       
-      // Admin kullanıcısı ekle
-      const usersCollection = db.collection('users');
-      const adminUser = {
-        id: 'admin',
-        email: 'admin@example.com',
-        displayName: 'Admin',
-        photoURL: null,
-        isAdmin: true,
-        createdAt: new Date(),
-        lastLogin: new Date(),
-        status: 'active'
-      };
+      // Demo admin kullanıcısı ekle
+      const users = db.collection('users');
+      const adminExists = await users.findOne({ email: 'admin@example.com' });
       
-      const existingAdmin = await usersCollection.findOne({ id: 'admin' });
-      if (!existingAdmin) {
-        await usersCollection.insertOne(adminUser);
-        console.log('Admin kullanıcısı oluşturuldu.');
+      if (!adminExists) {
+        await users.insertOne({
+          _id: 'admin123',
+          email: 'admin@example.com',
+          displayName: 'Admin',
+          isAdmin: true,
+          createdAt: new Date()
+        });
+        console.log('Demo admin kullanıcısı oluşturuldu');
       }
     }
     
     // Threats koleksiyonu
     if (!collectionNames.includes('threats')) {
+      console.log('Threats koleksiyonu oluşturuluyor...');
       await db.createCollection('threats');
-      console.log('threats koleksiyonu oluşturuldu.');
+      
+      // Demo tehdit verileri ekle
+      const threats = db.collection('threats');
+      const threatCount = await threats.countDocuments();
+      
+      if (threatCount === 0) {
+        await threats.insertMany([
+          {
+            _id: 'threat1',
+            name: 'Trojan.AndroidOS.Agent',
+            type: 'TROJAN',
+            description: 'Cihazın sistem yetkilerini ele geçirebilen ve kişisel verileri çalabilecek bir Truva atı tehdidir.',
+            severity: 'HIGH',
+            isCleaned: false,
+            detectionDate: new Date()
+          },
+          {
+            _id: 'threat2',
+            name: 'Adware.AndroidOS.Ewind',
+            type: 'ADWARE',
+            description: 'Rahatsız edici reklamlar gösteren ve kullanıcı davranışlarını takip eden bir reklam yazılımıdır.',
+            severity: 'MEDIUM',
+            isCleaned: false,
+            detectionDate: new Date()
+          },
+          {
+            _id: 'threat3',
+            name: 'Spyware.AndroidOS.Agent',
+            type: 'SPYWARE',
+            description: 'Kullanıcı bilgilerini gizlice toplayan ve uzak sunuculara gönderen bir casus yazılımdır.',
+            severity: 'HIGH',
+            isCleaned: true,
+            detectionDate: new Date(Date.now() - 86400000) // 1 gün önce
+          }
+        ]);
+        console.log('Demo tehdit verileri eklendi');
+      }
     }
     
-    // Scan Results koleksiyonu
-    if (!collectionNames.includes('scan_results')) {
-      await db.createCollection('scan_results');
-      console.log('scan_results koleksiyonu oluşturuldu.');
+    // ScanResults koleksiyonu
+    if (!collectionNames.includes('scanResults')) {
+      console.log('ScanResults koleksiyonu oluşturuluyor...');
+      await db.createCollection('scanResults');
+      
+      // Demo tarama sonuçları ekle
+      const scanResults = db.collection('scanResults');
+      const scanCount = await scanResults.countDocuments();
+      
+      if (scanCount === 0) {
+        await scanResults.insertMany([
+          {
+            _id: 'scan1',
+            type: 'QUICK',
+            startTime: new Date(Date.now() - 3600000), // 1 saat önce
+            endTime: new Date(Date.now() - 3540000),   // 59 dakika önce
+            totalScanned: 120,
+            threatsFound: ['threat1', 'threat2'],
+            userId: 'admin123'
+          },
+          {
+            _id: 'scan2',
+            type: 'FULL',
+            startTime: new Date(Date.now() - 86400000), // 1 gün önce
+            endTime: new Date(Date.now() - 86100000),   
+            totalScanned: 320,
+            threatsFound: ['threat3'],
+            userId: 'admin123'
+          }
+        ]);
+        console.log('Demo tarama sonuçları eklendi');
+      }
     }
     
-    // API Tokens koleksiyonu
-    if (!collectionNames.includes('api_tokens')) {
-      await db.createCollection('api_tokens');
-      console.log('api_tokens koleksiyonu oluşturuldu.');
+    // Premium koleksiyonu
+    if (!collectionNames.includes('premium')) {
+      console.log('Premium koleksiyonu oluşturuluyor...');
+      await db.createCollection('premium');
+      
+      // Premium aktivasyon kodlarını ekle
+      const premium = db.collection('premium');
+      const premiumCount = await premium.countDocuments();
+      
+      if (premiumCount === 0) {
+        await premium.insertMany([
+          {
+            _id: 'premium1',
+            code: '7426270308',
+            isUsed: false,
+            validDays: 365,
+            createdAt: new Date()
+          }
+        ]);
+        console.log('Demo premium kodları eklendi');
+      }
     }
     
-    console.log('Veritabanı koleksiyonları hazır.');
+    console.log('Koleksiyonlar başarıyla oluşturuldu');
   } catch (error) {
     console.error('Koleksiyonlar oluşturulurken hata:', error);
-    throw error;
   }
 }
 
@@ -109,9 +191,10 @@ async function initializeCollections() {
  * @returns {Promise<void>}
  */
 async function closeConnection() {
-  if (client) {
-    await client.close();
-    console.log('MongoDB bağlantısı kapatıldı.');
+  if (db) {
+    await db.client.close();
+    db = null;
+    console.log('MongoDB bağlantısı kapatıldı');
   }
 }
 
@@ -122,17 +205,6 @@ async function closeConnection() {
 function getDb() {
   return db;
 }
-
-// Process kapatıldığında bağlantıyı kapat
-process.on('SIGINT', async () => {
-  await closeConnection();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  await closeConnection();
-  process.exit(0);
-});
 
 module.exports = {
   connectToDatabase,

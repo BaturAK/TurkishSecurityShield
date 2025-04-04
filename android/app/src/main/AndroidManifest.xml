@@ -1,24 +1,43 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- İzinler -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.antivirus_app">
+
+    <!-- İnternet izni -->
+    <uses-permission android:name="android.permission.INTERNET" />
     
+    <!-- Ağ durumu izni -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Harici depolama erişim izni (tarama için) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    
+    <!-- Paket bilgilerini alma izni (Android 11+ için) -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    
+    <!-- Bildirim izni -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Cihaz açılışında çalışma için BOOT_COMPLETED izni -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- Ön planda servis çalıştırma izni -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    
+    <!-- Bioemetrik (parmak izi, yüz tanıma) izinleri -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    
+    <!-- Kamera izni (QR kod taraması için) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
-        android:label="AntiVirüs"
-        android:name="${applicationName}"
+        android:name=".Application"
+        android:label="Antivirüs Koruma"
         android:icon="@mipmap/ic_launcher"
-        android:enableOnBackInvokedCallback="true">
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:supportsRtl="true">
         
         <activity
             android:name=".MainActivity"
@@ -40,43 +59,36 @@
             </intent-filter>
         </activity>
         
-        <!-- Foreground Service -->
+        <!-- Foreground servis tarama hizmeti -->
         <service
             android:name=".services.ScanForegroundService"
-            android:foregroundServiceType="dataSync"
-            android:exported="false" />
-            
-        <!-- Boot Receiver -->
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        
+        <!-- Cihaz açılışı alıcısı -->
         <receiver
             android:name=".receivers.BootCompletedReceiver"
+            android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
         
-        <!-- Package Install/Uninstall Receiver -->
+        <!-- Uygulama kurulumu/güncelleme alıcısı -->
         <receiver
             android:name=".receivers.PackageChangeReceiver"
+            android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
-                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
         
-        <!-- WorkManager Provider -->
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup" />
-        </provider>
-        
+        <!-- Flutter Embedded V2 -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

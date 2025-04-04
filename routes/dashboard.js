@@ -5,18 +5,13 @@
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-
-// Models
+const { isAuthenticated } = require('../middleware/auth');
 const User = require('../models/user');
-const Threat = require('../models/threat');
 const ScanResult = require('../models/scanResult');
+const Threat = require('../models/threat');
 
-// Middleware
-const authMiddleware = require('../middleware/auth');
-
-// Tüm dashboard sayfaları için kimlik doğrulama gerekli
-router.use(authMiddleware.isAuthenticated);
+// Tüm dashboard rotaları için kimlik doğrulama gerekli
+router.use(isAuthenticated);
 
 /**
  * Dashboard Ana Sayfa
@@ -26,64 +21,26 @@ router.get('/', async (req, res) => {
   try {
     const userId = req.session.user.id;
     
-    // Kullanıcının son taramalarını getir
+    // Kullanıcıya ait son taramalar
     const recentScans = await ScanResult.findByUserId(userId, 5);
     
-    // Temizlenmemiş tehditleri getir
-    const threats = await Threat.findAll({ isCleaned: false });
-    
-    // İstatistikleri getir
+    // İstatistikleri hesapla
     const totalScans = await ScanResult.count({ userId });
-    const totalThreats = threats.length;
+    const activeThreats = await Threat.count({ isCleaned: false });
     const cleanedThreats = await Threat.count({ isCleaned: true });
     
-    // Son tarama tarihini bul
-    let lastScanDate = null;
-    if (recentScans.length > 0) {
-      lastScanDate = recentScans[0].startTime;
-    }
-
-    // Son aktiviteleri simüle et
-    const recentActivities = [
-      {
-        type: 'SCAN_COMPLETE',
-        title: 'Tarama Tamamlandı',
-        description: 'Hızlı tarama tamamlandı, 2 tehdit tespit edildi.',
-        timestamp: new Date(Date.now() - 3600000) // 1 saat önce
-      },
-      {
-        type: 'THREAT_FOUND',
-        title: 'Tehdit Tespit Edildi',
-        description: 'Adware.Mindspark tehdidi tespit edildi.',
-        timestamp: new Date(Date.now() - 7200000) // 2 saat önce
-      },
-      {
-        type: 'WIFI_SCAN',
-        title: 'WiFi Taraması',
-        description: 'WiFi ağı güvenli olarak tespit edildi.',
-        timestamp: new Date(Date.now() - 86400000) // 1 gün önce
-      },
-      {
-        type: 'LOGIN',
-        title: 'Giriş Yapıldı',
-        description: 'Yeni bir cihazdan giriş yapıldı.',
-        timestamp: new Date(Date.now() - 172800000) // 2 gün önce
-      }
-    ];
-
     res.render('dashboard/index', {
       title: 'Dashboard',
-      systemStatus: threats.length > 0 ? (threats.some(t => t.severity === 'HIGH') ? 'DANGER' : 'WARNING') : 'SECURE',
-      lastScanDate,
       recentScans,
-      recentActivities,
-      threats,
-      totalScans,
-      totalThreats,
-      cleanedThreats
+      stats: {
+        totalScans,
+        activeThreats,
+        cleanedThreats,
+        totalThreats: activeThreats + cleanedThreats
+      }
     });
   } catch (error) {
-    console.error('Dashboard sayfası yüklenirken hata:', error);
+    console.error('Dashboard yüklenirken hata:', error);
     res.status(500).render('error', {
       title: 'Hata',
       error: {
@@ -101,32 +58,47 @@ router.get('/', async (req, res) => {
 router.get('/scans', async (req, res) => {
   try {
     const userId = req.session.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
     
-    // Kullanıcının tüm taramalarını getir (son 20)
-    const scans = await ScanResult.findByUserId(userId, 20);
+    // Kullanıcıya ait taramaları getir
+    const db = require('../config/database').getDb();
+    const scanResults = db.collection('scanResults');
     
-    // Toplam tarama sayısını al
-    const totalScans = await ScanResult.count({ userId });
+    const totalScans = await scanResults.countDocuments({ userId });
+    const totalPages = Math.ceil(totalScans / limit);
     
-    // Tehditleri say
-    let totalThreats = 0;
-    let cleanedThreats = 0;
+    const scanDataList = await scanResults.find({ userId })
+      .sort({ startTime: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
     
-    scans.forEach(scan => {
-      scan.threatsFound.forEach(threat => {
-        totalThreats++;
-        if (threat.isCleaned) {
-          cleanedThreats++;
-        }
+    const scans = [];
+    
+    for (const scanData of scanDataList) {
+      scans.push({
+        id: scanData._id,
+        type: scanData.type,
+        startTime: scanData.startTime,
+        endTime: scanData.endTime,
+        totalScanned: scanData.totalScanned,
+        threatCount: scanData.threatsFound.length,
+        status: scanData.endTime ? 'COMPLETED' : 'RUNNING'
       });
-    });
+    }
     
     res.render('dashboard/scans', {
-      title: 'Taramalar',
+      title: 'Taramalarım',
       scans,
-      totalScans,
-      totalThreats,
-      cleanedThreats
+      pagination: {
+        page,
+        totalPages,
+        totalItems: totalScans,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
     });
   } catch (error) {
     console.error('Taramalar sayfası yüklenirken hata:', error);
@@ -134,7 +106,7 @@ router.get('/scans', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Tarama geçmişi yüklenirken bir hata oluştu.'
+        message: 'Taramalar sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -146,31 +118,54 @@ router.get('/scans', async (req, res) => {
  */
 router.get('/threats', async (req, res) => {
   try {
-    // Tüm tehditleri getir
-    const threats = await Threat.findAll();
+    const filter = req.query.filter || 'all';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
     
-    // Son taramayı getir
-    const userId = req.session.user.id;
-    const recentScans = await ScanResult.findByUserId(userId, 1);
-    let lastScan = null;
-    let lastScanDate = null;
-    
-    if (recentScans.length > 0) {
-      lastScan = recentScans[0];
-      lastScanDate = lastScan.startTime;
+    // Filtre oluştur
+    const dbFilter = {};
+    if (filter === 'active') {
+      dbFilter.isCleaned = false;
+    } else if (filter === 'cleaned') {
+      dbFilter.isCleaned = true;
     }
     
-    // Tehdit istatistikleri
-    const activeThreats = threats.filter(t => !t.isCleaned).length;
-    const cleanedThreats = threats.filter(t => t.isCleaned).length;
+    // Tehditleri getir
+    const db = require('../config/database').getDb();
+    const threats = db.collection('threats');
+    
+    const totalThreats = await threats.countDocuments(dbFilter);
+    const totalPages = Math.ceil(totalThreats / limit);
+    
+    const threatDataList = await threats.find(dbFilter)
+      .sort({ detectionDate: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    
+    const threatsList = threatDataList.map(threatData => new Threat(
+      threatData._id,
+      threatData.name,
+      threatData.type,
+      threatData.description,
+      threatData.severity,
+      threatData.filePath,
+      threatData.isCleaned,
+      threatData.detectionDate
+    ));
     
     res.render('dashboard/threats', {
       title: 'Tehditler',
-      threats: threats.filter(t => !t.isCleaned),
-      lastScan,
-      lastScanDate,
-      activeThreats,
-      cleanedThreats
+      threats: threatsList,
+      filter,
+      pagination: {
+        page,
+        totalPages,
+        totalItems: totalThreats,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
     });
   } catch (error) {
     console.error('Tehditler sayfası yüklenirken hata:', error);
@@ -178,7 +173,7 @@ router.get('/threats', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Tehditler yüklenirken bir hata oluştu.'
+        message: 'Tehditler sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -188,13 +183,64 @@ router.get('/threats', async (req, res) => {
  * Dashboard Ayarlar Sayfası
  * GET /dashboard/settings
  */
-router.get('/settings', (req, res) => {
-  res.render('dashboard/settings', {
-    title: 'Ayarlar',
-    user: req.session.user,
-    success: req.query.success,
-    error: req.query.error
-  });
+router.get('/settings', async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    
+    // Kullanıcı bilgilerini getir
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).render('error', {
+        title: 'Hata',
+        error: {
+          status: 404,
+          message: 'Kullanıcı bulunamadı.'
+        }
+      });
+    }
+    
+    // Veritabanından kullanıcı ayarlarını getir
+    const db = require('../config/database').getDb();
+    const usersCollection = db.collection('users');
+    const userSettings = await usersCollection.findOne(
+      { _id: userId },
+      { projection: { 
+        settings: 1, 
+        isPremium: 1, 
+        premiumValidUntil: 1 
+      }}
+    );
+    
+    // Varsayılan ayarlar
+    const settings = userSettings?.settings || {
+      autoScan: true,
+      scanFrequency: 'weekly',
+      notifications: true,
+      darkMode: false,
+      language: 'tr'
+    };
+    
+    const isPremium = userSettings?.isPremium || false;
+    const premiumValidUntil = userSettings?.premiumValidUntil || null;
+    
+    res.render('dashboard/settings', {
+      title: 'Ayarlar',
+      user,
+      settings,
+      isPremium,
+      premiumValidUntil
+    });
+  } catch (error) {
+    console.error('Ayarlar sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Ayarlar sayfası yüklenirken bir hata oluştu.'
+      }
+    });
+  }
 });
 
 /**
@@ -204,37 +250,39 @@ router.get('/settings', (req, res) => {
 router.post('/settings/save', async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { displayName, email, notificationsEnabled, autoScan } = req.body;
+    const { autoScan, scanFrequency, notifications, darkMode, language } = req.body;
     
-    // Kullanıcıyı getir
-    const user = await User.findById(userId);
+    // Ayarları güncelle
+    const db = require('../config/database').getDb();
+    const usersCollection = db.collection('users');
     
-    if (!user) {
-      return res.redirect('/dashboard/settings?error=Kullanıcı bulunamadı');
-    }
-    
-    // Kullanıcı bilgilerini güncelle
-    user.displayName = displayName || user.displayName;
-    
-    // E-posta değiştiyse, daha önce kullanılıyor mu kontrol et
-    if (email && email !== user.email) {
-      const existingUser = await User.findByEmail(email);
-      if (existingUser && existingUser.id !== userId) {
-        return res.redirect('/dashboard/settings?error=Bu e-posta adresi zaten kullanılıyor');
+    await usersCollection.updateOne(
+      { _id: userId },
+      { 
+        $set: { 
+          settings: {
+            autoScan: autoScan === 'on',
+            scanFrequency: scanFrequency || 'weekly',
+            notifications: notifications === 'on',
+            darkMode: darkMode === 'on',
+            language: language || 'tr'
+          }
+        }
       }
-      user.email = email;
-    }
+    );
     
-    // Kullanıcıyı kaydet
-    await user.save();
+    req.session.settingsSaved = true;
     
-    // Oturum bilgilerini güncelle
-    req.session.user = user.toJSON();
-    
-    res.redirect('/dashboard/settings?success=Ayarlar başarıyla kaydedildi');
+    res.redirect('/dashboard/settings');
   } catch (error) {
     console.error('Ayarlar kaydedilirken hata:', error);
-    res.redirect('/dashboard/settings?error=Ayarlar kaydedilirken bir hata oluştu');
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Ayarlar kaydedilirken bir hata oluştu.'
+      }
+    });
   }
 });
 
@@ -249,48 +297,155 @@ router.get('/help', (req, res) => {
 });
 
 /**
+ * Yeni Tarama Başlat
+ * POST /dashboard/scan/start
+ */
+router.post('/scan/start', async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { type } = req.body;
+    
+    // Geçerli tarama tipi kontrolü
+    const validTypes = ['QUICK', 'FULL', 'WIFI', 'CUSTOM', 'QR'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Geçersiz tarama tipi.'
+      });
+    }
+    
+    // Yeni tarama oluştur
+    const scanResult = ScanResult.createSimulatedScan(type, userId);
+    await scanResult.save();
+    
+    // Tarama simülasyonu (gerçek bir tarama yerine)
+    simulateScan(scanResult.id, type, userId);
+    
+    res.json({
+      success: true,
+      scanId: scanResult.id,
+      message: 'Tarama başlatıldı.'
+    });
+  } catch (error) {
+    console.error('Tarama başlatılırken hata:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Tarama başlatılırken bir hata oluştu.'
+    });
+  }
+});
+
+/**
+ * Tarama simülasyonu
+ * @param {string} scanId - Tarama ID'si
+ * @param {string} type - Tarama tipi
+ * @param {string} userId - Kullanıcı ID'si
+ */
+async function simulateScan(scanId, type, userId) {
+  try {
+    // Tarama tipleri için simüle edilmiş süreler (saniye)
+    const scanDurations = {
+      'QUICK': 5,
+      'FULL': 15,
+      'WIFI': 8,
+      'CUSTOM': 10,
+      'QR': 3
+    };
+    
+    // Tarama tipleri için maksimum tehdit sayısı
+    const maxThreatCounts = {
+      'QUICK': 2,
+      'FULL': 5,
+      'WIFI': 3,
+      'CUSTOM': 4,
+      'QR': 1
+    };
+    
+    // Tarama tipleri için taranan öğe sayısı (min, max)
+    const scanCounts = {
+      'QUICK': [50, 150],
+      'FULL': [200, 500],
+      'WIFI': [20, 50],
+      'CUSTOM': [100, 300],
+      'QR': [1, 1]
+    };
+    
+    const duration = scanDurations[type] || 10; // Varsayılan 10 saniye
+    const maxThreats = maxThreatCounts[type] || 3; // Varsayılan maksimum 3 tehdit
+    
+    // Rastgele tehdit sayısı (0 ile maksimum arasında)
+    const threatCount = Math.floor(Math.random() * (maxThreats + 1));
+    const threats = Threat.getRandomThreats(threatCount);
+    
+    // Taranan öğe sayısı
+    const [minCount, maxCount] = scanCounts[type] || [50, 200];
+    const totalScanned = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    
+    // Tarama tamamlandığında güncelle
+    setTimeout(async () => {
+      try {
+        const scanResult = await ScanResult.findById(scanId);
+        if (scanResult) {
+          scanResult.complete(totalScanned, threats);
+          await scanResult.save();
+          
+          // Bulunan tehditleri veritabanına kaydet
+          for (const threat of threats) {
+            await threat.save();
+          }
+          
+          console.log(`Tarama tamamlandı: ${scanId}, Tehdit sayısı: ${threatCount}`);
+        }
+      } catch (error) {
+        console.error(`Tarama tamamlanırken hata: ${scanId}`, error);
+      }
+    }, duration * 1000);
+    
+    console.log(`Tarama başlatıldı: ${scanId}, Süre: ${duration} saniye`);
+  } catch (error) {
+    console.error(`Tarama simülasyonu sırasında hata: ${scanId}`, error);
+  }
+}
+
+/**
  * Tehdit Temizleme (API)
  * POST /dashboard/threats/:threatId/clean
  */
 router.post('/threats/:threatId/clean', async (req, res) => {
   try {
-    const threatId = req.params.threatId;
+    const { threatId } = req.params;
     
     // Tehdidi getir
     const threat = await Threat.findById(threatId);
     
     if (!threat) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Tehdit bulunamadı'
+        success: false,
+        message: 'Tehdit bulunamadı.'
       });
     }
     
-    // Tehdit zaten temizlendi mi kontrol et
+    // Tehdit zaten temizlenmiş mi?
     if (threat.isCleaned) {
       return res.json({
-        status: 'success',
-        message: 'Tehdit zaten temizlendi',
-        data: threat
+        success: true,
+        message: 'Bu tehdit zaten temizlenmiş.'
       });
     }
     
     // Tehdidi temizle
     threat.clean();
-    
-    // Tehdidi kaydet
     await threat.save();
     
     res.json({
-      status: 'success',
-      message: 'Tehdit başarıyla temizlendi',
-      data: threat
+      success: true,
+      message: 'Tehdit başarıyla temizlendi.'
     });
   } catch (error) {
     console.error('Tehdit temizlenirken hata:', error);
     res.status(500).json({
-      status: 'error',
-      message: 'Tehdit temizlenirken bir hata oluştu'
+      success: false,
+      message: 'Tehdit temizlenirken bir hata oluştu.'
     });
   }
 });

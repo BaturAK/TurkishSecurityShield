@@ -1,133 +1,131 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  static FirebaseAuth? _auth;
+  static GoogleSignIn? _googleSignIn;
 
-  // Singleton pattern
-  static final FirebaseService _instance = FirebaseService._internal();
-  factory FirebaseService() => _instance;
-  FirebaseService._internal();
+  // Firebase servisini başlat
+  static Future<void> init() async {
+    await Firebase.initializeApp();
+    _auth = FirebaseAuth.instance;
+    _googleSignIn = GoogleSignIn();
+  }
 
-  // Giriş yapmış kullanıcıyı al
-  User? get currentUser => _auth.currentUser;
-  
-  // Giriş durumunu dinle
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
-  
-  // E-posta/şifre ile kayıt ol
-  Future<UserCredential> signUpWithEmailAndPassword(String email, String password) async {
-    try {
-      return await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } catch (e) {
-      throw Exception('Kayıt olma başarısız: $e');
+  // Firebase Auth nesnesini döndür
+  static FirebaseAuth get auth {
+    if (_auth == null) {
+      throw Exception('Firebase Auth is not initialized. Call init() first.');
     }
+    return _auth!;
   }
-  
-  // E-posta/şifre ile giriş yap
-  Future<UserCredential> signInWithEmailAndPassword(String email, String password) async {
-    try {
-      return await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } catch (e) {
-      throw Exception('Giriş yapma başarısız: $e');
+
+  // Google Sign In nesnesini döndür
+  static GoogleSignIn get googleSignIn {
+    if (_googleSignIn == null) {
+      throw Exception('Google Sign In is not initialized. Call init() first.');
     }
+    return _googleSignIn!;
   }
-  
+
+  // Şu anki kullanıcıyı döndür
+  static User? get currentUser => _auth?.currentUser;
+
+  // Kullanıcı ID'sini döndür
+  static String? get userId => _auth?.currentUser?.uid;
+
+  // Kullanıcı e-posta adresini döndür
+  static String? get userEmail => _auth?.currentUser?.email;
+
+  // Kullanıcı görünen adını döndür
+  static String? get displayName => _auth?.currentUser?.displayName;
+
+  // Kullanıcı profil fotoğrafını döndür
+  static String? get photoUrl => _auth?.currentUser?.photoURL;
+
+  // E-posta ve şifre ile giriş yap
+  static Future<UserCredential> signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    return await auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+  }
+
+  // E-posta ve şifre ile kayıt ol
+  static Future<UserCredential> createUserWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    return await auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+  }
+
   // Google ile giriş yap
-  Future<UserCredential> signInWithGoogle() async {
+  static Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        throw Exception('Google girişi iptal edildi');
+        // Kullanıcı işlemi iptal etti
+        return null;
       }
-      
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      
-      return await _auth.signInWithCredential(credential);
+
+      return await auth.signInWithCredential(credential);
     } catch (e) {
-      throw Exception('Google ile giriş yapma başarısız: $e');
+      print('Google Sign In error: $e');
+      rethrow;
     }
   }
-  
-  // Şifremi unuttum
-  Future<void> sendPasswordResetEmail(String email) async {
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } catch (e) {
-      throw Exception('Şifre sıfırlama e-postası gönderme başarısız: $e');
-    }
+
+  // Misafir olarak giriş yap
+  static Future<UserCredential> signInAnonymously() async {
+    return await auth.signInAnonymously();
   }
-  
+
   // Çıkış yap
-  Future<void> signOut() async {
-    try {
-      // Tercihlerden premium durumunu silme
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('isPremium');
-      
-      // Google oturumunu kapat
-      await _googleSignIn.signOut();
-      
-      // Firebase oturumunu kapat
-      await _auth.signOut();
-    } catch (e) {
-      throw Exception('Çıkış yapma başarısız: $e');
-    }
+  static Future<void> signOut() async {
+    await googleSignIn.signOut();
+    await auth.signOut();
   }
-  
-  // Kullanıcı profilini güncelle
-  Future<void> updateUserProfile({String? displayName, String? photoURL}) async {
-    try {
-      await _auth.currentUser?.updateDisplayName(displayName);
-      await _auth.currentUser?.updatePhotoURL(photoURL);
-    } catch (e) {
-      throw Exception('Profil güncelleme başarısız: $e');
-    }
+
+  // Şifre sıfırlama e-postası gönder
+  static Future<void> sendPasswordResetEmail(String email) async {
+    await auth.sendPasswordResetEmail(email: email);
   }
-  
-  // Kullanıcı e-postasını güncelle
-  Future<void> updateEmail(String newEmail) async {
-    try {
-      await _auth.currentUser?.updateEmail(newEmail);
-    } catch (e) {
-      throw Exception('E-posta güncelleme başarısız: $e');
-    }
+
+  // Kullanıcı bilgilerini güncelle
+  static Future<void> updateDisplayName(String displayName) async {
+    await auth.currentUser?.updateDisplayName(displayName);
   }
-  
-  // Kullanıcı şifresini güncelle
-  Future<void> updatePassword(String newPassword) async {
-    try {
-      await _auth.currentUser?.updatePassword(newPassword);
-    } catch (e) {
-      throw Exception('Şifre güncelleme başarısız: $e');
-    }
+
+  // Kullanıcı profil fotoğrafını güncelle
+  static Future<void> updatePhotoURL(String photoURL) async {
+    await auth.currentUser?.updatePhotoURL(photoURL);
   }
-  
-  // E-posta doğrulama gönder
-  Future<void> sendEmailVerification() async {
-    try {
-      await _auth.currentUser?.sendEmailVerification();
-    } catch (e) {
-      throw Exception('E-posta doğrulama gönderme başarısız: $e');
-    }
+
+  // E-posta adresini güncelle
+  static Future<void> updateEmail(String email) async {
+    await auth.currentUser?.updateEmail(email);
   }
-  
-  // E-posta doğrulanmış mı kontrol et
-  bool isEmailVerified() {
-    return _auth.currentUser?.emailVerified ?? false;
+
+  // Şifreyi değiştir
+  static Future<void> updatePassword(String password) async {
+    await auth.currentUser?.updatePassword(password);
+  }
+
+  // Kullanıcıyı sil
+  static Future<void> deleteUser() async {
+    await auth.currentUser?.delete();
   }
 }

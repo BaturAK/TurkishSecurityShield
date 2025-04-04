@@ -5,22 +5,17 @@
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-
-// Models
+const { isAuthenticated, isAdmin } = require('../middleware/auth');
 const User = require('../models/user');
-const Threat = require('../models/threat');
 const ScanResult = require('../models/scanResult');
-
-// Middleware
-const authMiddleware = require('../middleware/auth');
+const Threat = require('../models/threat');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Middleware zincirleri
  * Tüm admin sayfaları için oturum açmış ve admin yetkisine sahip olma kontrolü
  */
-router.use(authMiddleware.isAuthenticated);
-router.use(authMiddleware.isAdmin);
+router.use(isAuthenticated, isAdmin);
 
 /**
  * Admin Dashboard
@@ -28,34 +23,36 @@ router.use(authMiddleware.isAdmin);
  */
 router.get('/', async (req, res) => {
   try {
-    // İstatistikleri getir
-    const userCount = await User.count();
-    const threatCount = await Threat.count();
-    const scanCount = await ScanResult.count();
-    const activeThreats = await Threat.count({ isCleaned: false });
-    
-    // Son kullanıcıları getir
+    // Son kullanıcılar, taramalar ve tehditler
     const recentUsers = await User.findRecent(5);
-    
-    // Son taramaları getir
     const recentScans = await ScanResult.findRecent(5);
+    const activeThreats = await Threat.findAll({ isCleaned: false });
     
-    res.render('admin/dashboard', {
-      title: 'Admin Panel',
-      totalUsers: userCount,
-      totalThreats: threatCount,
-      totalScans: scanCount,
-      activeThreats: activeThreats,
+    // İstatistikler
+    const totalUsers = await User.count();
+    const totalScans = await ScanResult.count();
+    const totalThreats = await Threat.count();
+    const activeThreatsCount = await Threat.count({ isCleaned: false });
+    
+    res.render('admin/index', {
+      title: 'Admin Paneli',
       recentUsers,
-      recentScans
+      recentScans,
+      activeThreats,
+      stats: {
+        totalUsers,
+        totalScans,
+        totalThreats,
+        activeThreats: activeThreatsCount
+      }
     });
   } catch (error) {
-    console.error('Admin dashboard yüklenirken hata:', error);
+    console.error('Admin paneli yüklenirken hata:', error);
     res.status(500).render('error', {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Admin dashboard yüklenirken bir hata oluştu.'
+        message: 'Admin paneli yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -67,29 +64,43 @@ router.get('/', async (req, res) => {
  */
 router.get('/users', async (req, res) => {
   try {
-    // Tüm kullanıcıları getir
-    const users = await User.findAll();
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
     
-    // Toplam kullanıcı sayısını al
-    const totalUsers = await User.count();
+    // Veritabanı bağlantısı
+    const db = require('../config/database').getDb();
+    const usersCollection = db.collection('users');
     
-    // Aylık ve günlük kullanıcı sayılarını hesapla
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Toplam kullanıcı sayısı
+    const totalUsers = await usersCollection.countDocuments();
+    const totalPages = Math.ceil(totalUsers / limit);
     
-    // Kullanıcı kayıt tarihlerini kontrol et (basitleştirmek için tüm kullanıcılar 30 gün içinde kaydoldu varsayalım)
-    const monthlyUsers = Math.floor(totalUsers * 0.7); // Toplam kullanıcıların %70'i
-    const dailyUsers = Math.floor(totalUsers * 0.1); // Toplam kullanıcıların %10'u
+    // Kullanıcıları getir
+    const userData = await usersCollection.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    
+    const users = userData.map(user => new User(
+      user._id,
+      user.email,
+      user.displayName,
+      user.photoURL,
+      user.isAdmin
+    ));
     
     res.render('admin/users', {
-      title: 'Admin - Kullanıcı Yönetimi',
+      title: 'Kullanıcı Yönetimi',
       users,
-      totalUsers,
-      monthlyUsers,
-      dailyUsers,
-      success: req.query.success,
-      error: req.query.error
+      pagination: {
+        page,
+        totalPages,
+        totalItems: totalUsers,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
     });
   } catch (error) {
     console.error('Kullanıcı yönetimi sayfası yüklenirken hata:', error);
@@ -97,7 +108,7 @@ router.get('/users', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Kullanıcı listesi yüklenirken bir hata oluştu.'
+        message: 'Kullanıcı yönetimi sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -109,7 +120,7 @@ router.get('/users', async (req, res) => {
  */
 router.get('/users/:userId', async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const { userId } = req.params;
     
     // Kullanıcıyı getir
     const user = await User.findById(userId);
@@ -124,15 +135,48 @@ router.get('/users/:userId', async (req, res) => {
       });
     }
     
-    // Kullanıcının taramalarını getir
-    const scans = await ScanResult.findByUserId(userId, 10);
+    // Kullanıcıya ait son taramalar
+    const recentScans = await ScanResult.findByUserId(userId, 5);
+    
+    // İstatistikler
+    const totalScans = await ScanResult.count({ userId });
+    
+    // Kullanıcı ayarları
+    const db = require('../config/database').getDb();
+    const usersCollection = db.collection('users');
+    const userDetails = await usersCollection.findOne(
+      { _id: userId },
+      { 
+        projection: { 
+          settings: 1, 
+          isPremium: 1, 
+          premiumValidUntil: 1, 
+          premiumCode: 1 
+        } 
+      }
+    );
+    
+    const settings = userDetails?.settings || {
+      autoScan: true,
+      scanFrequency: 'weekly',
+      notifications: true,
+      darkMode: false,
+      language: 'tr'
+    };
+    
+    const isPremium = userDetails?.isPremium || false;
+    const premiumValidUntil = userDetails?.premiumValidUntil || null;
+    const premiumCode = userDetails?.premiumCode || null;
     
     res.render('admin/user-detail', {
-      title: 'Admin - Kullanıcı Detayı',
+      title: `Kullanıcı: ${user.displayName}`,
       user,
-      scans,
-      success: req.query.success,
-      error: req.query.error
+      recentScans,
+      totalScans,
+      settings,
+      isPremium,
+      premiumValidUntil,
+      premiumCode
     });
   } catch (error) {
     console.error('Kullanıcı detay sayfası yüklenirken hata:', error);
@@ -140,7 +184,7 @@ router.get('/users/:userId', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Kullanıcı detayları yüklenirken bir hata oluştu.'
+        message: 'Kullanıcı detay sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -152,29 +196,62 @@ router.get('/users/:userId', async (req, res) => {
  */
 router.get('/scans', async (req, res) => {
   try {
-    // Tüm taramaları getir (son 100)
-    const scans = await ScanResult.findRecent(100);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
     
-    // Toplam tarama sayısını al
-    const totalScans = await ScanResult.count();
-
-    // Aylık ve günlük tarama sayısını hesapla
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    // Aylık ve günlük tarama sayısını filtrele
-    const monthlyScans = scans.filter(scan => new Date(scan.startTime) >= startOfMonth).length;
-    const dailyScans = scans.filter(scan => new Date(scan.startTime) >= startOfDay).length;
+    // Veritabanı bağlantısı
+    const db = require('../config/database').getDb();
+    const scanResults = db.collection('scanResults');
+    
+    // Toplam tarama sayısı
+    const totalScans = await scanResults.countDocuments();
+    const totalPages = Math.ceil(totalScans / limit);
+    
+    // Taramaları getir
+    const scanDataList = await scanResults.find()
+      .sort({ startTime: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    
+    // Kullanıcı bilgilerini getir
+    const users = db.collection('users');
+    const scans = [];
+    
+    for (const scanData of scanDataList) {
+      let userName = 'Sistem';
+      
+      if (scanData.userId) {
+        const userData = await users.findOne({ _id: scanData.userId });
+        if (userData) {
+          userName = userData.displayName || userData.email;
+        }
+      }
+      
+      scans.push({
+        id: scanData._id,
+        type: scanData.type,
+        startTime: scanData.startTime,
+        endTime: scanData.endTime,
+        totalScanned: scanData.totalScanned,
+        threatCount: scanData.threatsFound.length,
+        status: scanData.endTime ? 'COMPLETED' : 'RUNNING',
+        userId: scanData.userId,
+        userName
+      });
+    }
     
     res.render('admin/scans', {
-      title: 'Admin - Tarama Yönetimi',
+      title: 'Tarama Yönetimi',
       scans,
-      totalScans,
-      monthlyScans,
-      dailyScans,
-      success: req.query.success,
-      error: req.query.error
+      pagination: {
+        page,
+        totalPages,
+        totalItems: totalScans,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
     });
   } catch (error) {
     console.error('Tarama yönetimi sayfası yüklenirken hata:', error);
@@ -182,7 +259,7 @@ router.get('/scans', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Tarama listesi yüklenirken bir hata oluştu.'
+        message: 'Tarama yönetimi sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -194,33 +271,32 @@ router.get('/scans', async (req, res) => {
  */
 router.get('/scans/:scanId', async (req, res) => {
   try {
-    const scanId = req.params.scanId;
+    const { scanId } = req.params;
     
     // Taramayı getir
-    const scan = await ScanResult.findById(scanId);
+    const scanResult = await ScanResult.findById(scanId);
     
-    if (!scan) {
+    if (!scanResult) {
       return res.status(404).render('error', {
         title: 'Hata',
         error: {
           status: 404,
-          message: 'Tarama bulunamadı.'
+          message: 'Tarama sonucu bulunamadı.'
         }
       });
     }
     
-    // Kullanıcıyı getir (eğer tarama bir kullanıcıya aitse)
+    // Taramayı yapan kullanıcı bilgisi
     let user = null;
-    if (scan.userId) {
-      user = await User.findById(scan.userId);
+    
+    if (scanResult.userId) {
+      user = await User.findById(scanResult.userId);
     }
     
     res.render('admin/scan-detail', {
-      title: 'Admin - Tarama Detayı',
-      scan,
-      user,
-      success: req.query.success,
-      error: req.query.error
+      title: `Tarama Detayı: ${scanId}`,
+      scanResult,
+      user
     });
   } catch (error) {
     console.error('Tarama detay sayfası yüklenirken hata:', error);
@@ -228,7 +304,7 @@ router.get('/scans/:scanId', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'Tarama detayları yüklenirken bir hata oluştu.'
+        message: 'Tarama detay sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -240,47 +316,71 @@ router.get('/scans/:scanId', async (req, res) => {
  */
 router.get('/stats', async (req, res) => {
   try {
-    // İstatistikleri getir
-    const userCount = await User.count();
-    const threatCount = await Threat.count();
-    const scanCount = await ScanResult.count();
+    const db = require('../config/database').getDb();
+    
+    // Toplam kullanıcı, tarama ve tehdit sayıları
+    const totalUsers = await User.count();
+    const totalScans = await ScanResult.count();
+    const totalThreats = await Threat.count();
     const activeThreats = await Threat.count({ isCleaned: false });
-    const cleanedThreats = await Threat.count({ isCleaned: true });
     
-    // Threat type dağılımı
-    const threats = await Threat.findAll();
+    // Son 7 günün tarama sayıları
+    const scanResults = db.collection('scanResults');
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    // Tarama tipi dağılımı
-    const scans = await ScanResult.findRecent(500);
-    
-    // Tiplerin dağılımını hesapla
-    const threatTypeDistribution = {};
-    threats.forEach(threat => {
-      if (!threatTypeDistribution[threat.type]) {
-        threatTypeDistribution[threat.type] = 0;
+    const dailyScans = await scanResults.aggregate([
+      { 
+        $match: { 
+          startTime: { $gte: sevenDaysAgo } 
+        } 
+      },
+      {
+        $group: {
+          _id: { 
+            $dateToString: { 
+              format: '%Y-%m-%d', 
+              date: '$startTime' 
+            } 
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
       }
-      threatTypeDistribution[threat.type]++;
-    });
+    ]).toArray();
     
-    const scanTypeDistribution = {};
-    scans.forEach(scan => {
-      if (!scanTypeDistribution[scan.type]) {
-        scanTypeDistribution[scan.type] = 0;
+    // Tehdit tipleri dağılımı
+    const threats = db.collection('threats');
+    const threatTypes = await threats.aggregate([
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 }
       }
-      scanTypeDistribution[scan.type]++;
-    });
+    ]).toArray();
+    
+    // Premium kullanıcı sayısı
+    const users = db.collection('users');
+    const premiumUsers = await users.countDocuments({ isPremium: true });
     
     res.render('admin/stats', {
-      title: 'Admin - İstatistikler',
+      title: 'İstatistikler',
       stats: {
-        userCount,
-        threatCount,
-        scanCount,
+        totalUsers,
+        totalScans,
+        totalThreats,
         activeThreats,
-        cleanedThreats,
-        threatTypeDistribution,
-        scanTypeDistribution
-      }
+        premiumUsers,
+        premiumPercentage: totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 100) : 0
+      },
+      dailyScans,
+      threatTypes
     });
   } catch (error) {
     console.error('İstatistikler sayfası yüklenirken hata:', error);
@@ -288,7 +388,75 @@ router.get('/stats', async (req, res) => {
       title: 'Hata',
       error: {
         status: 500,
-        message: 'İstatistikler yüklenirken bir hata oluştu.'
+        message: 'İstatistikler sayfası yüklenirken bir hata oluştu.'
+      }
+    });
+  }
+});
+
+/**
+ * Premium Kod Yönetimi Sayfası
+ * GET /admin/premium
+ */
+router.get('/premium', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+    
+    // Veritabanı bağlantısı
+    const db = require('../config/database').getDb();
+    const premium = db.collection('premium');
+    
+    // Toplam kod sayısı
+    const totalCodes = await premium.countDocuments();
+    const totalPages = Math.ceil(totalCodes / limit);
+    
+    // Kodları getir
+    const premiumCodes = await premium.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    
+    // Kullanıcı bilgilerini ekle
+    const users = db.collection('users');
+    const codes = [];
+    
+    for (const code of premiumCodes) {
+      let userName = '';
+      
+      if (code.usedBy) {
+        const userData = await users.findOne({ _id: code.usedBy });
+        if (userData) {
+          userName = userData.displayName || userData.email;
+        }
+      }
+      
+      codes.push({
+        ...code,
+        userName
+      });
+    }
+    
+    res.render('admin/premium', {
+      title: 'Premium Kod Yönetimi',
+      codes,
+      pagination: {
+        page,
+        totalPages,
+        totalItems: totalCodes,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Premium kod yönetimi sayfası yüklenirken hata:', error);
+    res.status(500).render('error', {
+      title: 'Hata',
+      error: {
+        status: 500,
+        message: 'Premium kod yönetimi sayfası yüklenirken bir hata oluştu.'
       }
     });
   }
@@ -303,18 +471,33 @@ router.post('/users/add', async (req, res) => {
     const { email, displayName, isAdmin } = req.body;
     
     if (!email) {
-      return res.redirect('/admin/users?error=E-posta adresi gereklidir');
+      return res.status(400).json({
+        success: false,
+        message: 'E-posta adresi gereklidir.'
+      });
     }
     
-    // Kullanıcı var mı kontrol et
+    // E-posta formatı kontrolü
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Geçerli bir e-posta adresi giriniz.'
+      });
+    }
+    
+    // Kullanıcı zaten var mı?
     const existingUser = await User.findByEmail(email);
     if (existingUser) {
-      return res.redirect('/admin/users?error=Bu e-posta adresi zaten kullanılıyor');
+      return res.status(400).json({
+        success: false,
+        message: 'Bu e-posta adresi zaten kullanılmaktadır.'
+      });
     }
     
     // Yeni kullanıcı oluştur
     const user = new User(
-      uuidv4(),
+      `user_${uuidv4().substring(0, 8)}`,
       email,
       displayName || email.split('@')[0],
       null,
@@ -323,10 +506,17 @@ router.post('/users/add', async (req, res) => {
     
     await user.save();
     
-    res.redirect('/admin/users?success=Kullanıcı başarıyla eklendi');
+    res.json({
+      success: true,
+      message: 'Kullanıcı başarıyla eklendi.',
+      user: user.toJSON()
+    });
   } catch (error) {
     console.error('Kullanıcı eklenirken hata:', error);
-    res.redirect('/admin/users?error=Kullanıcı eklenirken bir hata oluştu');
+    res.status(500).json({
+      success: false,
+      message: 'Kullanıcı eklenirken bir hata oluştu.'
+    });
   }
 });
 
@@ -336,26 +526,23 @@ router.post('/users/add', async (req, res) => {
  */
 router.post('/users/update', async (req, res) => {
   try {
-    const { userId, email, displayName, isAdmin } = req.body;
+    const { userId, displayName, isAdmin, isPremium, validDays } = req.body;
     
     if (!userId) {
-      return res.redirect('/admin/users?error=Kullanıcı ID gereklidir');
+      return res.status(400).json({
+        success: false,
+        message: 'Kullanıcı ID gereklidir.'
+      });
     }
     
     // Kullanıcıyı getir
     const user = await User.findById(userId);
     
     if (!user) {
-      return res.redirect('/admin/users?error=Kullanıcı bulunamadı');
-    }
-    
-    // E-posta değiştiyse, daha önce kullanılıyor mu kontrol et
-    if (email && email !== user.email) {
-      const existingUser = await User.findByEmail(email);
-      if (existingUser && existingUser.id !== userId) {
-        return res.redirect(`/admin/users/${userId}?error=Bu e-posta adresi zaten kullanılıyor`);
-      }
-      user.email = email;
+      return res.status(404).json({
+        success: false,
+        message: 'Kullanıcı bulunamadı.'
+      });
     }
     
     // Kullanıcı bilgilerini güncelle
@@ -364,10 +551,40 @@ router.post('/users/update', async (req, res) => {
     
     await user.save();
     
-    res.redirect(`/admin/users/${userId}?success=Kullanıcı başarıyla güncellendi`);
+    // Premium durumu güncelleme
+    if (isPremium !== undefined) {
+      const db = require('../config/database').getDb();
+      const usersCollection = db.collection('users');
+      
+      const updateData = {
+        isPremium: isPremium === 'true'
+      };
+      
+      // Premium geçerlilik süresi
+      if (isPremium === 'true' && validDays) {
+        updateData.premiumValidUntil = new Date(Date.now() + (parseInt(validDays) * 24 * 60 * 60 * 1000));
+      }
+      
+      await usersCollection.updateOne(
+        { _id: userId },
+        { $set: updateData }
+      );
+    }
+    
+    res.json({
+      success: true,
+      message: 'Kullanıcı başarıyla güncellendi.',
+      user: {
+        ...user.toJSON(),
+        isPremium: isPremium === 'true'
+      }
+    });
   } catch (error) {
     console.error('Kullanıcı güncellenirken hata:', error);
-    res.redirect('/admin/users?error=Kullanıcı güncellenirken bir hata oluştu');
+    res.status(500).json({
+      success: false,
+      message: 'Kullanıcı güncellenirken bir hata oluştu.'
+    });
   }
 });
 
@@ -380,30 +597,108 @@ router.post('/users/delete', async (req, res) => {
     const { userId } = req.body;
     
     if (!userId) {
-      return res.redirect('/admin/users?error=Kullanıcı ID gereklidir');
+      return res.status(400).json({
+        success: false,
+        message: 'Kullanıcı ID gereklidir.'
+      });
     }
     
-    // Admin kullanıcısı silinemez kontrolü
-    if (userId === 'admin') {
-      return res.redirect('/admin/users?error=Admin kullanıcısı silinemez');
+    // Kendini silmeye çalışıyor mu?
+    if (userId === req.session.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kendi hesabınızı silemezsiniz.'
+      });
     }
     
     // Kullanıcıyı getir
     const user = await User.findById(userId);
     
     if (!user) {
-      return res.redirect('/admin/users?error=Kullanıcı bulunamadı');
+      return res.status(404).json({
+        success: false,
+        message: 'Kullanıcı bulunamadı.'
+      });
     }
     
     // Kullanıcıyı sil
-    // Bu bir demo, gerçek bir uygulama için veritabanında silme işlemi yapılmalı
     const db = require('../config/database').getDb();
-    await db.collection('users').deleteOne({ id: userId });
+    const usersCollection = db.collection('users');
     
-    res.redirect('/admin/users?success=Kullanıcı başarıyla silindi');
+    await usersCollection.deleteOne({ _id: userId });
+    
+    res.json({
+      success: true,
+      message: 'Kullanıcı başarıyla silindi.'
+    });
   } catch (error) {
     console.error('Kullanıcı silinirken hata:', error);
-    res.redirect('/admin/users?error=Kullanıcı silinirken bir hata oluştu');
+    res.status(500).json({
+      success: false,
+      message: 'Kullanıcı silinirken bir hata oluştu.'
+    });
+  }
+});
+
+/**
+ * Premium Kod Oluşturma (POST işlemi)
+ * POST /admin/premium/generate
+ */
+router.post('/premium/generate', async (req, res) => {
+  try {
+    const { count, validDays } = req.body;
+    
+    const codeCount = parseInt(count) || 1;
+    const days = parseInt(validDays) || 365;
+    
+    if (codeCount <= 0 || codeCount > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Kod sayısı 1 ile 100 arasında olmalıdır.'
+      });
+    }
+    
+    if (days <= 0 || days > 3650) {
+      return res.status(400).json({
+        success: false,
+        message: 'Geçerlilik süresi 1 ile 3650 gün arasında olmalıdır.'
+      });
+    }
+    
+    // Kodları oluştur
+    const db = require('../config/database').getDb();
+    const premium = db.collection('premium');
+    
+    const codes = [];
+    
+    for (let i = 0; i < codeCount; i++) {
+      // 10 haneli kod oluştur
+      const code = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      
+      const premiumCode = {
+        _id: `premium_${uuidv4().substring(0, 8)}`,
+        code,
+        isUsed: false,
+        validDays: days,
+        createdAt: new Date(),
+        createdBy: req.session.user.id
+      };
+      
+      await premium.insertOne(premiumCode);
+      codes.push(premiumCode);
+    }
+    
+    res.json({
+      success: true,
+      message: `${codeCount} adet premium kod başarıyla oluşturuldu.`,
+      codes
+    });
+  } catch (error) {
+    console.error('Premium kod oluşturulurken hata:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Premium kod oluşturulurken bir hata oluştu.'
+    });
   }
 });
 
@@ -416,25 +711,38 @@ router.post('/scans/delete', async (req, res) => {
     const { scanId } = req.body;
     
     if (!scanId) {
-      return res.redirect('/admin/scans?error=Tarama ID gereklidir');
+      return res.status(400).json({
+        success: false,
+        message: 'Tarama ID gereklidir.'
+      });
     }
     
     // Taramayı getir
-    const scan = await ScanResult.findById(scanId);
+    const scanResult = await ScanResult.findById(scanId);
     
-    if (!scan) {
-      return res.redirect('/admin/scans?error=Tarama bulunamadı');
+    if (!scanResult) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tarama bulunamadı.'
+      });
     }
     
     // Taramayı sil
-    // Bu bir demo, gerçek bir uygulama için veritabanında silme işlemi yapılmalı
     const db = require('../config/database').getDb();
-    await db.collection('scan_results').deleteOne({ id: scanId });
+    const scanResults = db.collection('scanResults');
     
-    res.redirect('/admin/scans?success=Tarama başarıyla silindi');
+    await scanResults.deleteOne({ _id: scanId });
+    
+    res.json({
+      success: true,
+      message: 'Tarama başarıyla silindi.'
+    });
   } catch (error) {
     console.error('Tarama silinirken hata:', error);
-    res.redirect('/admin/scans?error=Tarama silinirken bir hata oluştu');
+    res.status(500).json({
+      success: false,
+      message: 'Tarama silinirken bir hata oluştu.'
+    });
   }
 });
 

@@ -3,8 +3,8 @@
  * Tehditleri temsil eden model sınıfı
  */
 
-const { getDb } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const database = require('../config/database');
 
 /**
  * Threat model
@@ -23,7 +23,7 @@ class Threat {
    * @param {Date} detectionDate - Tespit edilme tarihi
    */
   constructor(id, name, type, description, severity = 'MEDIUM', filePath = null, isCleaned = false, detectionDate = new Date()) {
-    this.id = id;
+    this.id = id || uuidv4();
     this.name = name;
     this.type = type;
     this.description = description;
@@ -65,26 +65,31 @@ class Threat {
    */
   async save() {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return false;
+
+      const threats = db.collection('threats');
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const threatCollection = db.collection('threats');
-      
-      // Tehdit zaten var mı kontrol et
-      const existingThreat = await threatCollection.findOne({ id: this.id });
+      const threatData = {
+        _id: this.id,
+        name: this.name,
+        type: this.type,
+        description: this.description,
+        severity: this.severity,
+        filePath: this.filePath,
+        isCleaned: this.isCleaned,
+        detectionDate: this.detectionDate
+      };
+
+      // Tehdidin daha önce kaydedilip kaydedilmediğini kontrol et
+      const existingThreat = await threats.findOne({ _id: this.id });
       
       if (existingThreat) {
-        // Tehdit var, güncelle
-        await threatCollection.updateOne(
-          { id: this.id },
-          { $set: this.toJSON() }
-        );
+        // Tehdit zaten var, güncelle
+        await threats.updateOne({ _id: this.id }, { $set: threatData });
       } else {
-        // Tehdit yok, yeni kayıt ekle
-        await threatCollection.insertOne(this.toJSON());
+        // Yeni tehdit ekle
+        await threats.insertOne(threatData);
       }
       
       return true;
@@ -101,21 +106,16 @@ class Threat {
    */
   static async findById(id) {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return null;
+
+      const threats = db.collection('threats');
+      const threatData = await threats.findOne({ _id: id });
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const threatCollection = db.collection('threats');
-      const threatData = await threatCollection.findOne({ id });
-      
-      if (!threatData) {
-        return null;
-      }
+      if (!threatData) return null;
       
       return new Threat(
-        threatData.id,
+        threatData._id,
         threatData.name,
         threatData.type,
         threatData.description,
@@ -125,7 +125,7 @@ class Threat {
         threatData.detectionDate
       );
     } catch (error) {
-      console.error('ID ile tehdit bulunurken hata:', error);
+      console.error('ID ile tehdit aranırken hata:', error);
       return null;
     }
   }
@@ -137,17 +137,14 @@ class Threat {
    */
   static async findAll(filter = {}) {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return [];
+
+      const threats = db.collection('threats');
+      const threatDataList = await threats.find(filter).toArray();
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const threatCollection = db.collection('threats');
-      const threats = await threatCollection.find(filter).sort({ detectionDate: -1 }).toArray();
-      
-      return threats.map(threatData => new Threat(
-        threatData.id,
+      return threatDataList.map(threatData => new Threat(
+        threatData._id,
         threatData.name,
         threatData.type,
         threatData.description,
@@ -157,7 +154,7 @@ class Threat {
         threatData.detectionDate
       ));
     } catch (error) {
-      console.error('Tehditler getirilirken hata:', error);
+      console.error('Tüm tehditler getirilirken hata:', error);
       return [];
     }
   }
@@ -169,16 +166,13 @@ class Threat {
    */
   static async count(filter = {}) {
     try {
-      const db = getDb();
-      
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const threatCollection = db.collection('threats');
-      return await threatCollection.countDocuments(filter);
+      const db = database.getDb();
+      if (!db) return 0;
+
+      const threats = db.collection('threats');
+      return await threats.countDocuments(filter);
     } catch (error) {
-      console.error('Tehdit sayısı hesaplanırken hata:', error);
+      console.error('Tehdit sayısı getirilirken hata:', error);
       return 0;
     }
   }
@@ -189,63 +183,61 @@ class Threat {
    * @returns {Threat[]} - Üretilen tehdit nesneleri dizisi
    */
   static getRandomThreats(count = 3) {
-    const threatTypes = ['Trojan', 'Virus', 'Spyware', 'Adware', 'Ransomware', 'Worm', 'Rootkit'];
-    const severities = ['LOW', 'MEDIUM', 'HIGH'];
-    
-    const filePaths = [
-      '/data/app/com.example.suspicious.app/base.apk',
-      '/sdcard/Download/suspicious_file.apk',
-      '/sdcard/DCIM/malicious_attachment.jpg',
-      '/data/data/com.example.game/cache/ad_library.dex',
-      '/system/app/bloatware.apk',
-      '/data/app/com.example.modified.app/classes.dex'
-    ];
-    
-    const threatNames = [
-      'Android.Trojan.BankBot',
-      'Android.Virus.Locker',
-      'Android.Spyware.Pegasus',
-      'Android.Adware.Ewind',
-      'Android.Ransomware.WannaLocker',
-      'Android.Worm.Selfmite',
-      'Android.Rootkit.GhostPush',
-      'Android.Trojan.FakeBank',
-      'Android.Virus.Judy',
-      'Android.Spyware.Flexispy'
-    ];
-    
-    const descriptions = [
-      'Bu tehdit bankacılık bilgilerinizi çalmayı amaçlar ve SMS izinlerini kullanır.',
-      'Cihazınızı kilitleyerek erişimi engeller ve kişisel verilerinizi şifreler.',
-      'Arka planda çalışarak kişisel bilgilerinizi ve iletişimlerinizi izler.',
-      'İstenmeyen reklamlar gösterir ve tarama geçmişinizi takip eder.',
-      'Verilerinizi şifreleyerek fidye talep eder.',
-      'SMS yoluyla kendini diğer cihazlara yayar.',
-      'Sistem seviyesinde erişim sağlayarak kendini gizler.',
-      'Gerçek bankacılık uygulamalarını taklit ederek kimlik bilgilerinizi çalar.',
-      'Zararlı reklam kodları içerir ve otomatik tıklama işlemleri gerçekleştirir.',
-      'Çağrıları ve mesajları dinleyerek kişisel bilgilerinizi toplar.'
-    ];
+    const threatTypes = ['TROJAN', 'VIRUS', 'SPYWARE', 'ADWARE', 'RANSOMWARE', 'WORM'];
+    const severityLevels = ['LOW', 'MEDIUM', 'HIGH'];
     
     const threats = [];
     
     for (let i = 0; i < count; i++) {
       const type = threatTypes[Math.floor(Math.random() * threatTypes.length)];
-      const severity = severities[Math.floor(Math.random() * severities.length)];
-      const nameIndex = Math.floor(Math.random() * threatNames.length);
-      const descIndex = Math.floor(Math.random() * descriptions.length);
-      const filePath = filePaths[Math.floor(Math.random() * filePaths.length)];
+      const severity = severityLevels[Math.floor(Math.random() * severityLevels.length)];
       
-      threats.push(new Threat(
-        uuidv4(),
-        threatNames[nameIndex],
+      let name, description;
+      
+      switch (type) {
+        case 'TROJAN':
+          name = `Trojan.AndroidOS.${['Agent', 'Banker', 'SMS', 'Spy'][Math.floor(Math.random() * 4)]}`;
+          description = 'Cihazın sistem yetkilerini ele geçirebilen ve kişisel verileri çalabilecek bir Truva atı tehdidir.';
+          break;
+        case 'VIRUS':
+          name = `Virus.AndroidOS.${['Boot', 'File', 'Script'][Math.floor(Math.random() * 3)]}`;
+          description = 'Sisteme zarar veren ve kendini kopyalayarak yayılan zararlı bir yazılımdır.';
+          break;
+        case 'SPYWARE':
+          name = `Spyware.AndroidOS.${['Track', 'Keylog', 'Info'][Math.floor(Math.random() * 3)]}`;
+          description = 'Kullanıcı bilgilerini gizlice toplayan ve uzak sunuculara gönderen bir casus yazılımdır.';
+          break;
+        case 'ADWARE':
+          name = `Adware.AndroidOS.${['Ewind', 'PopUp', 'Banner'][Math.floor(Math.random() * 3)]}`;
+          description = 'Rahatsız edici reklamlar gösteren ve kullanıcı davranışlarını takip eden bir reklam yazılımıdır.';
+          break;
+        case 'RANSOMWARE':
+          name = `Ransom.AndroidOS.${['Locker', 'Crypt', 'Block'][Math.floor(Math.random() * 3)]}`;
+          description = 'Cihaz verilerini şifreleyen ve fidye talep eden bir fidye yazılımıdır.';
+          break;
+        case 'WORM':
+          name = `Worm.AndroidOS.${['Net', 'Spread', 'Link'][Math.floor(Math.random() * 3)]}`;
+          description = 'Kendini kopyalayarak ağ üzerinden yayılan ve sistem kaynaklarını tüketen bir solucan türüdür.';
+          break;
+        default:
+          name = `Unknown.AndroidOS.Type${Math.floor(Math.random() * 100)}`;
+          description = 'Tanımlanamayan şüpheli bir yazılım.';
+      }
+      
+      const filePath = Math.random() > 0.3 ? `/data/app/com.example.suspicious${Math.floor(Math.random() * 10)}/base.apk` : null;
+      
+      const threat = new Threat(
+        `threat${uuidv4().substring(0, 8)}`,
+        name,
         type,
-        descriptions[descIndex],
+        description,
         severity,
         filePath,
         false,
-        new Date()
-      ));
+        new Date(Date.now() - Math.floor(Math.random() * 86400000))
+      );
+      
+      threats.push(threat);
     }
     
     return threats;

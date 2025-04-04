@@ -3,8 +3,8 @@
  * Kullanıcıları temsil eden model sınıfı
  */
 
-const { getDb } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const database = require('../config/database');
 
 /**
  * User model
@@ -20,14 +20,12 @@ class User {
    * @param {boolean} isAdmin - Admin yetkisi
    */
   constructor(id, email, displayName = null, photoURL = null, isAdmin = false) {
-    this.id = id;
+    this.id = id || uuidv4();
     this.email = email;
     this.displayName = displayName || email.split('@')[0];
     this.photoURL = photoURL;
     this.isAdmin = isAdmin;
     this.createdAt = new Date();
-    this.lastLogin = new Date();
-    this.status = 'active';
   }
 
   /**
@@ -41,9 +39,7 @@ class User {
       displayName: this.displayName,
       photoURL: this.photoURL,
       isAdmin: this.isAdmin,
-      createdAt: this.createdAt,
-      lastLogin: this.lastLogin,
-      status: this.status
+      createdAt: this.createdAt
     };
   }
 
@@ -53,26 +49,29 @@ class User {
    */
   async save() {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return false;
+
+      const users = db.collection('users');
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      
-      // Kullanıcı zaten var mı kontrol et
-      const existingUser = await userCollection.findOne({ id: this.id });
+      const userData = {
+        _id: this.id,
+        email: this.email,
+        displayName: this.displayName,
+        photoURL: this.photoURL,
+        isAdmin: this.isAdmin,
+        createdAt: this.createdAt
+      };
+
+      // Kullanıcının daha önce kaydedilip kaydedilmediğini kontrol et
+      const existingUser = await users.findOne({ _id: this.id });
       
       if (existingUser) {
-        // Kullanıcı var, güncelle
-        await userCollection.updateOne(
-          { id: this.id },
-          { $set: this.toJSON() }
-        );
+        // Kullanıcı zaten var, güncelle
+        await users.updateOne({ _id: this.id }, { $set: userData });
       } else {
-        // Kullanıcı yok, yeni kayıt ekle
-        await userCollection.insertOne(this.toJSON());
+        // Yeni kullanıcı ekle
+        await users.insertOne(userData);
       }
       
       return true;
@@ -81,7 +80,7 @@ class User {
       return false;
     }
   }
-
+  
   /**
    * Kullanıcıyı veritabanına kaydeder
    * @param {User} userData - Kaydedilecek kullanıcı verisi
@@ -89,11 +88,11 @@ class User {
    */
   static async saveUserToDb(userData) {
     const user = new User(
-      userData.id || uuidv4(),
+      userData.id,
       userData.email,
       userData.displayName,
       userData.photoURL,
-      userData.isAdmin || false
+      userData.isAdmin
     );
     
     await user.save();
@@ -107,28 +106,23 @@ class User {
    */
   static async findByEmail(email) {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return null;
+
+      const users = db.collection('users');
+      const userData = await users.findOne({ email });
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      const userData = await userCollection.findOne({ email });
-      
-      if (!userData) {
-        return null;
-      }
+      if (!userData) return null;
       
       return new User(
-        userData.id,
+        userData._id,
         userData.email,
         userData.displayName,
         userData.photoURL,
         userData.isAdmin
       );
     } catch (error) {
-      console.error('E-posta ile kullanıcı bulunurken hata:', error);
+      console.error('E-posta ile kullanıcı aranırken hata:', error);
       return null;
     }
   }
@@ -140,28 +134,23 @@ class User {
    */
   static async findById(id) {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return null;
+
+      const users = db.collection('users');
+      const userData = await users.findOne({ _id: id });
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      const userData = await userCollection.findOne({ id });
-      
-      if (!userData) {
-        return null;
-      }
+      if (!userData) return null;
       
       return new User(
-        userData.id,
+        userData._id,
         userData.email,
         userData.displayName,
         userData.photoURL,
         userData.isAdmin
       );
     } catch (error) {
-      console.error('ID ile kullanıcı bulunurken hata:', error);
+      console.error('ID ile kullanıcı aranırken hata:', error);
       return null;
     }
   }
@@ -172,17 +161,14 @@ class User {
    */
   static async findAll() {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return [];
+
+      const users = db.collection('users');
+      const userDataList = await users.find().toArray();
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      const users = await userCollection.find().toArray();
-      
-      return users.map(userData => new User(
-        userData.id,
+      return userDataList.map(userData => new User(
+        userData._id,
         userData.email,
         userData.displayName,
         userData.photoURL,
@@ -200,17 +186,14 @@ class User {
    */
   static async findAdmins() {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return [];
+
+      const users = db.collection('users');
+      const userDataList = await users.find({ isAdmin: true }).toArray();
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      const users = await userCollection.find({ isAdmin: true }).toArray();
-      
-      return users.map(userData => new User(
-        userData.id,
+      return userDataList.map(userData => new User(
+        userData._id,
         userData.email,
         userData.displayName,
         userData.photoURL,
@@ -228,16 +211,13 @@ class User {
    */
   static async count() {
     try {
-      const db = getDb();
-      
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      return await userCollection.countDocuments();
+      const db = database.getDb();
+      if (!db) return 0;
+
+      const users = db.collection('users');
+      return await users.countDocuments();
     } catch (error) {
-      console.error('Kullanıcı sayısı hesaplanırken hata:', error);
+      console.error('Kullanıcı sayısı getirilirken hata:', error);
       return 0;
     }
   }
@@ -249,17 +229,17 @@ class User {
    */
   static async findRecent(limit = 10) {
     try {
-      const db = getDb();
+      const db = database.getDb();
+      if (!db) return [];
+
+      const users = db.collection('users');
+      const userDataList = await users.find()
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .toArray();
       
-      if (!db) {
-        throw new Error('Veritabanı bağlantısı kurulamadı');
-      }
-      
-      const userCollection = db.collection('users');
-      const users = await userCollection.find().sort({ createdAt: -1 }).limit(limit).toArray();
-      
-      return users.map(userData => new User(
-        userData.id,
+      return userDataList.map(userData => new User(
+        userData._id,
         userData.email,
         userData.displayName,
         userData.photoURL,

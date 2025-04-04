@@ -1,133 +1,228 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/premium_provider.dart';
-import '../screens/premium_screen.dart';
-import '../screens/home_screen.dart';
-import '../screens/scan_results_screen.dart';
-import '../screens/settings_screen.dart';
+import '../utils/constants.dart';
 
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     final premiumProvider = Provider.of<PremiumProvider>(context);
     
     return Drawer(
       child: Column(
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.security,
+          // Başlık
+          Container(
+            padding: EdgeInsets.only(top: 40, bottom: 20),
+            color: AppColors.primaryColor,
+            width: double.infinity,
+            child: Column(
+              children: [
+                // Kullanıcı avatarı
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                     color: Colors.white,
-                    size: 48,
+                    image: authProvider.photoURL != null
+                        ? DecorationImage(
+                            image: NetworkImage(authProvider.photoURL!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Antivirüs Uygulaması',
+                  child: authProvider.photoURL == null
+                      ? Icon(
+                          Icons.person,
+                          size: 40,
+                          color: AppColors.primaryColor,
+                        )
+                      : null,
+                ),
+                SizedBox(height: 12),
+                
+                // Kullanıcı adı
+                Text(
+                  authProvider.displayName ?? 'Misafir Kullanıcı',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4),
+                
+                // Kullanıcı e-posta
+                if (authProvider.userEmail != null)
+                  Text(
+                    authProvider.userEmail!,
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white70,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  if (premiumProvider.isPremium)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'PREMIUM',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                
+                // Premium rozeti
+                if (premiumProvider.isPremium)
+                  Container(
+                    margin: EdgeInsets.only(top: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                ],
-              ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.verified,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Premium',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
+          
+          // Menü öğeleri
           ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Ana Sayfa'),
+            leading: Icon(Icons.home),
+            title: Text('Ana Sayfa'),
             onTap: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const HomeScreen(),
-                ),
-              );
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/home');
             },
           ),
+          
           ListTile(
-            leading: const Icon(Icons.shield),
-            title: const Text('Tarama Sonuçları'),
+            leading: Icon(Icons.security),
+            title: Text('Tarama Sonuçları'),
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ScanResultsScreen(),
-                ),
-              );
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/scan_results');
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Ayarlar'),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
+          
+          // Premium kullanıcı değilse premium menüsü göster
+          if (!premiumProvider.isPremium)
+            ListTile(
+              leading: Icon(
+                Icons.star,
+                color: AppColors.secondaryColor,
+              ),
+              title: Text(
+                AppTexts.goPremium,
+                style: TextStyle(
+                  color: AppColors.secondaryColor,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/premium');
+              },
+            ),
+          
+          ListTile(
+            leading: Icon(Icons.settings),
+            title: Text(AppTexts.settings),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/settings');
             },
           ),
-          const Divider(),
+          
+          Divider(),
+          
           ListTile(
-            leading: const Icon(Icons.workspace_premium),
-            title: Text(
-              'Premium',
+            leading: Icon(Icons.help),
+            title: Text(AppTexts.help),
+            onTap: () {
+              Navigator.pop(context);
+              // Yardım sayfasına git
+            },
+          ),
+          
+          ListTile(
+            leading: Icon(Icons.info),
+            title: Text(AppTexts.about),
+            onTap: () {
+              Navigator.pop(context);
+              // Hakkında sayfasına git
+            },
+          ),
+          
+          Spacer(),
+          
+          // Çıkış yap
+          if (authProvider.isLoggedIn)
+            ListTile(
+              leading: Icon(
+                Icons.exit_to_app,
+                color: AppColors.errorColor,
+              ),
+              title: Text(
+                AppTexts.logout,
+                style: TextStyle(
+                  color: AppColors.errorColor,
+                ),
+              ),
+              onTap: () => _showLogoutDialog(context),
+            ),
+          
+          // Sürüm bilgisi
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'v1.0.0',
               style: TextStyle(
-                fontWeight: premiumProvider.isPremium 
-                  ? FontWeight.bold 
-                  : FontWeight.normal,
-                color: premiumProvider.isPremium 
-                  ? Colors.amber.shade800 
-                  : null,
+                fontSize: 12,
+                color: Colors.grey,
               ),
             ),
-            trailing: premiumProvider.isPremium
-                ? const Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                  )
-                : const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const PremiumScreen(),
-                ),
-              );
-            },
           ),
-          const Spacer(),
-          const Divider(height: 1),
-          const ListTile(
-            title: Text('Sürüm 1.0.0'),
-            subtitle: Text('Güvenliğiniz, önceliğimiz'),
-            leading: Icon(Icons.info_outline),
+        ],
+      ),
+    );
+  }
+  
+  // Çıkış diyaloğu
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Çıkış Yap'),
+        content: Text('Oturumunuzu kapatmak istediğinize emin misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppTexts.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              await authProvider.signOut();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            child: Text(AppTexts.logout),
+            style: ElevatedButton.styleFrom(
+              primary: AppColors.errorColor,
+            ),
           ),
         ],
       ),

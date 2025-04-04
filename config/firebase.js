@@ -4,31 +4,42 @@
  */
 
 const admin = require('firebase-admin');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
-// Firebase yapılandırması
+// .env değişkenlerini yükle
+dotenv.config();
+
+let firebaseInitialized = false;
+let auth = null;
+let firestore = null;
+
+// Firebase yapılandırma bilgileri
 const firebaseConfig = {
-  projectId: process.env.FIREBASE_PROJECT_ID || 'demo-project',
-  apiKey: process.env.FIREBASE_API_KEY || 'demo-api-key',
-  appId: process.env.FIREBASE_APP_ID || 'demo-app-id'
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  apiKey: process.env.FIREBASE_API_KEY,
+  appId: process.env.FIREBASE_APP_ID
 };
 
-// Firebase admin uygulama örneği
-let firebaseApp;
-
-// Firebase başlatma
+// Firebase'i başlat
 try {
-  // Firebase admin başlatma
-  firebaseApp = admin.initializeApp({
-    projectId: firebaseConfig.projectId,
-    credential: admin.credential.applicationDefault()
-  });
-  
-  console.log('Firebase Admin başarıyla başlatıldı.');
+  if (firebaseConfig.projectId) {
+    // ServiceAccount bilgileri varsa Firebase Admin SDK ile başlat
+    admin.initializeApp({
+      projectId: firebaseConfig.projectId
+    });
+    
+    auth = admin.auth();
+    firestore = admin.firestore();
+    firebaseInitialized = true;
+    
+    console.log('Firebase başarıyla başlatıldı');
+  } else {
+    console.log('Firebase yapılandırma bilgileri eksik, demo mod etkinleştiriliyor');
+  }
 } catch (error) {
-  // Hata varsa, demo modu kullanılacak
-  console.warn('Firebase Admin başlatılamadı. Demo modu kullanılacak:', error.message);
-  firebaseApp = null;
+  console.error('Firebase başlatılırken hata:', error);
+  console.log('Demo mod etkinleştiriliyor');
+  firebaseInitialized = false;
 }
 
 /**
@@ -36,7 +47,7 @@ try {
  * @returns {boolean} Bağlantı başarılı ise true, değilse false
  */
 function testFirebaseConnection() {
-  return !!firebaseApp;
+  return firebaseInitialized;
 }
 
 /**
@@ -44,8 +55,7 @@ function testFirebaseConnection() {
  * @returns {object|null} Firebase auth nesnesi, bağlantı yoksa null
  */
 function getAuth() {
-  if (!firebaseApp) return null;
-  return admin.auth();
+  return auth;
 }
 
 /**
@@ -53,8 +63,7 @@ function getAuth() {
  * @returns {object|null} Firebase firestore nesnesi, bağlantı yoksa null
  */
 function getFirestore() {
-  if (!firebaseApp) return null;
-  return admin.firestore();
+  return firestore;
 }
 
 /**
@@ -62,19 +71,10 @@ function getFirestore() {
  * @returns {object|null} Google oturum açma sağlayıcısı, bağlantı yoksa null
  */
 function getGoogleAuthProvider() {
-  if (!firebaseApp) return null;
-  
-  try {
-    // Client-side oauth sağlayıcıyı döndür
-    return new admin.auth.GoogleAuthProvider();
-  } catch (error) {
-    console.error('Google auth provider oluşturulamadı:', error);
-    return null;
-  }
+  return firebaseInitialized ? new admin.auth.GoogleAuthProvider() : null;
 }
 
 module.exports = {
-  firebaseConfig,
   testFirebaseConnection,
   getAuth,
   getFirestore,
