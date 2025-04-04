@@ -597,7 +597,7 @@ router.post('/premium/activate', async (req, res) => {
     if (!activationCode || !userId) {
       return res.status(400).json({
         success: false,
-        message: 'Aktivasyon kodu ve kullanıcı ID'si gereklidir.'
+        message: "Aktivasyon kodu ve kullanıcı ID'si gereklidir."
       });
     }
     
